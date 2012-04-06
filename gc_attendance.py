@@ -7,7 +7,7 @@ import datetime
 db = os.path.join(os.getcwd(), 'gc-attendance.sqlite')
 
 
-activeRoster = []
+active_roster = []
 
 def createTables():
 	try:
@@ -53,20 +53,28 @@ class Student:
 		self.credit = cred	# Taking GC for class credit
 		self.signins = []
 		self.excuses = []
+		
+	def fetch_signins(self):
+		''' Fetch all Signins by this Student from the database. '''
+		pass
+	
+	def fetch_excuses(self):
+		''' Fetch all Excuses by this Student from the database. '''
+		pass
 	
 class Excuse:
 	''' A Student's excuse for missing an Event sent to gc-excuse. 
 	The datetime and student ID are the primary key colums.''' 
 	def __init__(self, dt, r, s):
-		self.excuseDate = dt	# a datetime object
+		self.excuse_date = dt	# a datetime object
 		self.reason = r		# Student's message to gc-excuse
 		self.student = s
 	
-class signIn:
+class Signin:
 	''' Corresponds to a row in the RFID output file. 
 	The datetime and student ID are the primary key colums.'''
 	def __init__(self, dt, s):
-		self.signDate = dt	# a datetime object
+		self.signin_date = dt	# a datetime object
 		self.student = s
 
 class Event:
@@ -77,7 +85,16 @@ class Event:
 	TYPE_CONCERT = 'Concert'
 	
 	def __init__(self, dt, t):
-		self.eventDate = dt	# a datetime object, primary key
-		self.eventType = t	# One of the Event.TYPE_ constants 
+		self.event_date = dt	# a datetime object, primary key
+		self.event_type = t	# One of the Event.TYPE_ constants 
 		self.signins = []
 		self.excuses = []
+		
+	def fetch_signins(self):
+		''' Fetch all Signins for this Event from the database. '''
+		pass
+	
+	def fetch_excuses(self):
+		''' Fetch all Excuses for this Event from the database. '''
+		pass
+	
