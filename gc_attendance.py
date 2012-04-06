@@ -49,7 +49,7 @@ class Student:
 		self.email = email
 		self.shm = shm
 		self.officer = officer
-		self.goodStanding = standing
+		self.good_standing = standing
 		self.credit = cred	# Taking GC for class credit
 		self.signins = []
 		self.excuses = []
