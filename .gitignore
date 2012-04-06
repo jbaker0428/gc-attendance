@@ -7,3 +7,6 @@
 .*project
 desktop.ini
 ~$*.*x
+gdata*
+elementtree*
+exemaker*
