@@ -54,12 +54,27 @@ class Student:
 		self.signins = []
 		self.excuses = []
 		
+	def __del__(self):
+		self.delete()
+	
 	def fetch_signins(self):
 		''' Fetch all Signins by this Student from the database. '''
 		pass
 	
 	def fetch_excuses(self):
 		''' Fetch all Excuses by this Student from the database. '''
+		pass
+	
+	def update(self):
+		''' Update an existing Student record in the DB. '''
+		pass
+	
+	def insert(self):
+		''' Write the Student to the DB. '''
+		pass
+	
+	def delete(self):
+		''' Delete the Student from the DB. '''
 		pass
 	
 class Excuse:
@@ -70,12 +85,42 @@ class Excuse:
 		self.reason = r		# Student's message to gc-excuse
 		self.student = s
 	
+	def __del__(self):
+		self.delete()
+		
+	def update(self):
+		''' Update an existing Excuse record in the DB. '''
+		pass
+	
+	def insert(self):
+		''' Write the Excuse to the DB. '''
+		pass
+	
+	def delete(self):
+		''' Delete the Excuse from the DB. '''
+		pass
+	
 class Signin:
 	''' Corresponds to a row in the RFID output file. 
 	The datetime and student ID are the primary key colums.'''
 	def __init__(self, dt, s):
 		self.signin_date = dt	# a datetime object
 		self.student = s
+	
+	def __del__(self):
+		self.delete()
+		
+	def update(self):
+		''' Update an existing Signin record in the DB. '''
+		pass
+	
+	def insert(self):
+		''' Write the Signin to the DB. '''
+		pass
+	
+	def delete(self):
+		''' Delete the Signin from the DB. '''
+		pass
 
 class Event:
 	''' An event where attendance is taken. 
@@ -89,6 +134,9 @@ class Event:
 		self.event_type = t	# One of the Event.TYPE_ constants 
 		self.signins = []
 		self.excuses = []
+	
+	def __del__(self):
+		self.delete()
 		
 	def fetch_signins(self):
 		''' Fetch all Signins for this Event from the database. '''
@@ -96,5 +144,17 @@ class Event:
 	
 	def fetch_excuses(self):
 		''' Fetch all Excuses for this Event from the database. '''
+		pass
+	
+	def update(self):
+		''' Update an existing Event record in the DB. '''
+		pass
+	
+	def insert(self):
+		''' Write the Event to the DB. '''
+		pass
+	
+	def delete(self):
+		''' Delete the Event from the DB. '''
 		pass
 	
