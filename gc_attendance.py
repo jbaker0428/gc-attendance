@@ -40,6 +40,41 @@ def createTables():
 		con.close()
 
 class Student:
+	@staticmethod
+	def select_by_id(id):
+		''' Return the Student of given ID. '''
+		pass
+	
+	@staticmethod
+	def select_by_name(fname, lname):
+		''' Return the Student(s) of given name. '''
+		pass
+	
+	@staticmethod
+	def select_by_email(email):
+		''' Return the Student with given email address. '''
+		pass
+	
+	@staticmethod
+	def select_by_shm(shm):
+		''' Return the list of Students in SHM (or not). '''
+		pass
+	
+	@staticmethod
+	def select_by_officer(officer):
+		''' Return the list of Students who are officers (or not). '''
+		pass
+	
+	@staticmethod
+	def select_by_standing(good_standing):
+		''' Return the list of Students of given standing. '''
+		pass
+	
+	@staticmethod
+	def select_by_credit(credit):
+		''' Return the list of Students taking Glee Club for credit (or not). '''
+		pass
+	
 	''' A Student who has signed into the attendance system. 
 	The student's RFID ID number is the primary key column.'''
 	def __init__(self, r, fn, ln, email, shm=False, officer=False, standing=True, cred=False):
