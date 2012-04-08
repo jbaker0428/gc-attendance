@@ -167,6 +167,37 @@ class Student:
 			cur.close()
 			con.close()
 			return students
+		
+	@staticmethod
+	def select_by_all(id='*', fname='*', lname='*', email='*', shm='*', standing='*', credit='*'):
+		''' Return a list of Students using any combination of filters. '''
+		if shm != '*':
+			shm = int(shm)
+			
+		if standing != '*':
+			standing = int(standing)
+			
+		if credit != '*':
+			credit = int(credit)
+		
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (id, fname, lname, email, shm, standing, credit,)
+			cur.execute('''SELECT * FROM students WHERE id=? AND fname=? AND lname=?
+			 AND email=? AND shm=? AND goodstanding=? AND credit=?''', symbol)
+			for row in cur.fetchall():
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
+				students.append(student)
+				
+		except:
+			print 'Exception in Student.select_by_email( %s )' % email
+			
+		finally:
+			cur.close()
+			con.close()
+			return students
 	
 	def __init__(self, r, fn, ln, email, shm=False, standing=True, cred=False):
 		self.rfid = r		# Numeric ID seen by the RFID reader
