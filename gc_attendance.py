@@ -166,6 +166,7 @@ class Student:
 				
 		except:
 			print 'Exception in Student.select_by_credit( %s )' % credit
+			
 		finally:
 			cur.close()
 			con.close()
@@ -212,6 +213,31 @@ class Student:
 			cur.close()
 			con.close()
 			return students
+	
+	@staticmethod
+	def merge(old, new):
+		''' Merge the records of one student into another, deleting the first.
+		This should be used when a student replaces their ID card, as the new
+		ID card will have a different RFID number. '''
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (new.rfid, old.rfid, )
+			cur.execute('UPDATE excuses SET student=? WHERE student=?', symbol)
+			cur.execute('UPDATE signins SET student=? WHERE student=?', symbol)
+			
+			symbol = (old.rfid, )
+			cur.execute('DELETE FROM students WHERE id=?', symbol)
+		
+		except:
+			print 'Exception in Student.merge( %s, %s )' % old, new
+			
+		finally:
+			cur.close()
+			con.close()
+			new.fetch_signins()
+			new.fetch_excuses()
 	
 	def __init__(self, r, fn, ln, email, shm=False, standing=True, cred=False, current=True):
 		self.rfid = r		# Numeric ID seen by the RFID reader
