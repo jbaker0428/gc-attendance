@@ -383,30 +383,46 @@ class Event:
 	@staticmethod
 	def select_by_datetime(start_dt, end_dt):
 		''' Return the list of Events in a given datetime range. '''
+		events = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (isoformat(start_dt), isoformat(end_dt),)
+			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', symbol)
+			for row in cur.fetchall():
+				event = Event(row[0], row[1])
+				events.append(event)
+				
 		except:
 			print 'Exception in Event.select_by_datetime( %s, %s )' % start_dt, end_dt
+			
 		finally:
 			cur.close()
 			con.close()
+			return events
 	
 	@staticmethod
 	def select_by_type(type):
 		''' Return the list of Events of a given type. '''
+		events = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (type,)
+			cur.execute('SELECT * FROM events WHERE eventtype=?', symbol)
+			for row in cur.fetchall():
+				event = Event(row[0], row[1])
+				events.append(event)
+				
 		except:
 			print 'Exception in Signin.select_by_type( %s )' % type
+			
 		finally:
 			cur.close()
 			con.close()
+			return events
 	
 	def __init__(self, dt, t):
 		self.event_date = dt	# a datetime object, primary key
