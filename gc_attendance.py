@@ -191,8 +191,13 @@ class Student:
 			cur = conn.cursor()
 			
 			symbol = (id, fname, lname, email, shm, standing, credit,)
-			cur.execute('''SELECT * FROM students WHERE id=? AND fname=? AND lname=?
-			 AND email=? AND shm=? AND goodstanding=? AND credit=?''', symbol)
+			cur.execute('''SELECT * FROM students WHERE id=? INTERSECT 
+			SELECT * FROM students WHERE fname=? INTERSECT 
+			SELECT * FROM students WHERE lname=? INTERSECT 
+			SELECT * FROM students WHERE email=? INTERSECT 
+			SELECT * FROM students WHERE shm=? INTERSECT 
+			SELECT * FROM students WHERE goodstanding=? INTERSECT 
+			SELECT * FROM students WHERE credit=?''', symbol)
 			for row in cur.fetchall():
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 				students.append(student)
@@ -281,6 +286,30 @@ class Excuse:
 				
 		except:
 			print 'Exception in Excuse.select_by_datetime( %s, %s )' % start_dt, end_dt
+			
+		finally:
+			cur.close()
+			con.close()
+			return excuses
+		
+	@staticmethod
+	def select_by_all(id, start_dt, end_dt):
+		''' Return a list of Excuses using any combination of filters. '''
+		excuses = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
+			cur.execute('''SELECT * FROM excuses WHERE student=? INTERSECT
+			 SELECT * FROM excuses WHERE dt BETWEEN ? AND ?''', symbol)
+			for row in cur.fetchall():
+				excuse = Excuse(row[0], row[1], row[2])
+				excuses.append(excuse)
+				
+		except:
+			print 'Exception in Excuse.select_by_all( %s, %s, %s )' % id, start_dt, end_dt
+			
 		finally:
 			cur.close()
 			con.close()
@@ -341,13 +370,36 @@ class Signin:
 			cur = conn.cursor()
 			
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
-			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
+			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
 				signin = Signin(row[0], row[1])
 				signins.append(signin)
 				
 		except:
 			print 'Exception in Signin.select_by_datetime( %s, %s )' % start_dt, end_dt
+			
+		finally:
+			cur.close()
+			con.close()
+			return signins
+	
+	@staticmethod
+	def select_by_all(id, start_dt, end_dt):
+		''' Return a list of Signins using any combination of filters. '''
+		signins = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
+			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
+			 SELECT * FROM signins WHERE dt BETWEEN ? AND ?''', symbol)
+			for row in cur.fetchall():
+				signin = Signin(row[0], row[1])
+				signins.append(signin)
+				
+		except:
+			print 'Exception in Signin.select_by_all( %s, %s, %s )' % id, start_dt, end_dt
 			
 		finally:
 			cur.close()
@@ -418,6 +470,29 @@ class Event:
 				
 		except:
 			print 'Exception in Signin.select_by_type( %s )' % type
+			
+		finally:
+			cur.close()
+			con.close()
+			return events
+	
+	@staticmethod
+	def select_by_all(id, start_dt, end_dt):
+		''' Return a list of Events using any combination of filters. '''
+		events = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
+			cur.execute('''SELECT * FROM events WHERE student=? INTERSECT
+			 SELECT * FROM events WHERE dt BETWEEN ? AND ?''', symbol)
+			for row in cur.fetchall():
+				event = Event(row[0], row[1])
+				events.append(event)
+				
+		except:
+			print 'Exception in Event.select_by_all( %s, %s, %s )' % id, start_dt, end_dt
 			
 		finally:
 			cur.close()
