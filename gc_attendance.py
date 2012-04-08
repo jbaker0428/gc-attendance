@@ -29,7 +29,7 @@ def createTables():
 		CONSTRAINT fk_signin_student FOREIGN KEY (student))''')
 		
 		cur.execute('''CREATE TABLE events
-		(dt TEXT, eventtype TEXT, student INTEGER,
+		(dt TEXT, eventtype TEXT,
 		CONSTRAINT pk_event PRIMARY KEY (dt, eventtype))''')
 		
 	except:
@@ -477,7 +477,7 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_all(id, start_dt, end_dt):
+	def select_by_all(type, start_dt, end_dt):
 		''' Return a list of Events using any combination of filters. '''
 		events = []
 		try:
@@ -485,14 +485,14 @@ class Event:
 			cur = conn.cursor()
 			
 			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
-			cur.execute('''SELECT * FROM events WHERE student=? INTERSECT
+			cur.execute('''SELECT * FROM events WHERE type=? INTERSECT
 			 SELECT * FROM events WHERE dt BETWEEN ? AND ?''', symbol)
 			for row in cur.fetchall():
 				event = Event(row[0], row[1])
 				events.append(event)
 				
 		except:
-			print 'Exception in Event.select_by_all( %s, %s, %s )' % id, start_dt, end_dt
+			print 'Exception in Event.select_by_all( %s, %s, %s )' % type, start_dt, end_dt
 			
 		finally:
 			cur.close()
