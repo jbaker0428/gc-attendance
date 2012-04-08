@@ -192,7 +192,7 @@ class Student:
 				students.append(student)
 				
 		except:
-			print 'Exception in Student.select_by_email( %s )' % email
+			print 'Exception in Student.select_by_all( %s, %s, %s, %s, %s, %s, %s )' % id, fname, lname, email, shm, standing, credit
 			
 		finally:
 			cur.close()
