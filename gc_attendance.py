@@ -50,40 +50,61 @@ class Student:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (id,)
+			cur.execute('SELECT * FROM students WHERE id=?', symbol)
+			row = cur.fetchone()
+			student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+			
 		except:
 			print 'Exception in Student.select_by_id( %s )' % id
+			
 		finally:
 			cur.close()
 			con.close()
+			return student
 	
 	@staticmethod
-	def select_by_name(fname, lname):
+	def select_by_name(fname='*', lname='*'):
 		''' Return the Student(s) of given name. '''
+		students = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (fname, lname,)
+			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', symbol)
+			for row in cur.fetchall():
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				students.append(student)
+				
 		except:
 			print 'Exception in Student.select_by_name( %s, %s )' % fname, lname
+			
 		finally:
 			cur.close()
 			con.close()
+			return students
 	
 	@staticmethod
 	def select_by_email(email):
-		''' Return the Student with given email address. '''
+		''' Return the Student(s) with given email address. '''
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (email,)
+			cur.execute('SELECT * FROM students WHERE email=?', symbol)
+			for row in cur.fetchall():
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				students.append(student)
+				
 		except:
 			print 'Exception in Student.select_by_email( %s )' % email
+			
 		finally:
 			cur.close()
 			con.close()
+			return students
 	
 	@staticmethod
 	def select_by_shm(shm):
@@ -92,12 +113,19 @@ class Student:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (int(shm),)
+			cur.execute('SELECT * FROM students WHERE shm=?', symbol)
+			for row in cur.fetchall():
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				students.append(student)
+				
 		except:
 			print 'Exception in Student.select_by_shm( %s )' % shm
+			
 		finally:
 			cur.close()
 			con.close()
+			return students
 	
 	@staticmethod
 	def select_by_officer(officer):
@@ -106,12 +134,19 @@ class Student:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (int(officer),)
+			cur.execute('SELECT * FROM students WHERE officer=?', symbol)
+			for row in cur.fetchall():
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				students.append(student)
+				
 		except:
 			print 'Exception in Student.select_by_officer( %s )' % officer
+			
 		finally:
 			cur.close()
 			con.close()
+			return students
 	
 	@staticmethod
 	def select_by_standing(good_standing):
@@ -120,12 +155,19 @@ class Student:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (int(good_standing),)
+			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
+			for row in cur.fetchall():
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				students.append(student)
+				
 		except:
 			print 'Exception in Student.select_by_standing( %s )' % standing
+			
 		finally:
 			cur.close()
 			con.close()
+			return students
 	
 	@staticmethod
 	def select_by_credit(credit):
@@ -134,12 +176,18 @@ class Student:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (int(credit),)
+			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
+			for row in cur.fetchall():
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				students.append(student)
+				
 		except:
 			print 'Exception in Student.select_by_credit( %s )' % credit
 		finally:
 			cur.close()
 			con.close()
+			return students
 	
 	def __init__(self, r, fn, ln, email, shm=False, officer=False, standing=True, cred=False):
 		self.rfid = r		# Numeric ID seen by the RFID reader
