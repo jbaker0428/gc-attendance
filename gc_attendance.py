@@ -171,6 +171,28 @@ class Student:
 			cur.close()
 			con.close()
 			return students
+	
+	@staticmethod
+	def select_by_current(current):
+		''' Return the list of current Students on the roster (or not). '''
+		students = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (int(credit),)
+			cur.execute('SELECT * FROM students WHERE current=?', symbol)
+			for row in cur.fetchall():
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				students.append(student)
+				
+		except:
+			print 'Exception in Student.select_by_current( %s )' % current
+			
+		finally:
+			cur.close()
+			con.close()
+			return students
 		
 	@staticmethod
 	def select_by_all(id='*', fname='*', lname='*', email='*', shm='*', standing='*', credit='*', current='*'):
