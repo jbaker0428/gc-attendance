@@ -266,21 +266,21 @@ class Excuse:
 			return excuses
 	
 	@staticmethod
-	def select_by_date(start_date, end_date):
+	def select_by_datetime(start_dt, end_dt):
 		''' Return the list of Excuses in a given datetime range. '''
 		excuses = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			symbol = (isoformat(start_date), isoformat(end_date),)
+			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
 				excuse = Excuse(row[0], row[1], row[2])
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_date( %s, %s )' % start_date, end_date
+			print 'Exception in Excuse.select_by_datetime( %s, %s )' % start_dt, end_dt
 		finally:
 			cur.close()
 			con.close()
@@ -333,21 +333,21 @@ class Signin:
 			return signins
 	
 	@staticmethod
-	def select_by_date(start_date, end_date):
+	def select_by_datetime(start_dt, end_dt):
 		''' Return the list of Signins in a given datetime range. '''
 		signins = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			symbol = (isoformat(start_date), isoformat(end_date),)
+			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
 				signin = Signin(row[0], row[1])
 				signins.append(signin)
 				
 		except:
-			print 'Exception in Signin.select_by_date( %s, %s )' % start_date, end_date
+			print 'Exception in Signin.select_by_datetime( %s, %s )' % start_dt, end_dt
 			
 		finally:
 			cur.close()
@@ -381,7 +381,7 @@ class Event:
 	TYPE_CONCERT = 'Concert'
 	
 	@staticmethod
-	def select_by_date(start_date, end_date):
+	def select_by_datetime(start_dt, end_dt):
 		''' Return the list of Events in a given datetime range. '''
 		try:
 			con = sqlite3.connect(db)
@@ -389,7 +389,7 @@ class Event:
 			
 			# Execute here
 		except:
-			print 'Exception in Event.select_by_date( %s, %s )' % start_date, end_date
+			print 'Exception in Event.select_by_datetime( %s, %s )' % start_dt, end_dt
 		finally:
 			cur.close()
 			con.close()
