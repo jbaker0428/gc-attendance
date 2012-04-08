@@ -6,7 +6,6 @@ import datetime
 
 db = os.path.join(os.getcwd(), 'gc-attendance.sqlite')
 
-
 active_roster = []
 
 def createTables():
@@ -248,6 +247,10 @@ class Excuse:
 	''' A Student's excuse for missing an Event sent to gc-excuse. 
 	The datetime and student ID are the primary key colums.'''
 	
+	# Cutoffs for when students can email gc-excuse (relative to event start time)
+	EXCUSES_OPENS = datetime.timedelta(-1, 0, 0, 0, 0, -18, 0)	# 1 day, 18 hours before
+	EXCUSES_CLOSES = datetime.timedelta(0, 0, 0, 0, 0, 6, 0)	# 6 hours after
+	
 	@staticmethod
 	def select_by_student(id):
 		''' Return the list of Excuses by a Student. '''
@@ -432,6 +435,10 @@ class Event:
 	TYPE_DRESS = 'Dress Rehearsal'	# Mandatory for a concert
 	TYPE_CONCERT = 'Concert'
 	
+	# Cutoffs for when students can sign in (relative to event start time)
+	ATTENDANCE_OPENS = datetime.timedelta(0, 0, 0, 0, -30, 0, 0)	# 30 minutes before
+	ATTENDANCE_CLOSES = datetime.timedelta(0, 0, 0, 0, 30, 1, 0)	# 90 minutes after
+	
 	@staticmethod
 	def select_by_name(name):
 		''' Return the list of Events of a given name. '''
@@ -534,11 +541,11 @@ class Event:
 		
 	def fetch_signins(self):
 		''' Fetch all Signins for this Event from the database. '''
-		pass
+		self.signins = Signin.select_by_datetime(self.event_date+Event.ATTENDANCE_OPENS, self.event_date+Event.ATTENDANCE_CLOSES)
 	
 	def fetch_excuses(self):
 		''' Fetch all Excuses for this Event from the database. '''
-		pass
+		self.excuses = Excuse.select_by_datetime(self.event_date+Excuse.EXCUSES_OPENS, self.event_date+Excuse.EXCUSES_CLOSES)
 	
 	def update(self):
 		''' Update an existing Event record in the DB. '''
