@@ -88,6 +88,7 @@ class Student:
 	@staticmethod
 	def select_by_email(email):
 		''' Return the Student(s) with given email address. '''
+		students = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
@@ -109,6 +110,7 @@ class Student:
 	@staticmethod
 	def select_by_shm(shm):
 		''' Return the list of Students in SHM (or not). '''
+		students = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
@@ -130,6 +132,7 @@ class Student:
 	@staticmethod
 	def select_by_standing(good_standing):
 		''' Return the list of Students of given standing. '''
+		students = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
@@ -151,6 +154,7 @@ class Student:
 	@staticmethod
 	def select_by_credit(credit):
 		''' Return the list of Students taking Glee Club for credit (or not). '''
+		students = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
@@ -179,6 +183,8 @@ class Student:
 			
 		if credit != '*':
 			credit = int(credit)
+			
+		students = []
 		
 		try:
 			con = sqlite3.connect(db)
