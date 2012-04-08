@@ -46,37 +46,100 @@ class Student:
 	@staticmethod
 	def select_by_id(id):
 		''' Return the Student of given ID. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Student.select_by_id( %s )' % id
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_name(fname, lname):
 		''' Return the Student(s) of given name. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Student.select_by_name( %s, %s )' % fname, lname
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_email(email):
 		''' Return the Student with given email address. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Student.select_by_email( %s )' % email
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_shm(shm):
 		''' Return the list of Students in SHM (or not). '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Student.select_by_shm( %s )' % shm
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_officer(officer):
 		''' Return the list of Students who are officers (or not). '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Student.select_by_officer( %s )' % officer
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_standing(good_standing):
 		''' Return the list of Students of given standing. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Student.select_by_standing( %s )' % standing
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_credit(credit):
 		''' Return the list of Students taking Glee Club for credit (or not). '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Student.select_by_credit( %s )' % credit
+		finally:
+			cur.close()
+			con.close()
 	
 	def __init__(self, r, fn, ln, email, shm=False, officer=False, standing=True, cred=False):
 		self.rfid = r		# Numeric ID seen by the RFID reader
@@ -120,12 +183,30 @@ class Excuse:
 	@staticmethod
 	def select_by_student(id):
 		''' Return the list of Excuses by a Student. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Excuse.select_by_student( %s )' % id
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_date(start_date, end_date):
 		''' Return the list of Excuses in a given datetime range. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Excuse.select_by_date( %s, %s )' % start_date, end_date
+		finally:
+			cur.close()
+			con.close()
 	 
 	def __init__(self, dt, r, s):
 		self.excuse_date = dt	# a datetime object
@@ -154,12 +235,30 @@ class Signin:
 	@staticmethod
 	def select_by_student(id):
 		''' Return the list of Signins by a Student. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Signin.select_by_student( %s )' % id
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_date(start_date, end_date):
 		''' Return the list of Signins in a given datetime range. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Signin.select_by_date( %s, %s )' % start_date, end_date
+		finally:
+			cur.close()
+			con.close()
 	
 	def __init__(self, dt, s):
 		self.signin_date = dt	# a datetime object
@@ -190,12 +289,30 @@ class Event:
 	@staticmethod
 	def select_by_date(start_date, end_date):
 		''' Return the list of Events in a given datetime range. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Event.select_by_date( %s, %s )' % start_date, end_date
+		finally:
+			cur.close()
+			con.close()
 	
 	@staticmethod
 	def select_by_type(type):
 		''' Return the list of Events of a given type. '''
-		pass
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			# Execute here
+		except:
+			print 'Exception in Signin.select_by_type( %s )' % type
+		finally:
+			cur.close()
+			con.close()
 	
 	def __init__(self, dt, t):
 		self.event_date = dt	# a datetime object, primary key
