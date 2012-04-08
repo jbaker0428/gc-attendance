@@ -16,7 +16,7 @@ def createTables():
 		
 		cur.execute('''CREATE TABLE students
 		(id INTEGER PRIMARY KEY, fname TEXT, lname TEXT, email TEXT, 
-		shm INTEGER, officer INTEGER, goodstanding INTEGER, credit INTEGER)''')
+		shm INTEGER, goodstanding INTEGER, credit INTEGER)''')
 		
 		cur.execute('''CREATE TABLE excuses
 		(dt TEXT, reason TEXT, student INTEGER,
@@ -53,7 +53,7 @@ class Student:
 			symbol = (id,)
 			cur.execute('SELECT * FROM students WHERE id=?', symbol)
 			row = cur.fetchone()
-			student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+			student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 			
 		except:
 			print 'Exception in Student.select_by_id( %s )' % id
@@ -74,7 +74,7 @@ class Student:
 			symbol = (fname, lname,)
 			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 				students.append(student)
 				
 		except:
@@ -95,7 +95,7 @@ class Student:
 			symbol = (email,)
 			cur.execute('SELECT * FROM students WHERE email=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 				students.append(student)
 				
 		except:
@@ -116,32 +116,11 @@ class Student:
 			symbol = (int(shm),)
 			cur.execute('SELECT * FROM students WHERE shm=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 				students.append(student)
 				
 		except:
 			print 'Exception in Student.select_by_shm( %s )' % shm
-			
-		finally:
-			cur.close()
-			con.close()
-			return students
-	
-	@staticmethod
-	def select_by_officer(officer):
-		''' Return the list of Students who are officers (or not). '''
-		try:
-			con = sqlite3.connect(db)
-			cur = conn.cursor()
-			
-			symbol = (int(officer),)
-			cur.execute('SELECT * FROM students WHERE officer=?', symbol)
-			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
-				students.append(student)
-				
-		except:
-			print 'Exception in Student.select_by_officer( %s )' % officer
 			
 		finally:
 			cur.close()
@@ -158,7 +137,7 @@ class Student:
 			symbol = (int(good_standing),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 				students.append(student)
 				
 		except:
@@ -179,7 +158,7 @@ class Student:
 			symbol = (int(credit),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 				students.append(student)
 				
 		except:
@@ -189,13 +168,12 @@ class Student:
 			con.close()
 			return students
 	
-	def __init__(self, r, fn, ln, email, shm=False, officer=False, standing=True, cred=False):
+	def __init__(self, r, fn, ln, email, shm=False, standing=True, cred=False):
 		self.rfid = r		# Numeric ID seen by the RFID reader
 		self.fname = fn
 		self.lname = ln
 		self.email = email
 		self.shm = shm
-		self.officer = officer
 		self.good_standing = standing
 		self.credit = cred	# Taking GC for class credit
 		self.signins = []
