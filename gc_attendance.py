@@ -285,7 +285,7 @@ class Excuse:
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_datetime( %s, %s )' % start_dt, end_dt
+			print 'Exception in Excuse.select_by_datetime( %s, %s )' % isoformat(start_dt), isoformat(end_dt)
 			
 		finally:
 			cur.close()
@@ -308,7 +308,7 @@ class Excuse:
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_all( %s, %s, %s )' % id, start_dt, end_dt
+			print 'Exception in Excuse.select_by_all( %s, %s, %s )' % id, isoformat(start_dt), isoformat(end_dt)
 			
 		finally:
 			cur.close()
@@ -376,7 +376,7 @@ class Signin:
 				signins.append(signin)
 				
 		except:
-			print 'Exception in Signin.select_by_datetime( %s, %s )' % start_dt, end_dt
+			print 'Exception in Signin.select_by_datetime( %s, %s )' % isoformat(start_dt), isoformat(end_dt)
 			
 		finally:
 			cur.close()
@@ -399,7 +399,7 @@ class Signin:
 				signins.append(signin)
 				
 		except:
-			print 'Exception in Signin.select_by_all( %s, %s, %s )' % id, start_dt, end_dt
+			print 'Exception in Signin.select_by_all( %s, %s, %s )' % id, isoformat(start_dt), isoformat(end_dt)
 			
 		finally:
 			cur.close()
@@ -469,7 +469,7 @@ class Event:
 				events.append(event)
 				
 		except:
-			print 'Exception in Event.select_by_datetime( %s, %s )' % start_dt, end_dt
+			print 'Exception in Event.select_by_datetime( %s, %s )' % isoformat(start_dt), isoformat(end_dt)
 			
 		finally:
 			cur.close()
@@ -515,7 +515,7 @@ class Event:
 				events.append(event)
 				
 		except:
-			print 'Exception in Event.select_by_all( %s, %s, %s, %s )' % name, start_dt, end_dt, type
+			print 'Exception in Event.select_by_all( %s, %s, %s, %s )' % name, isoformat(start_dt), isoformat(end_dt), type
 			
 		finally:
 			cur.close()
