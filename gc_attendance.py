@@ -273,7 +273,12 @@ class Excuse:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (isoformat(start_date), isoformat(end_date),)
+			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
+			for row in cur.fetchall():
+				excuse = Excuse(row[0], row[1], row[2])
+				excuses.append(excuse)
+				
 		except:
 			print 'Exception in Excuse.select_by_date( %s, %s )' % start_date, end_date
 		finally:
