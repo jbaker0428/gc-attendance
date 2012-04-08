@@ -313,30 +313,46 @@ class Signin:
 	@staticmethod
 	def select_by_student(id):
 		''' Return the list of Signins by a Student. '''
+		signins = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (id,)
+			cur.execute('SELECT * FROM signins WHERE student=?', symbol)
+			for row in cur.fetchall():
+				signin = Signin(row[0], row[1])
+				signins.append(signin)
+				
 		except:
 			print 'Exception in Signin.select_by_student( %s )' % id
+			
 		finally:
 			cur.close()
 			con.close()
+			return signins
 	
 	@staticmethod
 	def select_by_date(start_date, end_date):
 		''' Return the list of Signins in a given datetime range. '''
+		signins = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (isoformat(start_date), isoformat(end_date),)
+			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
+			for row in cur.fetchall():
+				signin = Signin(row[0], row[1])
+				signins.append(signin)
+				
 		except:
 			print 'Exception in Signin.select_by_date( %s, %s )' % start_date, end_date
+			
 		finally:
 			cur.close()
 			con.close()
+			return signins
 	
 	def __init__(self, dt, s):
 		self.signin_date = dt	# a datetime object
