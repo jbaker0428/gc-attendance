@@ -226,11 +226,11 @@ class Student:
 	
 	def fetch_signins(self):
 		''' Fetch all Signins by this Student from the database. '''
-		pass
+		self.signins = Signin.select_by_student(self.rfid)
 	
 	def fetch_excuses(self):
 		''' Fetch all Excuses by this Student from the database. '''
-		pass
+		self.excuses = Excuse.select_by_student(self.rfid)
 	
 	def update(self):
 		''' Update an existing Student record in the DB. '''
