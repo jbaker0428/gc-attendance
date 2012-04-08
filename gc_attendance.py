@@ -246,20 +246,29 @@ class Excuse:
 	@staticmethod
 	def select_by_student(id):
 		''' Return the list of Excuses by a Student. '''
+		excuses = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			# Execute here
+			symbol = (id,)
+			cur.execute('SELECT * FROM excuses WHERE student=?', symbol)
+			for row in cur.fetchall():
+				excuse = Excuse(row[0], row[1], row[2])
+				excuses.append(excuse)
+				
 		except:
 			print 'Exception in Excuse.select_by_student( %s )' % id
+			
 		finally:
 			cur.close()
 			con.close()
+			return excuses
 	
 	@staticmethod
 	def select_by_date(start_date, end_date):
 		''' Return the list of Excuses in a given datetime range. '''
+		excuses = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
@@ -270,6 +279,7 @@ class Excuse:
 		finally:
 			cur.close()
 			con.close()
+			return excuses
 	 
 	def __init__(self, dt, r, s):
 		self.excuse_date = dt	# a datetime object
