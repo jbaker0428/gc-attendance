@@ -29,7 +29,7 @@ def createTables():
 		CONSTRAINT fk_signin_student FOREIGN KEY (student))''')
 		
 		cur.execute('''CREATE TABLE events
-		(dt TEXT, eventtype TEXT,
+		(eventname TEXT, dt TEXT, eventtype TEXT,
 		CONSTRAINT pk_event PRIMARY KEY (dt, eventtype))''')
 		
 	except:
@@ -433,6 +433,28 @@ class Event:
 	TYPE_CONCERT = 'Concert'
 	
 	@staticmethod
+	def select_by_name(name):
+		''' Return the list of Events of a given name. '''
+		events = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (name,)
+			cur.execute('SELECT * FROM events WHERE eventname=?', symbol)
+			for row in cur.fetchall():
+				event = Event(row[0], row[1], row[2])
+				events.append(event)
+				
+		except:
+			print 'Exception in Signin.select_by_type( %s )' % type
+			
+		finally:
+			cur.close()
+			con.close()
+			return events
+	
+	@staticmethod
 	def select_by_datetime(start_dt, end_dt):
 		''' Return the list of Events in a given datetime range. '''
 		events = []
@@ -443,7 +465,7 @@ class Event:
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1])
+				event = Event(row[0], row[1], row[2])
 				events.append(event)
 				
 		except:
@@ -465,7 +487,7 @@ class Event:
 			symbol = (type,)
 			cur.execute('SELECT * FROM events WHERE eventtype=?', symbol)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1])
+				event = Event(row[0], row[1], row[2])
 				events.append(event)
 				
 		except:
@@ -477,29 +499,31 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_all(type, start_dt, end_dt):
+	def select_by_all(name, start_dt, end_dt, type):
 		''' Return a list of Events using any combination of filters. '''
 		events = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
-			cur.execute('''SELECT * FROM events WHERE type=? INTERSECT
-			 SELECT * FROM events WHERE dt BETWEEN ? AND ?''', symbol)
+			symbol = (name, isoformat(start_dt), isoformat(end_dt), type,)
+			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
+			SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
+			SELECT * FROM events WHERE eventtype=?''', symbol)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1])
+				event = Event(row[0], row[1], row[2])
 				events.append(event)
 				
 		except:
-			print 'Exception in Event.select_by_all( %s, %s, %s )' % type, start_dt, end_dt
+			print 'Exception in Event.select_by_all( %s, %s, %s, %s )' % name, start_dt, end_dt, type
 			
 		finally:
 			cur.close()
 			con.close()
 			return events
 	
-	def __init__(self, dt, t):
+	def __init__(self, name, dt, t):
+		self.event_name = name
 		self.event_date = dt	# a datetime object, primary key
 		self.event_type = t	# One of the Event.TYPE_ constants 
 		self.signins = []
