@@ -319,11 +319,126 @@ class Absence:
 	TYPE_EXCUSED = "Excused"
 	TYPE_UNEXCUSED = "Unexcused"
 	
-	def __init__(self, id, t, event_dt, excuse_dt=None):
-		self.student = id
-		self.type = t		# An Absence.TYPE_ constant
+	@staticmethod
+	def select_by_student(student_id):
+		''' Return the list of Absences by a Student. '''
+		absences = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (student_id,)
+			cur.execute('SELECT * FROM absences WHERE student=?', symbol)
+			for row in cur.fetchall():
+				absence = Absence(row[0], row[1], row[2], row[3])
+				absences.append(absence)
+				
+		except:
+			print 'Exception in Absence.select_by_student( %s )' % student_id
+			
+		finally:
+			cur.close()
+			con.close()
+			return absences
+	
+	@staticmethod
+	def select_by_type(absence_type):
+		''' Return the list of Absences of a given ABSENCE.TYPE_. '''
+		absences = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (absence_type,)
+			cur.execute('SELECT * FROM absences WHERE type=?', symbol)
+			for row in cur.fetchall():
+				absence = Absence(row[0], row[1], row[2], row[3])
+				absences.append(absence)
+				
+		except:
+			print 'Exception in Absence.select_by_type( %s )' % absence_type
+			
+		finally:
+			cur.close()
+			con.close()
+			return absences
+		
+	@staticmethod
+	def select_by_event_dt(event_dt):
+		''' Return the list of Absences of a given datetime. '''
+		absences = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (isoformat(event_dt),)
+			cur.execute('SELECT * FROM absences WHERE eventdt=?', symbol)
+			for row in cur.fetchall():
+				absence = Absence(row[0], row[1], row[2], row[3])
+				absences.append(absence)
+				
+		except:
+			print 'Exception in Absence.select_by_event_dt( %s )' % event_dt
+			
+		finally:
+			cur.close()
+			con.close()
+			return absences
+	
+	@staticmethod
+	def select_by_excuse(excuse_id):
+		''' Return the list of Absences of a given excuse ID.
+		Should only return one, but returning a list in case of
+		data integrity issues related to Excuse-Event mis-assignment. '''
+		absences = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (excuse_id,)
+			cur.execute('SELECT * FROM absences WHERE excuseid=?', symbol)
+			for row in cur.fetchall():
+				absence = Absence(row[0], row[1], row[2], row[3])
+				absences.append(absence)
+				
+		except:
+			print 'Exception in Absence.select_by_excuse( %s )' % excuse_id
+			
+		finally:
+			cur.close()
+			con.close()
+			return absences
+	
+	@staticmethod
+	def select_by_all(student_id='*', absence_type='*', event_dt='*', excuse_id='*'):
+		''' Return the list of Absences using any combination of filters. '''
+		absences = []
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (student_id, absence_type, isoformat(event_dt), excuse_id,)
+			cur.execute('''SELECT * FROM absences WHERE student=? INTERSECT
+			SELECT * FROM absences WHERE type=? INTERSECT
+			SELECT * FROM absences WHERE eventdt=? INTERSECT
+			SELECT * FROM absences WHERE excuseid=?''', symbol)
+			for row in cur.fetchall():
+				absence = Absence(row[0], row[1], row[2], row[3])
+				absences.append(absence)
+				
+		except:
+			print 'Exception in Absence.select_by_all( %s, %s, %s, %s )' % student_id, absence_type, isoformat(event_dt), excuse_id
+			
+		finally:
+			cur.close()
+			con.close()
+			return absences
+	
+	def __init__(self, student_id, t, event_dt, excuse_dt=None):
+		self.student = student_id
+		self.type = t		# An Absence.TYPE_ string constant
 		self.event_dt = event_dt	# Get the actual event via dt lookup
-		self.excuse_dt = excuse_dt	# Get the actual excuse via dt lookup
+		self.excuse_id = excuse_id
 	
 class Excuse:
 	''' A Student's excuse for missing an Event sent to gc-excuse. 
