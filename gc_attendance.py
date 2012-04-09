@@ -17,6 +17,12 @@ def createTables():
 		(id INTEGER PRIMARY KEY, fname TEXT, lname TEXT, email TEXT, 
 		shm INTEGER, goodstanding INTEGER, credit INTEGER, current INTEGER)''')
 		
+		cur.execute('''CREATE TABLE absences
+		(student INTEGER, type TEXT, eventdt TEXT, excusedt TEXT, 
+		CONSTRAINT pk_excuse PRIMARY KEY (eventdt, student),
+		CONSTRAINT fk_excuse_student FOREIGN KEY (student),
+		CONSTRAINT fk_excuse_eventdt FOREIGN KEY (eventdt))''')
+		
 		cur.execute('''CREATE TABLE excuses
 		(dt TEXT, reason TEXT, student INTEGER,
 		CONSTRAINT pk_excuse PRIMARY KEY (dt, student),
@@ -295,6 +301,19 @@ class Student:
 	def delete(self):
 		''' Delete the Student from the DB. '''
 		pass
+
+class Absence:
+	''' An instance of a Student not singing into an Event.
+	May or may not have an Excuse attached to it. '''
+	TYPE_PENDING = "Pending"
+	TYPE_EXCUSED = "Excused"
+	TYPE_UNEXCUSED = "Unexcused"
+	
+	def __init__(self, id, t, event_dt, excuse_dt=None):
+		self.student = id
+		self.type = t		# An Absence.TYPE_ constant
+		self.event_dt = event_dt	# Get the actual event via dt lookup
+		self.excuse_dt = excuse_dt	# Get the actual excuse via dt lookup
 	
 class Excuse:
 	''' A Student's excuse for missing an Event sent to gc-excuse. 
