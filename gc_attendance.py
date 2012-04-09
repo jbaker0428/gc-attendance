@@ -4,55 +4,70 @@ import os
 import sqlite3
 import datetime
 
-db = os.path.join(os.getcwd(), 'gc-attendance.sqlite')
 
 active_roster = []
-
-def createTables():
-	try:
-		con = sqlite3.connect(db)
+class AttendanceDB:
+	''' Base class for the attendance database. '''
+	db0 = os.path.join(os.getcwd(), 'gc-attendance.sqlite')
+	
+	def __init__(self, db=db0):
+		self.db = db
+	
+	def con_cursor(self):
+		''' Connect to the DB, enable foreign keys, and return a 
+		(connection, cursor) pair. '''
+		con = sqlite3.connect(self.db)
+		con.execute('PRAGMA foreign_keys = ON')
 		cur = con.cursor()
-		# TODO: Add error handling clauses to the foreign key constraints
-		cur.execute('''CREATE TABLE IF NOT EXISTS students
-		(id INTEGER PRIMARY KEY, 
-		fname TEXT, 
-		lname TEXT, 
-		email TEXT, 
-		shm INTEGER, 
-		goodstanding INTEGER, 
-		credit INTEGER, 
-		current INTEGER)''')
-		
-		cur.execute('''CREATE TABLE IF NOT EXISTS absences
-		(student INTEGER REFERENCES students(id), 
-		type TEXT, 
-		eventdt TEXT REFERENCES events(dt), 
-		excuseid TEXT REFERENCES excuses(id), 
-		CONSTRAINT pk_absence PRIMARY KEY (eventdt, student))''')
-		
-		cur.execute('''CREATE TABLE IF NOT EXISTS excuses
-		(id INTGER PRIMARY KEY
-		dt TEXT, 
-		reason TEXT, 
-		student INTEGER REFERENCES students(id))''')
-		
-		cur.execute('''CREATE TABLE IF NOT EXISTS signins
-		(dt TEXT, 
-		student INTEGER,
-		CONSTRAINT pk_signin PRIMARY KEY (dt, student),
-		CONSTRAINT fk_signin_student FOREIGN KEY (student))''')
-		
-		cur.execute('''CREATE TABLE IF NOT EXISTS events
-		(eventname TEXT, 
-		dt TEXT PRIMARY KEY, 
-		eventtype TEXT)''')
-		
-	except:
-		print 'createTables exception, probably because tables already created.'
-		
-	finally:
-		cur.close()
-		con.close()
+		return (con, cur)
+	
+	def createTables(self):
+		''' Create the database tables. '''
+		try:
+			(con, cur) = self.con_cursor()
+			# TODO: Add error handling clauses to the foreign key constraints
+			cur.execute('''CREATE TABLE IF NOT EXISTS students
+			(id INTEGER PRIMARY KEY, 
+			fname TEXT, 
+			lname TEXT, 
+			email TEXT, 
+			shm INTEGER, 
+			goodstanding INTEGER, 
+			credit INTEGER, 
+			current INTEGER)''')
+			
+			cur.execute('''CREATE TABLE IF NOT EXISTS absences
+			(student INTEGER REFERENCES students(id), 
+			type TEXT, 
+			eventdt TEXT REFERENCES events(dt), 
+			excuseid TEXT REFERENCES excuses(id), 
+			CONSTRAINT pk_absence PRIMARY KEY (eventdt, student))''')
+			
+			cur.execute('''CREATE TABLE IF NOT EXISTS excuses
+			(id INTGER PRIMARY KEY
+			dt TEXT, 
+			reason TEXT, 
+			student INTEGER REFERENCES students(id))''')
+			
+			cur.execute('''CREATE TABLE IF NOT EXISTS signins
+			(dt TEXT, 
+			student INTEGER,
+			CONSTRAINT pk_signin PRIMARY KEY (dt, student),
+			CONSTRAINT fk_signin_student FOREIGN KEY (student))''')
+			
+			cur.execute('''CREATE TABLE IF NOT EXISTS events
+			(eventname TEXT, 
+			dt TEXT PRIMARY KEY, 
+			eventtype TEXT)''')
+			
+		except:
+			print 'createTables exception, probably because tables already created.'
+			
+		finally:
+			cur.close()
+			con.close()
+
+gcdb = AttendanceDB()
 
 class Student:
 	''' A Student who has signed into the attendance system. 
@@ -62,8 +77,7 @@ class Student:
 	def select_by_id(id):
 		''' Return the Student of given ID. '''
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (id,)
 			cur.execute('SELECT * FROM students WHERE id=?', symbol)
@@ -83,8 +97,7 @@ class Student:
 		''' Return the Student(s) of given name. '''
 		students = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (fname, lname,)
 			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', symbol)
@@ -105,8 +118,7 @@ class Student:
 		''' Return the Student(s) with given email address. '''
 		students = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (email,)
 			cur.execute('SELECT * FROM students WHERE email=?', symbol)
@@ -127,8 +139,7 @@ class Student:
 		''' Return the list of Students in SHM (or not). '''
 		students = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (int(shm),)
 			cur.execute('SELECT * FROM students WHERE shm=?', symbol)
@@ -149,8 +160,7 @@ class Student:
 		''' Return the list of Students of given standing. '''
 		students = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (int(good_standing),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
@@ -171,8 +181,7 @@ class Student:
 		''' Return the list of Students taking Glee Club for credit (or not). '''
 		students = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (int(credit),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
@@ -193,8 +202,7 @@ class Student:
 		''' Return the list of current Students on the roster (or not). '''
 		students = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (int(credit),)
 			cur.execute('SELECT * FROM students WHERE current=?', symbol)
@@ -228,8 +236,7 @@ class Student:
 		students = []
 		
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (id, fname, lname, email, shm, standing, credit, current,)
 			cur.execute('''SELECT * FROM students WHERE id=? INTERSECT 
@@ -258,8 +265,7 @@ class Student:
 		This should be used when a student replaces their ID card, as the new
 		ID card will have a different RFID number. '''
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (new.rfid, old.rfid, )
 			cur.execute('UPDATE excuses SET student=? WHERE student=?', symbol)
@@ -324,8 +330,7 @@ class Absence:
 		''' Return the list of Absences by a Student. '''
 		absences = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (student_id,)
 			cur.execute('SELECT * FROM absences WHERE student=?', symbol)
@@ -346,8 +351,7 @@ class Absence:
 		''' Return the list of Absences of a given ABSENCE.TYPE_. '''
 		absences = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (absence_type,)
 			cur.execute('SELECT * FROM absences WHERE type=?', symbol)
@@ -368,8 +372,7 @@ class Absence:
 		''' Return the list of Absences of a given datetime. '''
 		absences = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (isoformat(event_dt),)
 			cur.execute('SELECT * FROM absences WHERE eventdt=?', symbol)
@@ -392,8 +395,7 @@ class Absence:
 		data integrity issues related to Excuse-Event mis-assignment. '''
 		absences = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (excuse_id,)
 			cur.execute('SELECT * FROM absences WHERE excuseid=?', symbol)
@@ -414,8 +416,7 @@ class Absence:
 		''' Return the list of Absences using any combination of filters. '''
 		absences = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (student_id, absence_type, isoformat(event_dt), excuse_id,)
 			cur.execute('''SELECT * FROM absences WHERE student=? INTERSECT
@@ -452,8 +453,7 @@ class Excuse:
 	def select_by_id(excuse_id):
 		''' Return the Excuse of given unique ID. '''
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (excuse_id,)
 			cur.execute('SELECT * FROM excuses WHERE id=?', symbol)
@@ -473,8 +473,7 @@ class Excuse:
 		''' Return the list of Excuses by a Student. '''
 		excuses = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (student_id,)
 			cur.execute('SELECT * FROM excuses WHERE student=?', symbol)
@@ -495,8 +494,7 @@ class Excuse:
 		''' Return the list of Excuses in a given datetime range. '''
 		excuses = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
@@ -517,8 +515,7 @@ class Excuse:
 		''' Return a list of Excuses using any combination of filters. '''
 		excuses = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (excuse_id, student_id, isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT
@@ -566,8 +563,7 @@ class Signin:
 		''' Return the list of Signins by a Student. '''
 		signins = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (id,)
 			cur.execute('SELECT * FROM signins WHERE student=?', symbol)
@@ -588,8 +584,7 @@ class Signin:
 		''' Return the list of Signins in a given datetime range. '''
 		signins = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', symbol)
@@ -610,8 +605,7 @@ class Signin:
 		''' Return a list of Signins using any combination of filters. '''
 		signins = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
@@ -663,8 +657,7 @@ class Event:
 		''' Return the list of Events of a given name. '''
 		events = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (name,)
 			cur.execute('SELECT * FROM events WHERE eventname=?', symbol)
@@ -685,8 +678,7 @@ class Event:
 		''' Return the list of Events in a given datetime range. '''
 		events = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', symbol)
@@ -707,8 +699,7 @@ class Event:
 		''' Return the list of Events of a given type. '''
 		events = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (type,)
 			cur.execute('SELECT * FROM events WHERE eventtype=?', symbol)
@@ -729,8 +720,7 @@ class Event:
 		''' Return a list of Events using any combination of filters. '''
 		events = []
 		try:
-			con = sqlite3.connect(db)
-			cur = con.cursor()
+			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (name, isoformat(start_dt), isoformat(end_dt), type,)
 			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
