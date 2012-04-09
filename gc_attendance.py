@@ -12,30 +12,40 @@ def createTables():
 	try:
 		con = sqlite3.connect(db)
 		cur = conn.cursor()
+		# TODO: Add error handling clauses to the foreign key constraints
+		cur.execute('''CREATE TABLE IF NOT EXISTS students
+		(id INTEGER PRIMARY KEY, 
+		fname TEXT, 
+		lname TEXT, 
+		email TEXT, 
+		shm INTEGER, 
+		goodstanding INTEGER, 
+		credit INTEGER, 
+		current INTEGER)''')
 		
-		cur.execute('''CREATE TABLE students
-		(id INTEGER PRIMARY KEY, fname TEXT, lname TEXT, email TEXT, 
-		shm INTEGER, goodstanding INTEGER, credit INTEGER, current INTEGER)''')
+		cur.execute('''CREATE TABLE IF NOT EXISTS absences
+		(student INTEGER REFERENCES students(id), 
+		type TEXT, 
+		eventdt TEXT REFERENCES events(dt), 
+		excuseid TEXT REFERENCES excuses(id), 
+		CONSTRAINT pk_absence PRIMARY KEY (eventdt, student))''')
 		
-		cur.execute('''CREATE TABLE absences
-		(student INTEGER, type TEXT, eventdt TEXT, excusedt TEXT, 
-		CONSTRAINT pk_excuse PRIMARY KEY (eventdt, student),
-		CONSTRAINT fk_excuse_student FOREIGN KEY (student),
-		CONSTRAINT fk_excuse_eventdt FOREIGN KEY (eventdt))''')
+		cur.execute('''CREATE TABLE IF NOT EXISTS excuses
+		(id INTGER PRIMARY KEY
+		dt TEXT, 
+		reason TEXT, 
+		student INTEGER REFERENCES students(id))''')
 		
-		cur.execute('''CREATE TABLE excuses
-		(dt TEXT, reason TEXT, student INTEGER,
-		CONSTRAINT pk_excuse PRIMARY KEY (dt, student),
-		CONSTRAINT fk_excuse_student FOREIGN KEY (student))''')
-		
-		cur.execute('''CREATE TABLE signins
-		(dt TEXT, student INTEGER,
+		cur.execute('''CREATE TABLE IF NOT EXISTS signins
+		(dt TEXT, 
+		student INTEGER,
 		CONSTRAINT pk_signin PRIMARY KEY (dt, student),
 		CONSTRAINT fk_signin_student FOREIGN KEY (student))''')
 		
-		cur.execute('''CREATE TABLE events
-		(eventname TEXT, dt TEXT, eventtype TEXT,
-		CONSTRAINT pk_event PRIMARY KEY (dt, eventtype))''')
+		cur.execute('''CREATE TABLE IF NOT EXISTS events
+		(eventname TEXT, 
+		dt TEXT PRIMARY KEY, 
+		eventtype TEXT)''')
 		
 	except:
 		print 'createTables exception, probably because tables already created.'
@@ -324,21 +334,41 @@ class Excuse:
 	EXCUSES_CLOSES = datetime.timedelta(0, 0, 0, 0, 0, 6, 0)	# 6 hours after
 	
 	@staticmethod
-	def select_by_student(id):
+	def select_by_id(excuse_id):
+		''' Return the Excuse of given unique ID. '''
+		try:
+			con = sqlite3.connect(db)
+			cur = conn.cursor()
+			
+			symbol = (excuse_id,)
+			cur.execute('SELECT * FROM excuses WHERE id=?', symbol)
+			row = cur.fetchone()
+			excuse = Excuse(row[0], row[1], row[2], row[3])
+				
+		except:
+			print 'Exception in Excuse.select_by_student( %s )' % excuse_id
+			
+		finally:
+			cur.close()
+			con.close()
+			return excuse
+	
+	@staticmethod
+	def select_by_student(student_id):
 		''' Return the list of Excuses by a Student. '''
 		excuses = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			symbol = (id,)
+			symbol = (student_id,)
 			cur.execute('SELECT * FROM excuses WHERE student=?', symbol)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2])
+				excuse = Excuse(row[0], row[1], row[2], row[3])
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_student( %s )' % id
+			print 'Exception in Excuse.select_by_student( %s )' % student_id
 			
 		finally:
 			cur.close()
@@ -356,7 +386,7 @@ class Excuse:
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2])
+				excuse = Excuse(row[0], row[1], row[2], row[3])
 				excuses.append(excuse)
 				
 		except:
@@ -368,29 +398,31 @@ class Excuse:
 			return excuses
 		
 	@staticmethod
-	def select_by_all(id, start_dt, end_dt):
+	def select_by_all(excuse_id='*', student_id='*', start_dt='*', end_dt='*'):
 		''' Return a list of Excuses using any combination of filters. '''
 		excuses = []
 		try:
 			con = sqlite3.connect(db)
 			cur = conn.cursor()
 			
-			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
-			cur.execute('''SELECT * FROM excuses WHERE student=? INTERSECT
+			symbol = (excuse_id, student_id, isoformat(start_dt), isoformat(end_dt),)
+			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT
+			SELECT * FROM excuses WHERE student=? INTERSECT
 			 SELECT * FROM excuses WHERE dt BETWEEN ? AND ?''', symbol)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2])
+				excuse = Excuse(row[0], row[1], row[2], row[3])
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_all( %s, %s, %s )' % id, isoformat(start_dt), isoformat(end_dt)
+			print 'Exception in Excuse.select_by_all( %s, %s, %s, %s )' % excuse_id, student_id, isoformat(start_dt), isoformat(end_dt)
 			
 		finally:
 			cur.close()
 			con.close()
 			return excuses
 	 
-	def __init__(self, dt, r, s):
+	def __init__(self, id, dt, r, s):
+		self.id = id		# Unique primary key
 		self.excuse_date = dt	# a datetime object
 		self.reason = r		# Student's message to gc-excuse
 		self.student = s
