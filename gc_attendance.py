@@ -11,7 +11,7 @@ active_roster = []
 def createTables():
 	try:
 		con = sqlite3.connect(db)
-		cur = conn.cursor()
+		cur = con.cursor()
 		# TODO: Add error handling clauses to the foreign key constraints
 		cur.execute('''CREATE TABLE IF NOT EXISTS students
 		(id INTEGER PRIMARY KEY, 
@@ -63,7 +63,7 @@ class Student:
 		''' Return the Student of given ID. '''
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (id,)
 			cur.execute('SELECT * FROM students WHERE id=?', symbol)
@@ -84,7 +84,7 @@ class Student:
 		students = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (fname, lname,)
 			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', symbol)
@@ -106,7 +106,7 @@ class Student:
 		students = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (email,)
 			cur.execute('SELECT * FROM students WHERE email=?', symbol)
@@ -128,7 +128,7 @@ class Student:
 		students = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (int(shm),)
 			cur.execute('SELECT * FROM students WHERE shm=?', symbol)
@@ -150,7 +150,7 @@ class Student:
 		students = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (int(good_standing),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
@@ -172,7 +172,7 @@ class Student:
 		students = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (int(credit),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
@@ -194,7 +194,7 @@ class Student:
 		students = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (int(credit),)
 			cur.execute('SELECT * FROM students WHERE current=?', symbol)
@@ -229,7 +229,7 @@ class Student:
 		
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (id, fname, lname, email, shm, standing, credit, current,)
 			cur.execute('''SELECT * FROM students WHERE id=? INTERSECT 
@@ -259,7 +259,7 @@ class Student:
 		ID card will have a different RFID number. '''
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (new.rfid, old.rfid, )
 			cur.execute('UPDATE excuses SET student=? WHERE student=?', symbol)
@@ -325,7 +325,7 @@ class Absence:
 		absences = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (student_id,)
 			cur.execute('SELECT * FROM absences WHERE student=?', symbol)
@@ -347,7 +347,7 @@ class Absence:
 		absences = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (absence_type,)
 			cur.execute('SELECT * FROM absences WHERE type=?', symbol)
@@ -369,7 +369,7 @@ class Absence:
 		absences = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (isoformat(event_dt),)
 			cur.execute('SELECT * FROM absences WHERE eventdt=?', symbol)
@@ -393,7 +393,7 @@ class Absence:
 		absences = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (excuse_id,)
 			cur.execute('SELECT * FROM absences WHERE excuseid=?', symbol)
@@ -415,7 +415,7 @@ class Absence:
 		absences = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (student_id, absence_type, isoformat(event_dt), excuse_id,)
 			cur.execute('''SELECT * FROM absences WHERE student=? INTERSECT
@@ -453,7 +453,7 @@ class Excuse:
 		''' Return the Excuse of given unique ID. '''
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (excuse_id,)
 			cur.execute('SELECT * FROM excuses WHERE id=?', symbol)
@@ -474,7 +474,7 @@ class Excuse:
 		excuses = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (student_id,)
 			cur.execute('SELECT * FROM excuses WHERE student=?', symbol)
@@ -496,7 +496,7 @@ class Excuse:
 		excuses = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
@@ -518,7 +518,7 @@ class Excuse:
 		excuses = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (excuse_id, student_id, isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT
@@ -567,7 +567,7 @@ class Signin:
 		signins = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (id,)
 			cur.execute('SELECT * FROM signins WHERE student=?', symbol)
@@ -589,7 +589,7 @@ class Signin:
 		signins = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', symbol)
@@ -611,7 +611,7 @@ class Signin:
 		signins = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
@@ -664,7 +664,7 @@ class Event:
 		events = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (name,)
 			cur.execute('SELECT * FROM events WHERE eventname=?', symbol)
@@ -686,7 +686,7 @@ class Event:
 		events = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', symbol)
@@ -708,7 +708,7 @@ class Event:
 		events = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (type,)
 			cur.execute('SELECT * FROM events WHERE eventtype=?', symbol)
@@ -730,7 +730,7 @@ class Event:
 		events = []
 		try:
 			con = sqlite3.connect(db)
-			cur = conn.cursor()
+			cur = con.cursor()
 			
 			symbol = (name, isoformat(start_dt), isoformat(end_dt), type,)
 			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
