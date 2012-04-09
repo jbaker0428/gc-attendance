@@ -270,6 +270,7 @@ class Student:
 			symbol = (new.rfid, old.rfid, )
 			cur.execute('UPDATE excuses SET student=? WHERE student=?', symbol)
 			cur.execute('UPDATE signins SET student=? WHERE student=?', symbol)
+			cur.execute('UPDATE absences SET student=? WHERE student=?', symbol)
 			
 			symbol = (old.rfid, )
 			cur.execute('DELETE FROM students WHERE id=?', symbol)
