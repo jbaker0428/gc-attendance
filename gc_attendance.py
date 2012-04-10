@@ -697,7 +697,19 @@ class Excuse:
 	
 	def insert(self):
 		''' Write the Excuse to the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.excuse_dt, self.event_dt, self.reason, self.student,)
+			# INSERTing 'NULL' for the integer primary key column autogenerates an id
+			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', symbol)
+				
+		except:
+			print 'Exception in Excuse.insert()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def delete(self):
 		''' Delete the Excuse from the DB. '''
