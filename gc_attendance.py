@@ -512,7 +512,7 @@ class Absence:
 			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (self.student, self.type, self.event_dt, self.excuse_id,)
-			cur.execute('INSERT INTO students VALUES (?,?,?,?)', symbol)
+			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', symbol)
 				
 		except:
 			print 'Exception in Absence.insert()'
