@@ -825,7 +825,18 @@ class Signin:
 	
 	def insert(self):
 		''' Write the Signin to the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.signin_dt, self.event_dt, self.student,)
+			cur.execute('INSERT INTO signins VALUES (?,?,?)', symbol)
+				
+		except:
+			print 'Exception in Signin.insert()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def delete(self):
 		''' Delete the Signin from the DB. '''
