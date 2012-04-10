@@ -14,9 +14,10 @@ class AttendanceDB:
 		self.db = db
 	
 	def con_cursor(self):
-		''' Connect to the DB, enable foreign keys, and return a 
-		(connection, cursor) pair. '''
+		''' Connect to the DB, enable foreign keys, set autocommit mode,  
+		and return a (connection, cursor) pair. '''
 		con = sqlite3.connect(self.db)
+		con.isolation_level = None
 		con.execute('PRAGMA foreign_keys = ON')
 		cur = con.cursor()
 		return (con, cur)
