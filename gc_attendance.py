@@ -311,7 +311,20 @@ class Student:
 	
 	def update(self):
 		''' Update an existing Student record in the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current, self.rfid,)
+			cur.execute('''UPDATE students 
+			SET fname=?, lname=?, email=?, shm=?, goodstanding=?, credit=?, current=? 
+			WHERE id=?''', symbol)
+				
+		except:
+			print 'Exception in Student.update()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def insert(self):
 		''' Write the Student to the DB. '''
