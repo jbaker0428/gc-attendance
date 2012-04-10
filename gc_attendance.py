@@ -448,9 +448,24 @@ class Absence:
 	
 	def __init__(self, student_id, t, event_dt, excuse_id=None):
 		self.student = student_id
-		self.type = t		# An Absence.TYPE_ string constant
+		self.type = t				# An Absence.TYPE_ string constant
 		self.event_dt = event_dt	# Get the actual event via dt lookup
 		self.excuse_id = excuse_id
+	
+	def __del__(self):
+		self.delete()
+		
+	def update(self):
+		''' Update an existing Absence record in the DB. '''
+		pass
+	
+	def insert(self):
+		''' Write the Absence to the DB. '''
+		pass
+	
+	def delete(self):
+		''' Delete the Absence from the DB. '''
+		pass
 	
 class Excuse:
 	''' A Student's excuse for missing an Event sent to gc-excuse. 
