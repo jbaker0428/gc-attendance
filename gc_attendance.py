@@ -94,7 +94,7 @@ class AttendanceDB:
 					new_student = Student(t[3], 'NULL', 'NULL', 'NULL')
 					print 'Adding unknown member to database, RFID# = ', t[3]
 					new_student.insert()
-				cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', t)
+			cur.executemany('INSERT OR ABORT INTO signins VALUES (?,?,?)', signins)
 			
 		except:
 			print 'Exception in Student.select_by_id( %s )' % id
