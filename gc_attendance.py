@@ -1035,7 +1035,18 @@ class Event:
 	
 	def insert(self):
 		''' Write the Event to the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			(self.name, self.event_dt, self.event_type,)
+			cur.execute('INSERT INTO events VALUES (?,?,?)', symbol)
+				
+		except:
+			print 'Exception in Event.insert()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def delete(self):
 		''' Delete the Event from the DB. '''
