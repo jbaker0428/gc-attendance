@@ -1050,5 +1050,17 @@ class Event:
 	
 	def delete(self):
 		''' Delete the Event from the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.event_dt,)
+			cur.execute('DELETE FROM events WHERE dt=?', symbol)
+				
+		except:
+			print 'Exception in Event.delete()'
+			
+		finally:
+			cur.close()
+			con.close()
+
 	
