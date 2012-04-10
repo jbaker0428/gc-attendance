@@ -327,7 +327,18 @@ class Student:
 	
 	def insert(self):
 		''' Write the Student to the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.rfid, self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current,)
+			cur.execute('INSERT INTO students VALUES (?,?,?,?,?,?,?,?)', symbol)
+				
+		except:
+			print 'Exception in Student.insert()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def delete(self):
 		''' Delete the Student from the DB. '''
