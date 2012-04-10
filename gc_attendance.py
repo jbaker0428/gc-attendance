@@ -491,7 +491,20 @@ class Absence:
 		
 	def update(self):
 		''' Update an existing Absence record in the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.student, self.type, self.event_dt, self.excuse_id, self.student, self.event_dt,)
+			cur.execute('''UPDATE absences 
+			SET student=?, type=?, eventdt=?, excuseid=? 
+			WHERE student=? AND eventdt=?''', symbol)
+				
+		except:
+			print 'Exception in Absence.update()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def insert(self):
 		''' Write the Absence to the DB. '''
