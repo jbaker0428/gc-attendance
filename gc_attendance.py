@@ -68,6 +68,34 @@ class AttendanceDB:
 		finally:
 			cur.close()
 			con.close()
+	
+	def read_attendance(self, infile):
+		signins = []
+		with open(infile, 'rb') as f:
+			reader = csv.reader(f, delimiter=',')
+			for row in reader:
+				# row[0] is the mystery blank column
+				# row[1] is the date MM/D/YYYY
+				# row[2] is the 24-hour time HH:MM 
+				# row[3] is the RFID number
+				date = row[1].split('/')
+				time = row[2].split(':')
+				dt = datetime.datetime(int(date[2]), int(date[0]), int(date[1]), int(time[0]), int(time[1]))
+				record = (isoformat(dt), 'NULL', int(row[3]))
+				signins.append(record)
+		
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			for t in signins:
+				cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', t)
+			
+		except:
+			print 'Exception in Student.select_by_id( %s )' % id
+			
+		finally:
+			cur.close()
+			con.close()
 
 gcdb = AttendanceDB()
 
@@ -865,7 +893,7 @@ class Signin:
 			(con, cur) = gcdb.con_cursor()
 			
 			symbol = (self.signin_dt, self.event_dt, self.student,)
-			cur.execute('INSERT INTO signins VALUES (?,?,?)', symbol)
+			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', symbol)
 				
 		except:
 			print 'Exception in Signin.insert()'
