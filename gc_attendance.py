@@ -680,7 +680,20 @@ class Excuse:
 		
 	def update(self):
 		''' Update an existing Excuse record in the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.excuse_dt, self.event_dt, self.reason, self.student, self.id,)
+			cur.execute('''UPDATE excuses 
+			SET dt=?, eventdt=?, reason=?, student=? 
+			WHERE id=?''', symbol)
+				
+		except:
+			print 'Exception in Excuse.update()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def insert(self):
 		''' Write the Excuse to the DB. '''
