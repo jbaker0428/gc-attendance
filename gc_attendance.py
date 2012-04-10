@@ -1000,7 +1000,7 @@ class Event:
 	
 	def __init__(self, name, dt, t):
 		self.event_name = name
-		self.event_date = dt	# a datetime object, primary key
+		self.event_dt = dt	# a datetime object, primary key
 		self.event_type = t	# One of the Event.TYPE_ constants 
 		self.signins = []
 		self.excuses = []
@@ -1010,15 +1010,28 @@ class Event:
 		
 	def fetch_signins(self):
 		''' Fetch all Signins for this Event from the database. '''
-		self.signins = Signin.select_by_datetime(self.event_date+Event.ATTENDANCE_OPENS, self.event_date+Event.ATTENDANCE_CLOSES)
+		self.signins = Signin.select_by_datetime(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES)
 	
 	def fetch_excuses(self):
 		''' Fetch all Excuses for this Event from the database. '''
-		self.excuses = Excuse.select_by_datetime(self.event_date+Excuse.EXCUSES_OPENS, self.event_date+Excuse.EXCUSES_CLOSES)
+		self.excuses = Excuse.select_by_datetime(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES)
 	
 	def update(self):
 		''' Update an existing Event record in the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.name, self.event_dt, self.event_type, self.event_dt,)
+			cur.execute('''UPDATE events 
+			SET eventname=?, dt=?, type=? 
+			WHERE dt=?''', symbol)
+				
+		except:
+			print 'Exception in Event.update()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def insert(self):
 		''' Write the Event to the DB. '''
