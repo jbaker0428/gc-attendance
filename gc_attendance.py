@@ -274,8 +274,7 @@ class Student:
 			cur.execute('UPDATE signins SET student=? WHERE student=?', symbol)
 			cur.execute('UPDATE absences SET student=? WHERE student=?', symbol)
 			
-			symbol = (old.rfid, )
-			cur.execute('DELETE FROM students WHERE id=?', symbol)
+			old.delete()
 		
 		except:
 			print 'Exception in Student.merge( %s, %s )' % old, new
@@ -332,7 +331,18 @@ class Student:
 	
 	def delete(self):
 		''' Delete the Student from the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.rfid,)
+			cur.execute('DELETE FROM students WHERE id=?', symbol)
+				
+		except:
+			print 'Exception in Student.delete()'
+			
+		finally:
+			cur.close()
+			con.close()
 
 class Absence:
 	''' An instance of a Student not singing into an Event.
