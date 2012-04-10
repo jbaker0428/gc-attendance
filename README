@@ -8,6 +8,6 @@ Program features/plans/ideas:
 -Use the Gmail API to enter messages sent to the gc-excuse alias into the database.
 -Associate attendance records with rehearsals based on the date/time.
 -Attempt to associate gc-excuse messages with emails based on the date/time. It will probably suggest a rehearsal and the user will have to confirm the system's guess or choose another.
- - Almost everything is automated from here in terms of calculating if people are in good standing, etc. 
+-Almost everything is automated from here in terms of calculating if people are in good standing, etc. 
 -Maybe automatically send warning emails when people fall out of good standing?
 
