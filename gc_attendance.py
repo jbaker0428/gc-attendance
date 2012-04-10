@@ -713,7 +713,18 @@ class Excuse:
 	
 	def delete(self):
 		''' Delete the Excuse from the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.id,)
+			cur.execute('DELETE FROM excuses WHERE id=?', symbol)
+				
+		except:
+			print 'Exception in Excuse.delete()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 class Signin:
 	''' Corresponds to a row in the RFID output file. 
