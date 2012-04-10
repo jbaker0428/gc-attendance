@@ -81,6 +81,7 @@ class AttendanceDB:
 				date = row[1].split('/')
 				time = row[2].split(':')
 				dt = datetime.datetime(int(date[2]), int(date[0]), int(date[1]), int(time[0]), int(time[1]))
+				# The record variable formatting matches the Sigin.__init__ arguments list
 				record = (isoformat(dt), 'NULL', int(row[3]))
 				signins.append(record)
 		
@@ -88,6 +89,11 @@ class AttendanceDB:
 			(con, cur) = gcdb.con_cursor()
 			
 			for t in signins:
+				# Check that student ID is in DB, if not, create a blank entry
+				if Student.select_by_id(t[3]) == None:
+					new_student = Student(t[3], 'NULL', 'NULL', 'NULL')
+					print 'Adding unknown member to database, RFID# = ', t[3]
+					new_student.insert()
 				cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', t)
 			
 		except:
@@ -112,8 +118,10 @@ class Student:
 			symbol = (id,)
 			cur.execute('SELECT * FROM students WHERE id=?', symbol)
 			row = cur.fetchone()
-			student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
-			
+			if row != None:
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+			else:
+				student = None
 		except:
 			print 'Exception in Student.select_by_id( %s )' % id
 			
