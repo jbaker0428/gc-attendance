@@ -930,6 +930,7 @@ class Event:
 	''' An event where attendance is taken. 
 	The datetime is the primary key column.'''
 	TYPE_REHEARSAL = 'Rehearsal'
+	TYPE_MAKEUP = 'Makeup Rehearsal'
 	TYPE_DRESS = 'Dress Rehearsal'	# Mandatory for a concert
 	TYPE_CONCERT = 'Concert'
 	
