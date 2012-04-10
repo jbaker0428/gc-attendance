@@ -46,11 +46,13 @@ class AttendanceDB:
 			cur.execute('''CREATE TABLE IF NOT EXISTS excuses
 			(id INTGER PRIMARY KEY
 			dt TEXT, 
+			eventdt TEXT REFERENCES events(dt),
 			reason TEXT, 
 			student INTEGER REFERENCES students(id))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS signins
 			(dt TEXT, 
+			eventdt TEXT REFERENCES events(dt),
 			student INTEGER,
 			CONSTRAINT pk_signin PRIMARY KEY (dt, student),
 			CONSTRAINT fk_signin_student FOREIGN KEY (student))''')
@@ -459,7 +461,7 @@ class Excuse:
 			symbol = (excuse_id,)
 			cur.execute('SELECT * FROM excuses WHERE id=?', symbol)
 			row = cur.fetchone()
-			excuse = Excuse(row[0], row[1], row[2], row[3])
+			excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				
 		except:
 			print 'Exception in Excuse.select_by_student( %s )' % excuse_id
@@ -479,7 +481,7 @@ class Excuse:
 			symbol = (student_id,)
 			cur.execute('SELECT * FROM excuses WHERE student=?', symbol)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2], row[3])
+				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
 		except:
@@ -500,7 +502,7 @@ class Excuse:
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2], row[3])
+				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
 		except:
@@ -512,33 +514,65 @@ class Excuse:
 			return excuses
 		
 	@staticmethod
-	def select_by_all(excuse_id='*', student_id='*', start_dt='*', end_dt='*'):
-		''' Return a list of Excuses using any combination of filters. '''
+	def select_by_event_datetime(event_dt):
+		''' Return the list of Excuses associated with a given Event. '''
 		excuses = []
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (excuse_id, student_id, isoformat(start_dt), isoformat(end_dt),)
-			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT
-			SELECT * FROM excuses WHERE student=? INTERSECT
-			 SELECT * FROM excuses WHERE dt BETWEEN ? AND ?''', symbol)
+			symbol = (isoformat(event_dt),)
+			cur.execute('SELECT * FROM excuses WHERE eventdt=?', symbol)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2], row[3])
+				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_all( %s, %s, %s, %s )' % excuse_id, student_id, isoformat(start_dt), isoformat(end_dt)
+			print 'Exception in Excuse.select_by_event_datetime( %s )' % isoformat(event_dt)
+			
+		finally:
+			cur.close()
+			con.close()
+			return excuses
+		
+	@staticmethod
+	def select_by_all(excuse_id='*', student_id='*', start_dt='*', end_dt='*', event_dt='*'):
+		''' Return a list of Excuses using any combination of filters. '''
+		excuses = []
+		if start_dt != '*':
+			start_dt = isoformat(start_dt)
+		
+		if end_dt != '*':
+			end_dt = isoformat(end_dt)
+		
+		if event_dt != '*':
+			event_dt = isoformat(event_dt)
+		
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (excuse_id, student_id, start_dt, end_dt, event_dt,)
+			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT 
+			SELECT * FROM excuses WHERE student=? INTERSECT 
+			SELECT * FROM excuses WHERE dt BETWEEN ? AND ? INTERSECT 
+			SELECT * FROM excuses WHERE eventdt=?''', symbol)
+			for row in cur.fetchall():
+				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
+				excuses.append(excuse)
+				
+		except:
+			print 'Exception in Excuse.select_by_all( %s, %s, %s, %s, %s )' % excuse_id, student_id, isoformat(start_dt), isoformat(end_dt), isoformat(event_dt)
 			
 		finally:
 			cur.close()
 			con.close()
 			return excuses
 	 
-	def __init__(self, id, dt, r, s):
-		self.id = id		# Unique primary key
-		self.excuse_date = dt	# a datetime object
-		self.reason = r		# Student's message to gc-excuse
-		self.student = s
+	def __init__(self, id, dt, event_dt, reason, s):
+		self.id = id				# Unique primary key
+		self.excuse_dt = dt			# a datetime object
+		self.event_dt = event_dt	# a datetime object or 'NULL'
+		self.reason = reason		# Student's message to gc-excuse
+		self.student = s			# RFID number
 	
 	def __del__(self):
 		self.delete()
@@ -569,7 +603,7 @@ class Signin:
 			symbol = (id,)
 			cur.execute('SELECT * FROM signins WHERE student=?', symbol)
 			for row in cur.fetchall():
-				signin = Signin(row[0], row[1])
+				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
 				
 		except:
@@ -590,7 +624,7 @@ class Signin:
 			symbol = (isoformat(start_dt), isoformat(end_dt),)
 			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
-				signin = Signin(row[0], row[1])
+				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
 				
 		except:
@@ -602,30 +636,62 @@ class Signin:
 			return signins
 	
 	@staticmethod
-	def select_by_all(id, start_dt, end_dt):
-		''' Return a list of Signins using any combination of filters. '''
+	def select_by_event_datetime(event_dt):
+		''' Return the list of Signins associated with a given Event. '''
 		signins = []
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (id, isoformat(start_dt), isoformat(end_dt),)
-			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
-			 SELECT * FROM signins WHERE dt BETWEEN ? AND ?''', symbol)
+			symbol = (isoformat(event_dt),)
+			cur.execute('SELECT * FROM signins WHERE eventdt=?', symbol)
 			for row in cur.fetchall():
-				signin = Signin(row[0], row[1])
+				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
 				
 		except:
-			print 'Exception in Signin.select_by_all( %s, %s, %s )' % id, isoformat(start_dt), isoformat(end_dt)
+			print 'Exception in Signin.select_by_event_datetime( %s )' % isoformat(event_dt)
 			
 		finally:
 			cur.close()
 			con.close()
 			return signins
 	
-	def __init__(self, dt, s):
-		self.signin_date = dt	# a datetime object
-		self.student = s
+	@staticmethod
+	def select_by_all(id='*', start_dt='*', end_dt='*', event_dt='*'):
+		''' Return a list of Signins using any combination of filters. '''
+		signins = []
+		if start_dt != '*':
+			start_dt = isoformat(start_dt)
+		
+		if end_dt != '*':
+			end_dt = isoformat(end_dt)
+		
+		if event_dt != '*':
+			event_dt = isoformat(event_dt)
+			
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (id, start_dt, end_dt, event_dt,)
+			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
+			 SELECT * FROM signins WHERE dt BETWEEN ? AND ? INTERSECT 
+			 SELECT * FROM signins WHERE eventdt=?''', symbol)
+			for row in cur.fetchall():
+				signin = Signin(row[0], row[1], row[2])
+				signins.append(signin)
+				
+		except:
+			print 'Exception in Signin.select_by_all( %s, %s, %s, %s )' % id, start_dt, end_dt, event_dt
+			
+		finally:
+			cur.close()
+			con.close()
+			return signins
+	
+	def __init__(self, dt, event_dt, s):
+		self.signin_dt = dt			# a datetime object
+		self.event_dt = event_dt	# a datetime object or 'NULL'
+		self.student = s			# RFID number
 	
 	def __del__(self):
 		self.delete()
