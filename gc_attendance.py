@@ -329,7 +329,7 @@ class Absence:
 	TYPE_UNEXCUSED = "Unexcused"
 	
 	@staticmethod
-	def select_by_student(student_id):
+	def select_by_student(student_id='*'):
 		''' Return the list of Absences by a Student. '''
 		absences = []
 		try:
@@ -350,7 +350,7 @@ class Absence:
 			return absences
 	
 	@staticmethod
-	def select_by_type(absence_type):
+	def select_by_type(absence_type='*'):
 		''' Return the list of Absences of a given ABSENCE.TYPE_. '''
 		absences = []
 		try:
@@ -371,13 +371,17 @@ class Absence:
 			return absences
 		
 	@staticmethod
-	def select_by_event_dt(event_dt):
+	def select_by_event_dt(event_dt='*'):
 		''' Return the list of Absences of a given datetime. '''
 		absences = []
+		
+		if type(event_dt == datetime):
+			event_dt = isoformat(event_dt)
+			
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (isoformat(event_dt),)
+			symbol = (event_dt,)
 			cur.execute('SELECT * FROM absences WHERE eventdt=?', symbol)
 			for row in cur.fetchall():
 				absence = Absence(row[0], row[1], row[2], row[3])
@@ -392,7 +396,7 @@ class Absence:
 			return absences
 	
 	@staticmethod
-	def select_by_excuse(excuse_id):
+	def select_by_excuse(excuse_id='*'):
 		''' Return the list of Absences of a given excuse ID.
 		Should only return one, but returning a list in case of
 		data integrity issues related to Excuse-Event mis-assignment. '''
@@ -418,10 +422,14 @@ class Absence:
 	def select_by_all(student_id='*', absence_type='*', event_dt='*', excuse_id='*'):
 		''' Return the list of Absences using any combination of filters. '''
 		absences = []
+		
+		if type(event_dt == datetime):
+			event_dt = isoformat(event_dt)
+		
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (student_id, absence_type, isoformat(event_dt), excuse_id,)
+			symbol = (student_id, absence_type, event_dt, excuse_id,)
 			cur.execute('''SELECT * FROM absences WHERE student=? INTERSECT
 			SELECT * FROM absences WHERE type=? INTERSECT
 			SELECT * FROM absences WHERE eventdt=? INTERSECT
@@ -431,14 +439,14 @@ class Absence:
 				absences.append(absence)
 				
 		except:
-			print 'Exception in Absence.select_by_all( %s, %s, %s, %s )' % student_id, absence_type, isoformat(event_dt), excuse_id
+			print 'Exception in Absence.select_by_all( %s, %s, %s, %s )' % student_id, absence_type, event_dt, excuse_id
 			
 		finally:
 			cur.close()
 			con.close()
 			return absences
 	
-	def __init__(self, student_id, t, event_dt, excuse_dt=None):
+	def __init__(self, student_id, t, event_dt, excuse_id=None):
 		self.student = student_id
 		self.type = t		# An Absence.TYPE_ string constant
 		self.event_dt = event_dt	# Get the actual event via dt lookup
@@ -472,7 +480,7 @@ class Excuse:
 			return excuse
 	
 	@staticmethod
-	def select_by_student(student_id):
+	def select_by_student(student_id='*'):
 		''' Return the list of Excuses by a Student. '''
 		excuses = []
 		try:
@@ -493,20 +501,26 @@ class Excuse:
 			return excuses
 	
 	@staticmethod
-	def select_by_datetime(start_dt, end_dt):
+	def select_by_datetime(start_dt='*', end_dt='*'):
 		''' Return the list of Excuses in a given datetime range. '''
+		
+		if type(start_dt == datetime):
+			start_dt = isoformat(start_dt)
+		if type(end_dt == datetime):
+			end_dt = isoformat(end_dt)
+		
 		excuses = []
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (isoformat(start_dt), isoformat(end_dt),)
+			symbol = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_datetime( %s, %s )' % isoformat(start_dt), isoformat(end_dt)
+			print 'Exception in Excuse.select_by_datetime( %s, %s )' % start_dt, end_dt
 			
 		finally:
 			cur.close()
@@ -514,20 +528,24 @@ class Excuse:
 			return excuses
 		
 	@staticmethod
-	def select_by_event_datetime(event_dt):
+	def select_by_event_datetime(event_dt='*'):
 		''' Return the list of Excuses associated with a given Event. '''
 		excuses = []
+		
+		if type(event_dt == datetime):
+			event_dt = isoformat(event_dt)
+		
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (isoformat(event_dt),)
+			symbol = (event_dt,)
 			cur.execute('SELECT * FROM excuses WHERE eventdt=?', symbol)
 			for row in cur.fetchall():
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_event_datetime( %s )' % isoformat(event_dt)
+			print 'Exception in Excuse.select_by_event_datetime( %s )' % event_dt
 			
 		finally:
 			cur.close()
@@ -538,13 +556,12 @@ class Excuse:
 	def select_by_all(excuse_id='*', student_id='*', start_dt='*', end_dt='*', event_dt='*'):
 		''' Return a list of Excuses using any combination of filters. '''
 		excuses = []
-		if start_dt != '*':
+		
+		if type(start_dt == datetime):
 			start_dt = isoformat(start_dt)
-		
-		if end_dt != '*':
+		if type(end_dt == datetime):
 			end_dt = isoformat(end_dt)
-		
-		if event_dt != '*':
+		if type(event_dt == datetime):
 			event_dt = isoformat(event_dt)
 		
 		try:
@@ -560,7 +577,7 @@ class Excuse:
 				excuses.append(excuse)
 				
 		except:
-			print 'Exception in Excuse.select_by_all( %s, %s, %s, %s, %s )' % excuse_id, student_id, isoformat(start_dt), isoformat(end_dt), isoformat(event_dt)
+			print 'Exception in Excuse.select_by_all( %s, %s, %s, %s, %s )' % excuse_id, student_id, start_dt, end_dt, event_dt
 			
 		finally:
 			cur.close()
@@ -618,17 +635,23 @@ class Signin:
 	def select_by_datetime(start_dt, end_dt):
 		''' Return the list of Signins in a given datetime range. '''
 		signins = []
+		
+		if type(start_dt == datetime):
+			start_dt = isoformat(start_dt)
+		if type(end_dt == datetime):
+			end_dt = isoformat(end_dt)
+		
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (isoformat(start_dt), isoformat(end_dt),)
+			symbol = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
 				
 		except:
-			print 'Exception in Signin.select_by_datetime( %s, %s )' % isoformat(start_dt), isoformat(end_dt)
+			print 'Exception in Signin.select_by_datetime( %s, %s )' % start_dt, end_dt
 			
 		finally:
 			cur.close()
@@ -639,6 +662,10 @@ class Signin:
 	def select_by_event_datetime(event_dt):
 		''' Return the list of Signins associated with a given Event. '''
 		signins = []
+		
+		if type(event_dt == datetime):
+			event_dt = isoformat(event_dt)
+		
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
@@ -660,13 +687,12 @@ class Signin:
 	def select_by_all(id='*', start_dt='*', end_dt='*', event_dt='*'):
 		''' Return a list of Signins using any combination of filters. '''
 		signins = []
-		if start_dt != '*':
+		
+		if type(start_dt == datetime):
 			start_dt = isoformat(start_dt)
-		
-		if end_dt != '*':
+		if type(end_dt == datetime):
 			end_dt = isoformat(end_dt)
-		
-		if event_dt != '*':
+		if type(event_dt == datetime):
 			event_dt = isoformat(event_dt)
 			
 		try:
@@ -744,17 +770,23 @@ class Event:
 	def select_by_datetime(start_dt, end_dt):
 		''' Return the list of Events in a given datetime range. '''
 		events = []
+		
+		if type(start_dt == datetime):
+			start_dt = isoformat(start_dt)
+		if type(end_dt == datetime):
+			end_dt = isoformat(end_dt)
+		
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (isoformat(start_dt), isoformat(end_dt),)
+			symbol = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', symbol)
 			for row in cur.fetchall():
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
 				
 		except:
-			print 'Exception in Event.select_by_datetime( %s, %s )' % isoformat(start_dt), isoformat(end_dt)
+			print 'Exception in Event.select_by_datetime( %s, %s )' % start_dt, end_dt
 			
 		finally:
 			cur.close()
@@ -786,10 +818,16 @@ class Event:
 	def select_by_all(name, start_dt, end_dt, type):
 		''' Return a list of Events using any combination of filters. '''
 		events = []
+		
+		if type(start_dt == datetime):
+			start_dt = isoformat(start_dt)
+		if type(end_dt == datetime):
+			end_dt = isoformat(end_dt)
+		
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (name, isoformat(start_dt), isoformat(end_dt), type,)
+			symbol = (name, start_dt, end_dt, type,)
 			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
 			SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
 			SELECT * FROM events WHERE eventtype=?''', symbol)
@@ -798,7 +836,7 @@ class Event:
 				events.append(event)
 				
 		except:
-			print 'Exception in Event.select_by_all( %s, %s, %s, %s )' % name, isoformat(start_dt), isoformat(end_dt), type
+			print 'Exception in Event.select_by_all( %s, %s, %s, %s )' % name, start_dt, end_dt, type
 			
 		finally:
 			cur.close()
