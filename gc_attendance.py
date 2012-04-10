@@ -508,11 +508,33 @@ class Absence:
 	
 	def insert(self):
 		''' Write the Absence to the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.student, self.type, self.event_dt, self.excuse_id,)
+			cur.execute('INSERT INTO students VALUES (?,?,?,?)', symbol)
+				
+		except:
+			print 'Exception in Absence.insert()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def delete(self):
 		''' Delete the Absence from the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.student, self.event_dt,)
+			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', symbol)
+				
+		except:
+			print 'Exception in Absence.delete()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 class Excuse:
 	''' A Student's excuse for missing an Event sent to gc-excuse. 
