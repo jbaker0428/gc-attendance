@@ -840,7 +840,18 @@ class Signin:
 	
 	def delete(self):
 		''' Delete the Signin from the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.signin_dt, self.student,)
+			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', symbol)
+				
+		except:
+			print 'Exception in Signin.delete()'
+			
+		finally:
+			cur.close()
+			con.close()
 
 class Event:
 	''' An event where attendance is taken. 
