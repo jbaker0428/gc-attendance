@@ -3,6 +3,8 @@
 *.csv
 *.xls
 *.xlsx
+*.doc
+*.docx
 *.sqlite
 .*project
 desktop.ini
