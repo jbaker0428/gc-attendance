@@ -808,7 +808,20 @@ class Signin:
 		
 	def update(self):
 		''' Update an existing Signin record in the DB. '''
-		pass
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.signin_dt, self.event_dt, self.student, self.event_dt, self.student,)
+			cur.execute('''UPDATE signins 
+			SET dt=?, eventdt=?, student=? 
+			WHERE dt=? AND student=?''', symbol)
+				
+		except:
+			print 'Exception in Signin.update()'
+			
+		finally:
+			cur.close()
+			con.close()
 	
 	def insert(self):
 		''' Write the Signin to the DB. '''
