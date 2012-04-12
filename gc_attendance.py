@@ -108,7 +108,7 @@ gcdb = AttendanceDB()
 
 class Student:
 	''' A Student who has signed into the attendance system. 
-	The student's RFID ID number is the primary key column.'''
+	The student's RFID ID number is the primary key column.	'''
 	
 	@staticmethod
 	def select_by_id(id):
@@ -333,6 +333,7 @@ class Student:
 		self.current = current # Set false when no longer in active roster
 		self.signins = []
 		self.excuses = []
+		self.absences = []
 		
 	def __del__(self):
 		self.delete()
@@ -344,6 +345,10 @@ class Student:
 	def fetch_excuses(self):
 		''' Fetch all Excuses by this Student from the database. '''
 		self.excuses = Excuse.select_by_student(self.rfid)
+	
+	def fetch_absences(self):
+		''' Fetch all Absences by this Student from the database. '''
+		self.absences = Absence.select_by_student(self.rfid)
 	
 	def update(self):
 		''' Update an existing Student record in the DB. '''
