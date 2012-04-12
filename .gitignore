@@ -2,7 +2,7 @@
 *.pdf
 *.csv
 *.xls
-*.xlsx
+*xlsx*
 *.doc
 *.docx
 *.sqlite
@@ -12,3 +12,4 @@ desktop.ini
 gdata*
 elementtree*
 exemaker*
+*openpyxl*
