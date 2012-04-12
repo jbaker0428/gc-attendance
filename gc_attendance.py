@@ -3,7 +3,7 @@ import shutil
 import os
 import sqlite3
 import datetime
-
+import types
 
 active_roster = []
 class AttendanceDB:
@@ -63,6 +63,14 @@ class AttendanceDB:
 			dt TEXT PRIMARY KEY, 
 			eventtype TEXT)''')
 			
+			cur.execute('''CREATE TABLE IF NOT EXISTS terms
+			(name TEXT PRIMARY KEY,
+			startdate TEXT,
+			enddate TEXT)''')
+			
+			# Days where WPI closed (holidays, snow days, etc)
+			cur.execute('CREATE TABLE IF NOT EXISTS daysoff date TEXT')
+			
 		except:
 			print 'createTables exception, probably because tables already created.'
 			
@@ -105,6 +113,179 @@ class AttendanceDB:
 			con.close()
 
 gcdb = AttendanceDB()
+
+class Term:
+	''' Corresponds to one 7-week term on WPI's academic calendar. '''
+	
+	@staticmethod
+	def select_by_name(name='*'):
+		''' Return the Term of given name. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (name,)
+			cur.execute('SELECT * FROM terms WHERE name=?', symbol)
+			row = cur.fetchone()
+			if row != None:
+				term = Term(row[0], row[1], row[2])
+			else:
+				term = None
+				
+		except:
+			print 'Exception in Term.select_by_name( %s)' % name
+			
+		finally:
+			cur.close()
+			con.close()
+			return term
+	
+	@staticmethod
+	def select_by_date(start_date='*', end_date='*'):
+		''' Return the list of Terms in a given datetime range. 
+		Any Term whose startdate or enddate column falls within the
+		given range will be returned. '''
+		terms = []
+		
+		if type(start_date == date):
+			start_date = isoformat(start_date)
+		if type(end_date == date):
+			end_date = isoformat(end_date)
+		
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (start_date, end_date, start_date, end_date,)
+			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
+			SELECT * FROM terms WHERE enddate BETWEEN ? AND ?''', symbol)
+			for row in cur.fetchall():
+				term = Term(row[0], row[1], row[2])
+				terms.append(term)
+				
+		except:
+			print 'Exception in Term.select_by_date( %s, %s )' % start_date, end_date
+			
+		finally:
+			cur.close()
+			con.close()
+			return terms
+	
+	@staticmethod
+	def select_by_all(name='*', start_date='*', end_date='*'):
+		''' Return a list of Terms using any combination of filters. '''
+		terms = []
+		
+		if type(start_date == date):
+			start_date = isoformat(start_date)
+		if type(end_date == date):
+			end_date = isoformat(end_date)
+			
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (start_date, end_date, start_date, end_date, name,)
+			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
+			SELECT * FROM terms WHERE enddate BETWEEN ? AND ? INTERSECT
+			SELECT * FROM terms WHERE name=?''', symbol)
+			for row in cur.fetchall():
+				term = Term(row[0], row[1], row[2])
+				terms.append(term)
+				
+		except:
+			print 'Exception in Term.select_by_all( %s, %s, %s)' % name, start_date, end_date
+			
+		finally:
+			cur.close()
+			con.close()
+			return terms
+	
+	def __init__(self, name, start_date, end_date, days_off=[]):
+		self.name = name				# Something like "A09", "D12", etc. Primary key.
+		self.start_date = start_date	# A date object
+		self.end_date = end_date		# A date object
+		self.days_off = []	# A list of dates that class is cancelled (holidays, snow days, etc)
+		for d in days_off:
+			self.days_off.append(d)	
+	
+	def fetch_days_off(self):
+		''' Fetch all daysoff table entries for this Term from the database. 
+		Returns a list of date objects. '''
+		result = []
+		try:
+			if type(self.start_date == date):
+				start = isoformat(self.start_date)
+			elif type(self.start_date == str):
+				start = self.start_date
+			else:
+				raise TypeError
+				
+			if type(self.end_date == date):
+				end = isoformat(self.end_date)
+			elif type(self.end_date == str):
+				end = self.end_date
+			else:
+				raise TypeError
+		
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (start, end,)
+			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', symbol)
+			for row in cur.fetchall():
+				result.append(convert_date(row[0]))
+				
+		except:
+			print 'Exception in Term(%s).fetch_days_off()' % self.name
+			
+		finally:
+			cur.close()
+			con.close()
+			return result
+			
+	def update(self):
+		''' Update an existing Term record in the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.name, self.start_date, self.end_date, self.name,)
+			cur.execute('''UPDATE terms 
+			SET name=?, startdate=?, enddate=? 
+			WHERE name=?''', symbol)
+				
+		except:
+			print 'Exception in Term.update()'
+			
+		finally:
+			cur.close()
+			con.close()
+	
+	def insert(self):
+		''' Write the Term to the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.name, self.start_date, self.end_date, )
+			cur.execute('INSERT INTO terms VALUES (?,?,?)', symbol)
+				
+		except:
+			print 'Exception in Term.insert()'
+			
+		finally:
+			cur.close()
+			con.close()
+	
+	def delete(self):
+		''' Delete the Term from the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.name,)
+			cur.execute('DELETE FROM terms WHERE name=?', symbol)
+				
+		except:
+			print 'Exception in Term.delete()'
+			
+		finally:
+			cur.close()
+			con.close()
 
 class Student:
 	''' A Student who has signed into the attendance system. 
