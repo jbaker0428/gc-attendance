@@ -68,6 +68,11 @@ class AttendanceDB:
 			startdate TEXT,
 			enddate TEXT)''')
 			
+			cur.execute('''CREATE TABLE IF NOT EXISTS semesters
+			(name TEXT PRIMARY KEY,
+			termone TEXT REFERENCES terms(name),
+			termtwo TEXT REFERENCES terms(name))''')
+			
 			# Days where WPI closed (holidays, snow days, etc)
 			cur.execute('CREATE TABLE IF NOT EXISTS daysoff date TEXT')
 			
@@ -282,6 +287,195 @@ class Term:
 				
 		except:
 			print 'Exception in Term.delete()'
+			
+		finally:
+			cur.close()
+			con.close()
+
+class Semester:
+	''' Corresponds to one 2-term semester on WPI's academic calendar. '''
+	
+	@staticmethod
+	def select_by_name(name='*'):
+		''' Return the Semester of given name. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (name,)
+			cur.execute('SELECT * FROM semester WHERE name=?', symbol)
+			row = cur.fetchone()
+			if row != None:
+				t1 = Term.select_by_name(row[1])
+				t2 = Term.select_by_name(row[2])
+				semester = Term(row[0], t1, t2)
+			else:
+				semester = None
+				
+		except:
+			print 'Exception in Semester.select_by_name(%s)' % name
+			
+		finally:
+			cur.close()
+			con.close()
+			return semester
+	
+	@staticmethod
+	def select_by_date(start_date='*', end_date='*'):
+		''' Return the list of Semesters in a given datetime range. 
+		Any Semester whose startdate or enddate falls within the
+		given range will be returned. '''
+		terms = []
+		semesters = []
+		tnames = set()
+		snames = set()
+		if type(start_date == date):
+			start_date = isoformat(start_date)
+		if type(end_date == date):
+			end_date = isoformat(end_date)
+			
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, )
+			cur.execute('''
+			SELECT * from semesters WHERE termone IN 
+			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
+			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) 
+			UNION SELECT * from semesters WHERE termtwo IN 
+			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
+			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?)
+			 ''', symbol)
+			for row in cur.fetchall():
+				t1 = Term.select_by_name(row[1])
+				t2 = Term.select_by_name(row[2])
+				semester = Semester(row[0], t1, t2)
+				semesters.append(semester)
+							
+		except:
+			print 'Exception in Semester.select_by_date( %s, %s )' % start_date, end_date
+			
+		finally:
+			cur.close()
+			con.close()
+			return semesters
+	
+	@staticmethod
+	def select_by_all(name='*', start_date='*', end_date='*'):
+		''' Return a list of Semesters using any combination of filters. '''
+		semesters = []
+		
+		if type(start_date == date):
+			start_date = isoformat(start_date)
+		if type(end_date == date):
+			end_date = isoformat(end_date)
+			
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, name,)
+			cur.execute('''
+			SELECT * from semesters WHERE termone IN 
+			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
+			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) 
+			UNION SELECT * from semesters WHERE termtwo IN 
+			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
+			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) INTERSECT 
+			SELECT * FROM terms WHERE name=?''', symbol)
+			for row in cur.fetchall():
+				t1 = Term.select_by_name(row[1])
+				t2 = Term.select_by_name(row[2])
+				semester = Semester(row[0], t1, t2)
+				semesters.append(semester)
+				
+		except:
+			print 'Exception in Semester.select_by_all( %s, %s, %s)' % name, start_date, end_date
+			
+		finally:
+			cur.close()
+			con.close()
+			return semesters
+	
+	def __init__(self, name, term_one, term_two):
+		self.name = name			# Something like "Fall 2011". Primary key.
+		self.term_one = term_one	# A or C term
+		self.term_two = term_two	# B or D term
+		
+	def fetch_days_off(self):
+		''' Fetch all daysoff table entries for this Semester from the database. 
+		Returns a list of date objects. '''
+		result = []
+		try:
+			if type(self.term_one.start_date == date):
+				start = isoformat(self.term_one.start_date)
+			elif type(self.term_one.start_date == str):
+				start = self.term_one.start_date
+			else:
+				raise TypeError
+				
+			if type(self.term_two.end_date == date):
+				end = isoformat(self.term_two.end_date)
+			elif type(self.term_two.end_date == str):
+				end = self.term_two.end_date
+			else:
+				raise TypeError
+		
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (start, end,)
+			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', symbol)
+			for row in cur.fetchall():
+				result.append(convert_date(row[0]))
+				
+		except:
+			print 'Exception in Semester(%s).fetch_days_off()' % self.name
+			
+		finally:
+			cur.close()
+			con.close()
+			return result
+			
+	def update(self):
+		''' Update an existing Semester record in the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.name, self.term_one.name, self.term_two.name, self.name,)
+			cur.execute('''UPDATE semesters 
+			SET name=?, termone=?, termtwo=? 
+			WHERE name=?''', symbol)
+				
+		except:
+			print 'Exception in Semester(%s).update()' % self.name
+			
+		finally:
+			cur.close()
+			con.close()
+	
+	def insert(self):
+		''' Write the Semester to the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.name, self.term_one.name, self.term_two.name,)
+			cur.execute('INSERT INTO semesters VALUES (?,?,?)', symbol)
+				
+		except:
+			print 'Exception in Semester(%s).insert()' % self.name
+			
+		finally:
+			cur.close()
+			con.close()
+	
+	def delete(self):
+		''' Delete the Semester from the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			symbol = (self.name,)
+			cur.execute('DELETE FROM semesters WHERE name=?', symbol)
+				
+		except:
+			print 'Exception in Semester(%s).delete()' % self.name
 			
 		finally:
 			cur.close()
