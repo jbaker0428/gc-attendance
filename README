@@ -1,4 +1,4 @@
-An attendance system for the WPI Men's Glee Club.
+An attendance system for the WPI Men's Glee Club, Alden Voices, and Festival Choir.
 
 Program features/plans/ideas:
 -The program, a local SQLite database, and a copy of the roster will sit in the Dropbox folder that is used for the attendance spreadsheet.
