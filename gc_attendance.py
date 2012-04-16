@@ -37,6 +37,13 @@ class AttendanceDB:
 			credit INTEGER, 
 			current INTEGER)''')
 			
+			cur.execute('CREATE TABLE IF NOT EXISTS groups (name TEXT PRIMARY KEY)')
+			
+			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
+			(student INTEGER NOT NULL REFERENCES students(id),
+			group TEXT NOT NULL REFERENCES groups(name),
+			PRIMARY KEY(student, group))''')
+			
 			cur.execute('''CREATE TABLE IF NOT EXISTS absences
 			(student INTEGER REFERENCES students(id), 
 			type TEXT, 
