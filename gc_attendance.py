@@ -41,7 +41,7 @@ class AttendanceDB:
 			(student INTEGER REFERENCES students(id), 
 			type TEXT, 
 			eventdt TEXT REFERENCES events(dt), 
-			excuseid TEXT REFERENCES excuses(id), 
+			excuseid TEXT REFERENCES excuses(id) 
 			CONSTRAINT pk_absence PRIMARY KEY (eventdt, student))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS excuses
@@ -54,7 +54,7 @@ class AttendanceDB:
 			cur.execute('''CREATE TABLE IF NOT EXISTS signins
 			(dt TEXT, 
 			eventdt TEXT REFERENCES events(dt),
-			student INTEGER,
+			student INTEGER
 			CONSTRAINT pk_signin PRIMARY KEY (dt, student),
 			CONSTRAINT fk_signin_student FOREIGN KEY (student))''')
 			
