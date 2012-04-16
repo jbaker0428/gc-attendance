@@ -76,9 +76,6 @@ class AttendanceDB:
 			# Days where WPI closed (holidays, snow days, etc)
 			cur.execute('CREATE TABLE IF NOT EXISTS daysoff date TEXT')
 			
-		except:
-			print 'createTables exception, probably because tables already created.'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -110,9 +107,6 @@ class AttendanceDB:
 					new_student.insert()
 			cur.executemany('INSERT OR ABORT INTO signins VALUES (?,?,?)', signins)
 			
-		except:
-			print 'Exception in Student.select_by_id( %s )' % id
-			
 		finally:
 			cur.close()
 			con.close()
@@ -136,9 +130,6 @@ class Term:
 			else:
 				term = None
 				
-		except:
-			print 'Exception in Term.select_by_name( %s)' % name
-			
 		finally:
 			cur.close()
 			con.close()
@@ -166,9 +157,6 @@ class Term:
 				term = Term(row[0], row[1], row[2])
 				terms.append(term)
 				
-		except:
-			print 'Exception in Term.select_by_date( %s, %s )' % start_date, end_date
-			
 		finally:
 			cur.close()
 			con.close()
@@ -195,9 +183,6 @@ class Term:
 				term = Term(row[0], row[1], row[2])
 				terms.append(term)
 				
-		except:
-			print 'Exception in Term.select_by_all( %s, %s, %s)' % name, start_date, end_date
-			
 		finally:
 			cur.close()
 			con.close()
@@ -237,9 +222,6 @@ class Term:
 			for row in cur.fetchall():
 				result.append(convert_date(row[0]))
 				
-		except:
-			print 'Exception in Term(%s).fetch_days_off()' % self.name
-			
 		finally:
 			cur.close()
 			con.close()
@@ -255,9 +237,6 @@ class Term:
 			SET name=?, startdate=?, enddate=? 
 			WHERE name=?''', symbol)
 				
-		except:
-			print 'Exception in Term.update()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -270,9 +249,6 @@ class Term:
 			symbol = (self.name, self.start_date, self.end_date, )
 			cur.execute('INSERT INTO terms VALUES (?,?,?)', symbol)
 				
-		except:
-			print 'Exception in Term.insert()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -285,9 +261,6 @@ class Term:
 			symbol = (self.name,)
 			cur.execute('DELETE FROM terms WHERE name=?', symbol)
 				
-		except:
-			print 'Exception in Term.delete()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -311,9 +284,6 @@ class Semester:
 			else:
 				semester = None
 				
-		except:
-			print 'Exception in Semester.select_by_name(%s)' % name
-			
 		finally:
 			cur.close()
 			con.close()
@@ -351,9 +321,6 @@ class Semester:
 				semester = Semester(row[0], t1, t2)
 				semesters.append(semester)
 							
-		except:
-			print 'Exception in Semester.select_by_date( %s, %s )' % start_date, end_date
-			
 		finally:
 			cur.close()
 			con.close()
@@ -387,9 +354,6 @@ class Semester:
 				semester = Semester(row[0], t1, t2)
 				semesters.append(semester)
 				
-		except:
-			print 'Exception in Semester.select_by_all( %s, %s, %s)' % name, start_date, end_date
-			
 		finally:
 			cur.close()
 			con.close()
@@ -426,9 +390,6 @@ class Semester:
 			for row in cur.fetchall():
 				result.append(convert_date(row[0]))
 				
-		except:
-			print 'Exception in Semester(%s).fetch_days_off()' % self.name
-			
 		finally:
 			cur.close()
 			con.close()
@@ -444,9 +405,6 @@ class Semester:
 			SET name=?, termone=?, termtwo=? 
 			WHERE name=?''', symbol)
 				
-		except:
-			print 'Exception in Semester(%s).update()' % self.name
-			
 		finally:
 			cur.close()
 			con.close()
@@ -459,9 +417,6 @@ class Semester:
 			symbol = (self.name, self.term_one.name, self.term_two.name,)
 			cur.execute('INSERT INTO semesters VALUES (?,?,?)', symbol)
 				
-		except:
-			print 'Exception in Semester(%s).insert()' % self.name
-			
 		finally:
 			cur.close()
 			con.close()
@@ -474,9 +429,6 @@ class Semester:
 			symbol = (self.name,)
 			cur.execute('DELETE FROM semesters WHERE name=?', symbol)
 				
-		except:
-			print 'Exception in Semester(%s).delete()' % self.name
-			
 		finally:
 			cur.close()
 			con.close()
@@ -498,8 +450,6 @@ class Student:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 			else:
 				student = None
-		except:
-			print 'Exception in Student.select_by_id( %s )' % id
 			
 		finally:
 			cur.close()
@@ -519,9 +469,6 @@ class Student:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 				students.append(student)
 				
-		except:
-			print 'Exception in Student.select_by_name( %s, %s )' % fname, lname
-			
 		finally:
 			cur.close()
 			con.close()
@@ -540,9 +487,6 @@ class Student:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 				students.append(student)
 				
-		except:
-			print 'Exception in Student.select_by_email( %s )' % email
-			
 		finally:
 			cur.close()
 			con.close()
@@ -561,9 +505,6 @@ class Student:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 				students.append(student)
 				
-		except:
-			print 'Exception in Student.select_by_shm( %s )' % shm
-			
 		finally:
 			cur.close()
 			con.close()
@@ -582,9 +523,6 @@ class Student:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 				students.append(student)
 				
-		except:
-			print 'Exception in Student.select_by_standing( %s )' % standing
-			
 		finally:
 			cur.close()
 			con.close()
@@ -603,9 +541,6 @@ class Student:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 				students.append(student)
 				
-		except:
-			print 'Exception in Student.select_by_credit( %s )' % credit
-			
 		finally:
 			cur.close()
 			con.close()
@@ -624,9 +559,6 @@ class Student:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 				students.append(student)
 				
-		except:
-			print 'Exception in Student.select_by_current( %s )' % current
-			
 		finally:
 			cur.close()
 			con.close()
@@ -665,9 +597,6 @@ class Student:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 				students.append(student)
 				
-		except:
-			print 'Exception in Student.select_by_all( %s, %s, %s, %s, %s, %s, %s, %s )' % id, fname, lname, email, shm, standing, credit, current
-			
 		finally:
 			cur.close()
 			con.close()
@@ -688,9 +617,6 @@ class Student:
 			
 			old.delete()
 		
-		except:
-			print 'Exception in Student.merge( %s, %s )' % old, new
-			
 		finally:
 			cur.close()
 			con.close()
@@ -735,9 +661,6 @@ class Student:
 			SET fname=?, lname=?, email=?, shm=?, goodstanding=?, credit=?, current=? 
 			WHERE id=?''', symbol)
 				
-		except:
-			print 'Exception in Student.update()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -750,9 +673,6 @@ class Student:
 			symbol = (self.rfid, self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current,)
 			cur.execute('INSERT INTO students VALUES (?,?,?,?,?,?,?,?)', symbol)
 				
-		except:
-			print 'Exception in Student.insert()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -765,9 +685,6 @@ class Student:
 			symbol = (self.rfid,)
 			cur.execute('DELETE FROM students WHERE id=?', symbol)
 				
-		except:
-			print 'Exception in Student.delete()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -792,9 +709,6 @@ class Absence:
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
 				
-		except:
-			print 'Exception in Absence.select_by_student( %s )' % student_id
-			
 		finally:
 			cur.close()
 			con.close()
@@ -813,9 +727,6 @@ class Absence:
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
 				
-		except:
-			print 'Exception in Absence.select_by_type( %s )' % absence_type
-			
 		finally:
 			cur.close()
 			con.close()
@@ -838,9 +749,6 @@ class Absence:
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
 				
-		except:
-			print 'Exception in Absence.select_by_event_dt( %s )' % event_dt
-			
 		finally:
 			cur.close()
 			con.close()
@@ -861,9 +769,6 @@ class Absence:
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
 				
-		except:
-			print 'Exception in Absence.select_by_excuse( %s )' % excuse_id
-			
 		finally:
 			cur.close()
 			con.close()
@@ -889,9 +794,6 @@ class Absence:
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
 				
-		except:
-			print 'Exception in Absence.select_by_all( %s, %s, %s, %s )' % student_id, absence_type, event_dt, excuse_id
-			
 		finally:
 			cur.close()
 			con.close()
@@ -916,9 +818,6 @@ class Absence:
 			SET student=?, type=?, eventdt=?, excuseid=? 
 			WHERE student=? AND eventdt=?''', symbol)
 				
-		except:
-			print 'Exception in Absence.update()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -931,9 +830,6 @@ class Absence:
 			symbol = (self.student, self.type, self.event_dt, self.excuse_id,)
 			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', symbol)
 				
-		except:
-			print 'Exception in Absence.insert()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -946,9 +842,6 @@ class Absence:
 			symbol = (self.student, self.event_dt,)
 			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', symbol)
 				
-		except:
-			print 'Exception in Absence.delete()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -972,9 +865,6 @@ class Excuse:
 			row = cur.fetchone()
 			excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				
-		except:
-			print 'Exception in Excuse.select_by_student( %s )' % excuse_id
-			
 		finally:
 			cur.close()
 			con.close()
@@ -993,9 +883,6 @@ class Excuse:
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
-		except:
-			print 'Exception in Excuse.select_by_student( %s )' % student_id
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1020,9 +907,6 @@ class Excuse:
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
-		except:
-			print 'Exception in Excuse.select_by_datetime( %s, %s )' % start_dt, end_dt
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1045,9 +929,6 @@ class Excuse:
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
-		except:
-			print 'Exception in Excuse.select_by_event_datetime( %s )' % event_dt
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1077,9 +958,6 @@ class Excuse:
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
 				
-		except:
-			print 'Exception in Excuse.select_by_all( %s, %s, %s, %s, %s )' % excuse_id, student_id, start_dt, end_dt, event_dt
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1105,9 +983,6 @@ class Excuse:
 			SET dt=?, eventdt=?, reason=?, student=? 
 			WHERE id=?''', symbol)
 				
-		except:
-			print 'Exception in Excuse.update()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1121,9 +996,6 @@ class Excuse:
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
 			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', symbol)
 				
-		except:
-			print 'Exception in Excuse.insert()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1136,9 +1008,6 @@ class Excuse:
 			symbol = (self.id,)
 			cur.execute('DELETE FROM excuses WHERE id=?', symbol)
 				
-		except:
-			print 'Exception in Excuse.delete()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1160,9 +1029,6 @@ class Signin:
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
 				
-		except:
-			print 'Exception in Signin.select_by_student( %s )' % id
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1187,9 +1053,6 @@ class Signin:
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
 				
-		except:
-			print 'Exception in Signin.select_by_datetime( %s, %s )' % start_dt, end_dt
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1212,9 +1075,6 @@ class Signin:
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
 				
-		except:
-			print 'Exception in Signin.select_by_event_datetime( %s )' % isoformat(event_dt)
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1243,9 +1103,6 @@ class Signin:
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
 				
-		except:
-			print 'Exception in Signin.select_by_all( %s, %s, %s, %s )' % id, start_dt, end_dt, event_dt
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1269,9 +1126,6 @@ class Signin:
 			SET dt=?, eventdt=?, student=? 
 			WHERE dt=? AND student=?''', symbol)
 				
-		except:
-			print 'Exception in Signin.update()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1284,9 +1138,6 @@ class Signin:
 			symbol = (self.signin_dt, self.event_dt, self.student,)
 			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', symbol)
 				
-		except:
-			print 'Exception in Signin.insert()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1299,9 +1150,6 @@ class Signin:
 			symbol = (self.signin_dt, self.student,)
 			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', symbol)
 				
-		except:
-			print 'Exception in Signin.delete()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1331,9 +1179,6 @@ class Event:
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
 				
-		except:
-			print 'Exception in Signin.select_by_type( %s )' % type
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1358,9 +1203,6 @@ class Event:
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
 				
-		except:
-			print 'Exception in Event.select_by_datetime( %s, %s )' % start_dt, end_dt
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1379,9 +1221,6 @@ class Event:
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
 				
-		except:
-			print 'Exception in Signin.select_by_type( %s )' % type
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1408,9 +1247,6 @@ class Event:
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
 				
-		except:
-			print 'Exception in Event.select_by_all( %s, %s, %s, %s )' % name, start_dt, end_dt, type
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1444,9 +1280,6 @@ class Event:
 			SET eventname=?, dt=?, type=? 
 			WHERE dt=?''', symbol)
 				
-		except:
-			print 'Exception in Event.update()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1459,9 +1292,6 @@ class Event:
 			(self.name, self.event_dt, self.event_type,)
 			cur.execute('INSERT INTO events VALUES (?,?,?)', symbol)
 				
-		except:
-			print 'Exception in Event.insert()'
-			
 		finally:
 			cur.close()
 			con.close()
@@ -1474,9 +1304,6 @@ class Event:
 			symbol = (self.event_dt,)
 			cur.execute('DELETE FROM events WHERE dt=?', symbol)
 				
-		except:
-			print 'Exception in Event.delete()'
-			
 		finally:
 			cur.close()
 			con.close()
