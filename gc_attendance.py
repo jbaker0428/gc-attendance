@@ -127,8 +127,8 @@ class Term:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (name,)
-			cur.execute('SELECT * FROM terms WHERE name=?', symbol)
+			params = (name,)
+			cur.execute('SELECT * FROM terms WHERE name=?', params)
 			row = cur.fetchone()
 			if row != None:
 				term = Term(row[0], row[1], row[2])
@@ -155,9 +155,9 @@ class Term:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start_date, end_date, start_date, end_date,)
+			params = (start_date, end_date, start_date, end_date,)
 			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
-			SELECT * FROM terms WHERE enddate BETWEEN ? AND ?''', symbol)
+			SELECT * FROM terms WHERE enddate BETWEEN ? AND ?''', params)
 			for row in cur.fetchall():
 				term = Term(row[0], row[1], row[2])
 				terms.append(term)
@@ -180,10 +180,10 @@ class Term:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start_date, end_date, start_date, end_date, name,)
+			params = (start_date, end_date, start_date, end_date, name,)
 			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
 			SELECT * FROM terms WHERE enddate BETWEEN ? AND ? INTERSECT
-			SELECT * FROM terms WHERE name=?''', symbol)
+			SELECT * FROM terms WHERE name=?''', params)
 			for row in cur.fetchall():
 				term = Term(row[0], row[1], row[2])
 				terms.append(term)
@@ -222,8 +222,8 @@ class Term:
 		
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start, end,)
-			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', symbol)
+			params = (start, end,)
+			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
 				result.append(convert_date(row[0]))
 				
@@ -237,10 +237,10 @@ class Term:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.name, self.start_date, self.end_date, self.name,)
+			params = (self.name, self.start_date, self.end_date, self.name,)
 			cur.execute('''UPDATE terms 
 			SET name=?, startdate=?, enddate=? 
-			WHERE name=?''', symbol)
+			WHERE name=?''', params)
 				
 		finally:
 			cur.close()
@@ -251,8 +251,8 @@ class Term:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.name, self.start_date, self.end_date, )
-			cur.execute('INSERT INTO terms VALUES (?,?,?)', symbol)
+			params = (self.name, self.start_date, self.end_date, )
+			cur.execute('INSERT INTO terms VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -263,8 +263,8 @@ class Term:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.name,)
-			cur.execute('DELETE FROM terms WHERE name=?', symbol)
+			params = (self.name,)
+			cur.execute('DELETE FROM terms WHERE name=?', params)
 				
 		finally:
 			cur.close()
@@ -279,8 +279,8 @@ class Semester:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (name,)
-			cur.execute('SELECT * FROM semester WHERE name=?', symbol)
+			params = (name,)
+			cur.execute('SELECT * FROM semester WHERE name=?', params)
 			row = cur.fetchone()
 			if row != None:
 				t1 = Term.select_by_name(row[1])
@@ -311,7 +311,7 @@ class Semester:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, )
+			params = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, )
 			cur.execute('''
 			SELECT * from semesters WHERE termone IN 
 			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
@@ -319,7 +319,7 @@ class Semester:
 			UNION SELECT * from semesters WHERE termtwo IN 
 			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
 			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?)
-			 ''', symbol)
+			 ''', params)
 			for row in cur.fetchall():
 				t1 = Term.select_by_name(row[1])
 				t2 = Term.select_by_name(row[2])
@@ -344,7 +344,7 @@ class Semester:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, name,)
+			params = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, name,)
 			cur.execute('''
 			SELECT * from semesters WHERE termone IN 
 			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
@@ -352,7 +352,7 @@ class Semester:
 			UNION SELECT * from semesters WHERE termtwo IN 
 			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
 			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) INTERSECT 
-			SELECT * FROM terms WHERE name=?''', symbol)
+			SELECT * FROM terms WHERE name=?''', params)
 			for row in cur.fetchall():
 				t1 = Term.select_by_name(row[1])
 				t2 = Term.select_by_name(row[2])
@@ -390,8 +390,8 @@ class Semester:
 		
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start, end,)
-			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', symbol)
+			params = (start, end,)
+			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
 				result.append(convert_date(row[0]))
 				
@@ -405,10 +405,10 @@ class Semester:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.name, self.term_one.name, self.term_two.name, self.name,)
+			params = (self.name, self.term_one.name, self.term_two.name, self.name,)
 			cur.execute('''UPDATE semesters 
 			SET name=?, termone=?, termtwo=? 
-			WHERE name=?''', symbol)
+			WHERE name=?''', params)
 				
 		finally:
 			cur.close()
@@ -419,8 +419,8 @@ class Semester:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.name, self.term_one.name, self.term_two.name,)
-			cur.execute('INSERT INTO semesters VALUES (?,?,?)', symbol)
+			params = (self.name, self.term_one.name, self.term_two.name,)
+			cur.execute('INSERT INTO semesters VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -431,8 +431,8 @@ class Semester:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.name,)
-			cur.execute('DELETE FROM semesters WHERE name=?', symbol)
+			params = (self.name,)
+			cur.execute('DELETE FROM semesters WHERE name=?', params)
 				
 		finally:
 			cur.close()
@@ -448,8 +448,8 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (id,)
-			cur.execute('SELECT * FROM students WHERE id=?', symbol)
+			params = (id,)
+			cur.execute('SELECT * FROM students WHERE id=?', params)
 			row = cur.fetchone()
 			if row != None:
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
@@ -468,8 +468,8 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (fname, lname,)
-			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', symbol)
+			params = (fname, lname,)
+			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', params)
 			for row in cur.fetchall():
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
@@ -486,8 +486,8 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (email,)
-			cur.execute('SELECT * FROM students WHERE email=?', symbol)
+			params = (email,)
+			cur.execute('SELECT * FROM students WHERE email=?', params)
 			for row in cur.fetchall():
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
@@ -504,8 +504,8 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (int(good_standing),)
-			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
+			params = (int(good_standing),)
+			cur.execute('SELECT * FROM students WHERE goodstanding=?', params)
 			for row in cur.fetchall():
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
@@ -545,8 +545,8 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (int(current),)
-			cur.execute('SELECT * FROM students WHERE current=?', symbol)
+			params = (int(current),)
+			cur.execute('SELECT * FROM students WHERE current=?', params)
 			for row in cur.fetchall():
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
@@ -576,13 +576,13 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (id, fname, lname, email, shm, standing, credit, current,)
+			params = (id, fname, lname, email, shm, standing, credit, current,)
 			cur.execute('''SELECT * FROM students WHERE id=? INTERSECT 
 			SELECT * FROM students WHERE fname=? INTERSECT 
 			SELECT * FROM students WHERE lname=? INTERSECT 
 			SELECT * FROM students WHERE email=? INTERSECT 
 			SELECT * FROM students WHERE goodstanding=? INTERSECT 
-			SELECT * FROM students WHERE current=?''', symbol)
+			SELECT * FROM students WHERE current=?''', params)
 			for row in cur.fetchall():
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
@@ -600,10 +600,10 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (new.rfid, old.rfid, )
-			cur.execute('UPDATE excuses SET student=? WHERE student=?', symbol)
-			cur.execute('UPDATE signins SET student=? WHERE student=?', symbol)
-			cur.execute('UPDATE absences SET student=? WHERE student=?', symbol)
+			params = (new.rfid, old.rfid, )
+			cur.execute('UPDATE excuses SET student=? WHERE student=?', params)
+			cur.execute('UPDATE signins SET student=? WHERE student=?', params)
+			cur.execute('UPDATE absences SET student=? WHERE student=?', params)
 			
 			old.delete()
 		
@@ -691,10 +691,10 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current, self.rfid,)
+			params = (self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current, self.rfid,)
 			cur.execute('''UPDATE students 
 			SET fname=?, lname=?, email=?, shm=?, goodstanding=?, credit=?, current=? 
-			WHERE id=?''', symbol)
+			WHERE id=?''', params)
 				
 		finally:
 			cur.close()
@@ -705,8 +705,8 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.rfid, self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current,)
-			cur.execute('INSERT INTO students VALUES (?,?,?,?,?,?,?,?)', symbol)
+			params = (self.rfid, self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current,)
+			cur.execute('INSERT INTO students VALUES (?,?,?,?,?,?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -717,8 +717,8 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.rfid,)
-			cur.execute('DELETE FROM students WHERE id=?', symbol)
+			params = (self.rfid,)
+			cur.execute('DELETE FROM students WHERE id=?', params)
 				
 		finally:
 			cur.close()
@@ -831,8 +831,8 @@ class Absence:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (student_id,)
-			cur.execute('SELECT * FROM absences WHERE student=?', symbol)
+			params = (student_id,)
+			cur.execute('SELECT * FROM absences WHERE student=?', params)
 			for row in cur.fetchall():
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
@@ -849,8 +849,8 @@ class Absence:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (absence_type,)
-			cur.execute('SELECT * FROM absences WHERE type=?', symbol)
+			params = (absence_type,)
+			cur.execute('SELECT * FROM absences WHERE type=?', params)
 			for row in cur.fetchall():
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
@@ -871,8 +871,8 @@ class Absence:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (event_dt,)
-			cur.execute('SELECT * FROM absences WHERE eventdt=?', symbol)
+			params = (event_dt,)
+			cur.execute('SELECT * FROM absences WHERE eventdt=?', params)
 			for row in cur.fetchall():
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
@@ -891,8 +891,8 @@ class Absence:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (excuse_id,)
-			cur.execute('SELECT * FROM absences WHERE excuseid=?', symbol)
+			params = (excuse_id,)
+			cur.execute('SELECT * FROM absences WHERE excuseid=?', params)
 			for row in cur.fetchall():
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
@@ -913,11 +913,11 @@ class Absence:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (student_id, absence_type, event_dt, excuse_id,)
+			params = (student_id, absence_type, event_dt, excuse_id,)
 			cur.execute('''SELECT * FROM absences WHERE student=? INTERSECT
 			SELECT * FROM absences WHERE type=? INTERSECT
 			SELECT * FROM absences WHERE eventdt=? INTERSECT
-			SELECT * FROM absences WHERE excuseid=?''', symbol)
+			SELECT * FROM absences WHERE excuseid=?''', params)
 			for row in cur.fetchall():
 				absence = Absence(row[0], row[1], row[2], row[3])
 				absences.append(absence)
@@ -941,10 +941,10 @@ class Absence:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.student, self.type, self.event_dt, self.excuse_id, self.student, self.event_dt,)
+			params = (self.student, self.type, self.event_dt, self.excuse_id, self.student, self.event_dt,)
 			cur.execute('''UPDATE absences 
 			SET student=?, type=?, eventdt=?, excuseid=? 
-			WHERE student=? AND eventdt=?''', symbol)
+			WHERE student=? AND eventdt=?''', params)
 				
 		finally:
 			cur.close()
@@ -955,8 +955,8 @@ class Absence:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.student, self.type, self.event_dt, self.excuse_id,)
-			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', symbol)
+			params = (self.student, self.type, self.event_dt, self.excuse_id,)
+			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -967,8 +967,8 @@ class Absence:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.student, self.event_dt,)
-			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', symbol)
+			params = (self.student, self.event_dt,)
+			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', params)
 				
 		finally:
 			cur.close()
@@ -988,8 +988,8 @@ class Excuse:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (excuse_id,)
-			cur.execute('SELECT * FROM excuses WHERE id=?', symbol)
+			params = (excuse_id,)
+			cur.execute('SELECT * FROM excuses WHERE id=?', params)
 			row = cur.fetchone()
 			excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				
@@ -1005,8 +1005,8 @@ class Excuse:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (student_id,)
-			cur.execute('SELECT * FROM excuses WHERE student=?', symbol)
+			params = (student_id,)
+			cur.execute('SELECT * FROM excuses WHERE student=?', params)
 			for row in cur.fetchall():
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
@@ -1029,8 +1029,8 @@ class Excuse:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start_dt, end_dt,)
-			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', symbol)
+			params = (start_dt, end_dt,)
+			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
@@ -1051,8 +1051,8 @@ class Excuse:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (event_dt,)
-			cur.execute('SELECT * FROM excuses WHERE eventdt=?', symbol)
+			params = (event_dt,)
+			cur.execute('SELECT * FROM excuses WHERE eventdt=?', params)
 			for row in cur.fetchall():
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
@@ -1077,11 +1077,11 @@ class Excuse:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (excuse_id, student_id, start_dt, end_dt, event_dt,)
+			params = (excuse_id, student_id, start_dt, end_dt, event_dt,)
 			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT 
 			SELECT * FROM excuses WHERE student=? INTERSECT 
 			SELECT * FROM excuses WHERE dt BETWEEN ? AND ? INTERSECT 
-			SELECT * FROM excuses WHERE eventdt=?''', symbol)
+			SELECT * FROM excuses WHERE eventdt=?''', params)
 			for row in cur.fetchall():
 				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
 				excuses.append(excuse)
@@ -1106,10 +1106,10 @@ class Excuse:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.excuse_dt, self.event_dt, self.reason, self.student, self.id,)
+			params = (self.excuse_dt, self.event_dt, self.reason, self.student, self.id,)
 			cur.execute('''UPDATE excuses 
 			SET dt=?, eventdt=?, reason=?, student=? 
-			WHERE id=?''', symbol)
+			WHERE id=?''', params)
 				
 		finally:
 			cur.close()
@@ -1120,9 +1120,9 @@ class Excuse:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.excuse_dt, self.event_dt, self.reason, self.student,)
+			params = (self.excuse_dt, self.event_dt, self.reason, self.student,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
-			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', symbol)
+			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -1133,8 +1133,8 @@ class Excuse:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.id,)
-			cur.execute('DELETE FROM excuses WHERE id=?', symbol)
+			params = (self.id,)
+			cur.execute('DELETE FROM excuses WHERE id=?', params)
 				
 		finally:
 			cur.close()
@@ -1151,8 +1151,8 @@ class Signin:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (id,)
-			cur.execute('SELECT * FROM signins WHERE student=?', symbol)
+			params = (id,)
+			cur.execute('SELECT * FROM signins WHERE student=?', params)
 			for row in cur.fetchall():
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
@@ -1175,8 +1175,8 @@ class Signin:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start_dt, end_dt,)
-			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', symbol)
+			params = (start_dt, end_dt,)
+			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
@@ -1197,8 +1197,8 @@ class Signin:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (isoformat(event_dt),)
-			cur.execute('SELECT * FROM signins WHERE eventdt=?', symbol)
+			params = (isoformat(event_dt),)
+			cur.execute('SELECT * FROM signins WHERE eventdt=?', params)
 			for row in cur.fetchall():
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
@@ -1223,10 +1223,10 @@ class Signin:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (id, start_dt, end_dt, event_dt,)
+			params = (id, start_dt, end_dt, event_dt,)
 			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
 			 SELECT * FROM signins WHERE dt BETWEEN ? AND ? INTERSECT 
-			 SELECT * FROM signins WHERE eventdt=?''', symbol)
+			 SELECT * FROM signins WHERE eventdt=?''', params)
 			for row in cur.fetchall():
 				signin = Signin(row[0], row[1], row[2])
 				signins.append(signin)
@@ -1249,10 +1249,10 @@ class Signin:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.signin_dt, self.event_dt, self.student, self.event_dt, self.student,)
+			params = (self.signin_dt, self.event_dt, self.student, self.event_dt, self.student,)
 			cur.execute('''UPDATE signins 
 			SET dt=?, eventdt=?, student=? 
-			WHERE dt=? AND student=?''', symbol)
+			WHERE dt=? AND student=?''', params)
 				
 		finally:
 			cur.close()
@@ -1263,8 +1263,8 @@ class Signin:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.signin_dt, self.event_dt, self.student,)
-			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', symbol)
+			params = (self.signin_dt, self.event_dt, self.student,)
+			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -1275,8 +1275,8 @@ class Signin:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.signin_dt, self.student,)
-			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', symbol)
+			params = (self.signin_dt, self.student,)
+			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', params)
 				
 		finally:
 			cur.close()
@@ -1301,8 +1301,8 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (name,)
-			cur.execute('SELECT * FROM events WHERE eventname=?', symbol)
+			params = (name,)
+			cur.execute('SELECT * FROM events WHERE eventname=?', params)
 			for row in cur.fetchall():
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
@@ -1325,8 +1325,8 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (start_dt, end_dt,)
-			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', symbol)
+			params = (start_dt, end_dt,)
+			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
@@ -1343,8 +1343,8 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (type,)
-			cur.execute('SELECT * FROM events WHERE eventtype=?', symbol)
+			params = (type,)
+			cur.execute('SELECT * FROM events WHERE eventtype=?', params)
 			for row in cur.fetchall():
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
@@ -1367,10 +1367,10 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (name, start_dt, end_dt, type,)
+			params = (name, start_dt, end_dt, type,)
 			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
 			SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
-			SELECT * FROM events WHERE eventtype=?''', symbol)
+			SELECT * FROM events WHERE eventtype=?''', params)
 			for row in cur.fetchall():
 				event = Event(row[0], row[1], row[2])
 				events.append(event)
@@ -1403,10 +1403,10 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.name, self.event_dt, self.event_type, self.event_dt,)
+			params = (self.name, self.event_dt, self.event_type, self.event_dt,)
 			cur.execute('''UPDATE events 
 			SET eventname=?, dt=?, type=? 
-			WHERE dt=?''', symbol)
+			WHERE dt=?''', params)
 				
 		finally:
 			cur.close()
@@ -1417,8 +1417,8 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			(self.name, self.event_dt, self.event_type,)
-			cur.execute('INSERT INTO events VALUES (?,?,?)', symbol)
+			params = (self.name, self.event_dt, self.event_type,)
+			cur.execute('INSERT INTO events VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -1429,8 +1429,8 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (self.event_dt,)
-			cur.execute('DELETE FROM events WHERE dt=?', symbol)
+			params = (self.event_dt,)
+			cur.execute('DELETE FROM events WHERE dt=?', params)
 				
 		finally:
 			cur.close()
