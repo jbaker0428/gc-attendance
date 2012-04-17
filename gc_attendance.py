@@ -32,9 +32,7 @@ class AttendanceDB:
 			fname TEXT, 
 			lname TEXT, 
 			email TEXT, 
-			shm INTEGER, 
 			goodstanding INTEGER, 
-			credit INTEGER, 
 			current INTEGER)''')
 			
 			cur.execute('CREATE TABLE IF NOT EXISTS groups (name TEXT PRIMARY KEY)')
@@ -454,7 +452,7 @@ class Student:
 			cur.execute('SELECT * FROM students WHERE id=?', symbol)
 			row = cur.fetchone()
 			if row != None:
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 			else:
 				student = None
 			
@@ -473,7 +471,7 @@ class Student:
 			symbol = (fname, lname,)
 			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
 				
 		finally:
@@ -491,25 +489,7 @@ class Student:
 			symbol = (email,)
 			cur.execute('SELECT * FROM students WHERE email=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
-				students.append(student)
-				
-		finally:
-			cur.close()
-			con.close()
-			return students
-	
-	@staticmethod
-	def select_by_shm(shm):
-		''' Return the list of Students in SHM (or not). '''
-		students = []
-		try:
-			(con, cur) = gcdb.con_cursor()
-			
-			symbol = (int(shm),)
-			cur.execute('SELECT * FROM students WHERE shm=?', symbol)
-			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
 				
 		finally:
@@ -527,7 +507,7 @@ class Student:
 			symbol = (int(good_standing),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
 				
 		finally:
@@ -536,16 +516,21 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_credit(credit):
-		''' Return the list of Students taking Glee Club for credit (or not). '''
+	def select_by_group(group_name, in_group=True):
+		''' Return the list of Students in some group (or not). '''
 		students = []
 		try:
 			(con, cur) = gcdb.con_cursor()
-			
-			symbol = (int(credit),)
-			cur.execute('SELECT * FROM students WHERE goodstanding=?', symbol)
+			params = (group_name,)			
+			if in_group == True:
+				cur.execute("""SELECT * FROM students WHERE id IN
+				(SELECT DISTINCT student FROM group_memberships WHERE group=?)""", params)
+			else:
+				cur.execute("""SELECT * FROM students WHERE id NOT IN
+				(SELECT DISTINCT student FROM group_memberships WHERE group=?)""", params)
+
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
 				
 		finally:
@@ -554,16 +539,16 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_current(current):
+	def select_by_current(current=True):
 		''' Return the list of current Students on the roster (or not). '''
 		students = []
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			symbol = (int(credit),)
+			symbol = (int(current),)
 			cur.execute('SELECT * FROM students WHERE current=?', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
 				
 		finally:
@@ -572,7 +557,7 @@ class Student:
 			return students
 		
 	@staticmethod
-	def select_by_all(id='*', fname='*', lname='*', email='*', shm='*', standing='*', credit='*', current='*'):
+	def select_by_all(id='*', fname='*', lname='*', email='*', standing='*', current='*'):
 		''' Return a list of Students using any combination of filters. '''
 		if shm != '*':
 			shm = int(shm)
@@ -596,12 +581,10 @@ class Student:
 			SELECT * FROM students WHERE fname=? INTERSECT 
 			SELECT * FROM students WHERE lname=? INTERSECT 
 			SELECT * FROM students WHERE email=? INTERSECT 
-			SELECT * FROM students WHERE shm=? INTERSECT 
 			SELECT * FROM students WHERE goodstanding=? INTERSECT 
-			SELECT * FROM students WHERE credit=? INTERSECT
 			SELECT * FROM students WHERE current=?''', symbol)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
 				students.append(student)
 				
 		finally:
@@ -630,7 +613,7 @@ class Student:
 			new.fetch_signins()
 			new.fetch_excuses()
 	
-	def __init__(self, r, fn, ln, email, shm=False, standing=True, cred=False, current=True):
+	def __init__(self, r, fn, ln, email, standing=True, current=True):
 		self.rfid = r		# Numeric ID seen by the RFID reader
 		self.fname = fn
 		self.lname = ln
@@ -642,6 +625,7 @@ class Student:
 		self.signins = []
 		self.excuses = []
 		self.absences = []
+		self.groups = []
 		
 	def __del__(self):
 		self.delete()
@@ -657,6 +641,50 @@ class Student:
 	def fetch_absences(self):
 		''' Fetch all Absences by this Student from the database. '''
 		self.absences = Absence.select_by_student(self.rfid)
+	
+	def fetch_groups(self):
+		''' Fetch all Groups this Student is a member of from the database. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (self.name,)
+			cur.execute("""SELECT * FROM groups WHERE name IN
+					(SELECT DISTINCT group FROM group_memberships WHERE student=?)""", params)
+			rows = cur.fetchall()
+			for row in rows:
+				group = Group(row[0])
+				group.fetch_members()
+				self.groups.append(group)
+			
+		finally:
+			cur.close()
+			con.close()
+	
+	def join_group(self, group):
+		''' Add the Student to a Group. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (self.name, group.name,)
+			cur.execute('INSERT INTO group_memberships VALUES (?,?)', params)
+				
+		finally:
+			cur.close()
+			con.close()
+			self.groups.append(group)
+	
+	def leave_group(self, group):
+		''' Remove the Student from a Group. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (self.name, group.name,)
+			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
+			del self.groups[self.groups.index(group)]
+				
+		finally:
+			cur.close()
+			con.close()
 	
 	def update(self):
 		''' Update an existing Student record in the DB. '''
@@ -691,6 +719,99 @@ class Student:
 			
 			symbol = (self.rfid,)
 			cur.execute('DELETE FROM students WHERE id=?', symbol)
+				
+		finally:
+			cur.close()
+			con.close()
+
+class Group:
+	''' A group of students. This is usually an ensemble. 
+	However, it can also be the group of students participating in an
+	ensemble for WPI course credit. '''
+	
+	@staticmethod
+	def select_by_name(name='*'):
+		''' Return the Group(s) of given name. '''
+		groups = []
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (name,)
+			cur.execute('SELECT * FROM groups WHERE name=?', params)
+			for row in cur.fetchall():
+				group = Group(row[0])
+				groups.append(group)
+				
+		finally:
+			cur.close()
+			con.close()
+			return groups
+	
+	def __init__(self, name, students=[]):
+		self.name = name
+		self.members = students
+		
+	def fetch_members(self):
+		''' Fetch all Students in this group from the database. '''
+		self.members = Student.select_by_group(self.name, True)
+	
+	def add_member(self, student):
+		''' Add a new member to the group. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (student.name, self.name,)
+			cur.execute('INSERT INTO group_memberships VALUES (?,?)', params)
+				
+		finally:
+			cur.close()
+			con.close()
+			self.members.append(student)
+	
+	def remove_member(self, student):
+		''' Remove a member from the group. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (student.name, self.name,)
+			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
+			del self.members[self.members.index(student)]
+				
+		finally:
+			cur.close()
+			con.close()
+		
+	def update(self):
+		''' Update an existing Group record in the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (self.name, self.name,)
+			cur.execute('UPDATE groups SET name=? WHERE name=?', params)
+				
+		finally:
+			cur.close()
+			con.close()
+	
+	def insert(self):
+		''' Write the Group to the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (self.name,)
+			cur.execute('INSERT INTO groups VALUES (?)', params)
+				
+		finally:
+			cur.close()
+			con.close()
+	
+	def delete(self):
+		''' Delete the Group from the DB. '''
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (self.name,)
+			cur.execute('DELETE FROM groups WHERE name=?', params)
 				
 		finally:
 			cur.close()
