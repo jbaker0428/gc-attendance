@@ -5,7 +5,6 @@ import sqlite3
 import datetime
 import types
 
-active_roster = []
 class AttendanceDB:
 	''' Base class for the attendance database. '''
 	db0 = os.path.join(os.getcwd(), 'gc-attendance.sqlite')
