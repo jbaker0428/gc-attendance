@@ -5,9 +5,9 @@ Program features/plans/ideas:
 -Read the attendance spreadsheet into the database.
 -Read the roster into the database.
 -Use the Google Calendar API to grab rehearsal dates/times and save those in the database.
--Use the Gmail API to enter messages sent to the gc-excuse alias into the database.
+-Use the Gmail API to enter messages sent to the -excuse aliases into the database.
 -Associate attendance records with rehearsals based on the date/time.
--Attempt to associate gc-excuse messages with emails based on the date/time. It will probably suggest a rehearsal and the user will have to confirm the system's guess or choose another.
+-Attempt to associate -excuse emails with rehearsals based on the date/time. It will probably suggest a rehearsal and the user will have to confirm the system's guess or choose another.
 -Almost everything is automated from here in terms of calculating if people are in good standing, etc. 
 -Maybe automatically send warning emails when people fall out of good standing?
 
