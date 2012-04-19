@@ -35,11 +35,14 @@ class AttendanceDB:
 			goodstanding INTEGER, 
 			current INTEGER)''')
 			
-			cur.execute('CREATE TABLE IF NOT EXISTS groups (name TEXT PRIMARY KEY)')
+			cur.execute('''CREATE TABLE IF NOT EXISTS groups 
+			(id INTEGER PRIMARY KEY, 
+			name TEXT NOT NULL, 
+			semester TEXT NOT NULL REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
 			(student INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			group TEXT NOT NULL REFERENCES groups(name) ON DELETE CASCADE ON UPDATE CASCADE,
+			group INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE
 			PRIMARY KEY(student, group))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS absences
@@ -516,18 +519,18 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_group(group_name, in_group=True):
+	def select_by_group(group_id, in_group=True):
 		''' Return the list of Students in some group (or not). '''
 		students = []
 		try:
 			(con, cur) = gcdb.con_cursor()
-			params = (group_name,)			
+			params = (group_id,)			
 			if in_group == True:
 				cur.execute("""SELECT * FROM students WHERE id IN
-				(SELECT DISTINCT student FROM group_memberships WHERE group=?)""", params)
+				(SELECT DISTINCT student FROM group_memberships WHERE id=?)""", params)
 			else:
 				cur.execute("""SELECT * FROM students WHERE id NOT IN
-				(SELECT DISTINCT student FROM group_memberships WHERE group=?)""", params)
+				(SELECT DISTINCT student FROM group_memberships WHERE id=?)""", params)
 
 			for row in cur.fetchall():
 				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
@@ -665,7 +668,7 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (self.name, group.name,)
+			params = (self.name, group.id,)
 			cur.execute('INSERT INTO group_memberships VALUES (?,?)', params)
 				
 		finally:
@@ -678,7 +681,7 @@ class Student:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (self.name, group.name,)
+			params = (self.name, group.id,)
 			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
 			del self.groups[self.groups.index(group)]
 				
@@ -730,6 +733,24 @@ class Group:
 	ensemble for WPI course credit. '''
 	
 	@staticmethod
+	def select_by_id(gid):
+		''' Return the Group(s) of given ID. '''
+		groups = []
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (gid,)
+			cur.execute('SELECT * FROM groups WHERE id=?', params)
+			for row in cur.fetchall():
+				group = Group(row[0], row[1], row[2])
+				groups.append(group)
+				
+		finally:
+			cur.close()
+			con.close()
+			return groups
+	
+	@staticmethod
 	def select_by_name(name='*'):
 		''' Return the Group(s) of given name. '''
 		groups = []
@@ -739,7 +760,7 @@ class Group:
 			params = (name,)
 			cur.execute('SELECT * FROM groups WHERE name=?', params)
 			for row in cur.fetchall():
-				group = Group(row[0])
+				group = Group(row[0], row[1], row[2])
 				groups.append(group)
 				
 		finally:
@@ -747,20 +768,22 @@ class Group:
 			con.close()
 			return groups
 	
-	def __init__(self, name, students=[]):
+	def __init__(self, id, name, semester, students=[]):
+		self.id = id
 		self.name = name
+		self.semester = semester
 		self.members = students
 		
 	def fetch_members(self):
 		''' Fetch all Students in this group from the database. '''
-		self.members = Student.select_by_group(self.name, True)
+		self.members = Student.select_by_group(self.id, True)
 	
 	def add_member(self, student):
 		''' Add a new member to the group. '''
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (student.name, self.name,)
+			params = (student.name, self.id,)
 			cur.execute('INSERT OR ABORT INTO group_memberships VALUES (?,?)', params)
 				
 		finally:
@@ -773,7 +796,7 @@ class Group:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (student.name, self.name,)
+			params = (student.name, self.id,)
 			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
 			del self.members[self.members.index(student)]
 				
@@ -786,8 +809,8 @@ class Group:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (self.name, self.name,)
-			cur.execute('UPDATE groups SET name=? WHERE name=?', params)
+			params = (self.id, self.name, self.semester, self.id,)
+			cur.execute('UPDATE groups SET id=?, name=?, semester=? WHERE id=?', params)
 				
 		finally:
 			cur.close()
@@ -798,8 +821,8 @@ class Group:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (self.name,)
-			cur.execute('INSERT INTO groups VALUES (?)', params)
+			params = (self.id, self.name, self.semester,)
+			cur.execute('INSERT INTO groups VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -810,8 +833,8 @@ class Group:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (self.name,)
-			cur.execute('DELETE FROM groups WHERE name=?', params)
+			params = (self.id,)
+			cur.execute('DELETE FROM groups WHERE id=?', params)
 				
 		finally:
 			cur.close()
@@ -823,7 +846,7 @@ class Group:
 		try:
 			# Mark currently acrive students inactive
 			(con, cur) = gcdb.con_cursor()
-			params = (self.name, 1,)			
+			params = (self.id, 1,)			
 			cur.execute("""UPDATE students SET current=0 WHERE id IN 
 			(SELECT DISTINCT student FROM group_memberships WHERE group=? INTERSECT 
 			SELECT id FROM students WHERE current=?)""", params)
