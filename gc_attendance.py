@@ -37,30 +37,29 @@ class AttendanceDB:
 			cur.execute('CREATE TABLE IF NOT EXISTS groups (name TEXT PRIMARY KEY)')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
-			(student INTEGER NOT NULL REFERENCES students(id),
-			group TEXT NOT NULL REFERENCES groups(name),
+			(student INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+			group TEXT NOT NULL REFERENCES groups(name) ON DELETE CASCADE ON UPDATE CASCADE,
 			PRIMARY KEY(student, group))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS absences
-			(student INTEGER REFERENCES students(id), 
+			(student INTEGER REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE, 
 			type TEXT, 
-			eventdt TEXT REFERENCES events(dt), 
-			excuseid TEXT REFERENCES excuses(id) 
+			eventdt TEXT REFERENCES events(dt) ON DELETE CASCADE ON UPDATE CASCADE, 
+			excuseid TEXT REFERENCES excuses(id) ON DELETE CASCADE ON UPDATE CASCADE 
 			CONSTRAINT pk_absence PRIMARY KEY (eventdt, student))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS excuses
 			(id INTGER PRIMARY KEY
 			dt TEXT, 
-			eventdt TEXT REFERENCES events(dt),
+			eventdt TEXT REFERENCES events(dt) ON DELETE CASCADE ON UPDATE CASCADE,
 			reason TEXT, 
-			student INTEGER REFERENCES students(id))''')
+			student INTEGER REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS signins
 			(dt TEXT, 
-			eventdt TEXT REFERENCES events(dt),
-			student INTEGER
-			CONSTRAINT pk_signin PRIMARY KEY (dt, student),
-			CONSTRAINT fk_signin_student FOREIGN KEY (student))''')
+			eventdt TEXT REFERENCES events(dt) ON DELETE CASCADE ON UPDATE CASCADE,
+			student INTEGER REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE
+			CONSTRAINT pk_signin PRIMARY KEY (dt, student))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS events
 			(eventname TEXT, 
@@ -74,8 +73,8 @@ class AttendanceDB:
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS semesters
 			(name TEXT PRIMARY KEY,
-			termone TEXT REFERENCES terms(name),
-			termtwo TEXT REFERENCES terms(name))''')
+			termone TEXT REFERENCES terms(name) ON DELETE RESTRICT ON UPDATE CASCADE,
+			termtwo TEXT REFERENCES terms(name) ON DELETE RESTRICT ON UPDATE CASCADE)''')
 			
 			# Days where WPI closed (holidays, snow days, etc)
 			cur.execute('CREATE TABLE IF NOT EXISTS daysoff date TEXT')
