@@ -4,6 +4,7 @@ import os
 import sqlite3
 import datetime
 import types
+import xlsx
 
 class AttendanceDB:
 	''' Base class for the attendance database. '''
@@ -760,7 +761,7 @@ class Group:
 			(con, cur) = gcdb.con_cursor()
 			
 			params = (student.name, self.name,)
-			cur.execute('INSERT INTO group_memberships VALUES (?,?)', params)
+			cur.execute('INSERT OR ABORT INTO group_memberships VALUES (?,?)', params)
 				
 		finally:
 			cur.close()
@@ -811,6 +812,39 @@ class Group:
 			
 			params = (self.name,)
 			cur.execute('DELETE FROM groups WHERE name=?', params)
+				
+		finally:
+			cur.close()
+			con.close()
+			
+	def read_gc_roster(self, infile):
+		''' Parse the group's roster into the database using the Glee Club roster format. 
+		Any students formerly marked as active members that are not in the roster are marked inactive. '''
+		try:
+			# Mark currently acrive students inactive
+			(con, cur) = gcdb.con_cursor()
+			params = (self.name, 1,)			
+			cur.execute("""UPDATE students SET current=0 WHERE id IN 
+			(SELECT DISTINCT student FROM group_memberships WHERE group=? INTERSECT 
+			SELECT id FROM students WHERE current=?)""", params)
+			book = Workbook(infile)
+			sheet = book['Sheet1']
+			rfid_col = 0
+			fname_col = 1
+			lname_col = 2
+			email_col = 3
+			shm_col = 4
+			cred_col = 5
+			officer_col = 6
+			for row, cells in sheet.rows().iteritems():	# row is the row number
+				if row == 1: # skip header
+					continue
+				student = Student(cells[rfid_col], cells[fname_col], cells[lname_col], cells[email_col])
+				if Student.select_by_id(student.id) is None:	# Not in DB
+					student.insert()
+				else:
+					student.update()
+				self.add_member(student)
 				
 		finally:
 			cur.close()
