@@ -68,7 +68,8 @@ class AttendanceDB:
 			cur.execute('''CREATE TABLE IF NOT EXISTS events
 			(eventname TEXT, 
 			dt TEXT PRIMARY KEY, 
-			eventtype TEXT)''')
+			eventtype TEXT,
+			group INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS terms
 			(name TEXT PRIMARY KEY,
@@ -1367,7 +1368,7 @@ class Event:
 			params = (name,)
 			cur.execute('SELECT * FROM events WHERE eventname=?', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2])
+				event = Event(row[0], row[1], row[2], row[3])
 				events.append(event)
 				
 		finally:
@@ -1391,7 +1392,7 @@ class Event:
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2])
+				event = Event(row[0], row[1], row[2], row[3])
 				events.append(event)
 				
 		finally:
@@ -1409,7 +1410,7 @@ class Event:
 			params = (type,)
 			cur.execute('SELECT * FROM events WHERE eventtype=?', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2])
+				event = Event(row[0], row[1], row[2], row[3])
 				events.append(event)
 				
 		finally:
@@ -1418,7 +1419,25 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_all(name, start_dt, end_dt, type):
+	def select_by_group(group):
+		''' Return the list of Events of a given group. '''
+		events = []
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (group,)
+			cur.execute('SELECT * FROM events WHERE group=?', params)
+			for row in cur.fetchall():
+				event = Event(row[0], row[1], row[2], row[3])
+				events.append(event)
+				
+		finally:
+			cur.close()
+			con.close()
+			return events
+	
+	@staticmethod
+	def select_by_all(name, start_dt, end_dt, type, group):
 		''' Return a list of Events using any combination of filters. '''
 		events = []
 		
@@ -1430,12 +1449,13 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (name, start_dt, end_dt, type,)
+			params = (name, start_dt, end_dt, type, group,)
 			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
 			SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
-			SELECT * FROM events WHERE eventtype=?''', params)
+			SELECT * FROM events WHERE eventtype=? INTERSECT 
+			SELECT * FROM events WHERE group=?''', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2])
+				event = Event(row[0], row[1], row[2], row[3])
 				events.append(event)
 				
 		finally:
@@ -1443,10 +1463,11 @@ class Event:
 			con.close()
 			return events
 	
-	def __init__(self, name, dt, t):
+	def __init__(self, name, dt, t, group):
 		self.event_name = name
 		self.event_dt = dt	# a datetime object, primary key
 		self.event_type = t	# One of the Event.TYPE_ constants 
+		self.group = group	# Roster to check against
 		self.signins = []
 		self.excuses = []
 	
@@ -1466,9 +1487,9 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (self.name, self.event_dt, self.event_type, self.event_dt,)
+			params = (self.name, self.event_dt, self.event_type, self.group.id, self.event_dt,)
 			cur.execute('''UPDATE events 
-			SET eventname=?, dt=?, type=? 
+			SET eventname=?, dt=?, type=?, group=? 
 			WHERE dt=?''', params)
 				
 		finally:
@@ -1480,8 +1501,8 @@ class Event:
 		try:
 			(con, cur) = gcdb.con_cursor()
 			
-			params = (self.name, self.event_dt, self.event_type,)
-			cur.execute('INSERT INTO events VALUES (?,?,?)', params)
+			params = (self.name, self.event_dt, self.event_type, self.group.id,)
+			cur.execute('INSERT INTO events VALUES (?,?,?,?)', params)
 				
 		finally:
 			cur.close()
