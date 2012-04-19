@@ -873,7 +873,7 @@ class Group:
 		for row, cells in sheet.rows().iteritems():	# row is the row number
 			if row == 1: # skip header
 				continue
-			student = Student(cells[rfid_col], cells[fname_col], cells[lname_col], cells[email_col])
+			student = Student(cells[rfid_col].value, cells[fname_col].value, cells[lname_col].value, cells[email_col].value)
 			if Student.select_by_id(student.id) is None:	# Not in DB
 				student.insert()
 			else:
