@@ -767,6 +767,24 @@ class Group:
 			cur.close()
 			con.close()
 			return groups
+		
+	@staticmethod
+	def select_by_semester(semester='*'):
+		''' Return the Group(s) of given Semester. '''
+		groups = []
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (semester,)
+			cur.execute('SELECT * FROM groups WHERE semester=?', params)
+			for row in cur.fetchall():
+				group = Group(row[0], row[1], row[2])
+				groups.append(group)
+				
+		finally:
+			cur.close()
+			con.close()
+			return groups
 	
 	def __init__(self, id, name, semester, students=[]):
 		self.id = id
