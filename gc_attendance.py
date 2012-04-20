@@ -1055,7 +1055,10 @@ class Excuse:
 			params = (excuse_id,)
 			cur.execute('SELECT * FROM excuses WHERE id=?', params)
 			row = cur.fetchone()
-			excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
+			if row != None:
+				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
+			else:
+				excuse = None
 				
 		finally:
 			cur.close()
