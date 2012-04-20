@@ -88,7 +88,7 @@ class AttendanceDB:
 			cur.close()
 			con.close()
 	
-	def read_attendance(self, infile):
+	def read_attendance(self, infile, connection=None):
 		''' Parse the attendance record spreadsheet and write to the database. ''' 
 		try:
 			signins = []
@@ -105,8 +105,11 @@ class AttendanceDB:
 					# The record variable formatting matches the Sigin.__init__ arguments list
 					record = (isoformat(dt), 'NULL', int(row[3]))
 					signins.append(record)
-		
-			(con, cur) = gcdb.con_cursor()
+			
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			for t in signins:
 				# Check that student ID is in DB, if not, create a blank entry
@@ -118,7 +121,8 @@ class AttendanceDB:
 			
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 
 gcdb = AttendanceDB()
 
@@ -126,10 +130,13 @@ class Term:
 	''' Corresponds to one 7-week term on WPI's academic calendar. '''
 	
 	@staticmethod
-	def select_by_name(name='*'):
+	def select_by_name(name='*', connection=None):
 		''' Return the Term of given name. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (name,)
 			cur.execute('SELECT * FROM terms WHERE name=?', params)
@@ -141,11 +148,12 @@ class Term:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return term
 	
 	@staticmethod
-	def select_by_date(start_date='*', end_date='*'):
+	def select_by_date(start_date='*', end_date='*', connection=None):
 		''' Return the list of Terms in a given datetime range. 
 		Any Term whose startdate or enddate column falls within the
 		given range will be returned. '''
@@ -157,7 +165,10 @@ class Term:
 			end_date = isoformat(end_date)
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start_date, end_date, start_date, end_date,)
 			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
@@ -168,11 +179,12 @@ class Term:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return terms
 	
 	@staticmethod
-	def select_by_all(name='*', start_date='*', end_date='*'):
+	def select_by_all(name='*', start_date='*', end_date='*', connection=None):
 		''' Return a list of Terms using any combination of filters. '''
 		terms = []
 		
@@ -182,7 +194,10 @@ class Term:
 			end_date = isoformat(end_date)
 			
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start_date, end_date, start_date, end_date, name,)
 			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
@@ -194,7 +209,8 @@ class Term:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return terms
 	
 	def __init__(self, name, start_date, end_date, days_off=[]):
@@ -205,7 +221,7 @@ class Term:
 		for d in days_off:
 			self.days_off.append(d)	
 	
-	def fetch_days_off(self):
+	def fetch_days_off(self, connection=None):
 		''' Fetch all daysoff table entries for this Term from the database. 
 		Returns a list of date objects. '''
 		result = []
@@ -224,7 +240,10 @@ class Term:
 			else:
 				raise TypeError
 		
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start, end,)
 			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', params)
@@ -233,13 +252,17 @@ class Term:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return result
 			
-	def update(self):
+	def update(self, connection=None):
 		''' Update an existing Term record in the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name, self.start_date, self.end_date, self.name,)
 			cur.execute('''UPDATE terms 
@@ -248,40 +271,52 @@ class Term:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def insert(self):
+	def insert(self, connection=None):
 		''' Write the Term to the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name, self.start_date, self.end_date, )
 			cur.execute('INSERT INTO terms VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def delete(self):
+	def delete(self, connection=None):
 		''' Delete the Term from the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name,)
 			cur.execute('DELETE FROM terms WHERE name=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 
 class Semester:
 	''' Corresponds to one 2-term semester on WPI's academic calendar. '''
 	
 	@staticmethod
-	def select_by_name(name='*'):
+	def select_by_name(name='*', connection=None):
 		''' Return the Semester of given name. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (name,)
 			cur.execute('SELECT * FROM semester WHERE name=?', params)
@@ -295,11 +330,12 @@ class Semester:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return semester
 	
 	@staticmethod
-	def select_by_date(start_date='*', end_date='*'):
+	def select_by_date(start_date='*', end_date='*', connection=None):
 		''' Return the list of Semesters in a given datetime range. 
 		Any Semester whose startdate or enddate falls within the
 		given range will be returned. '''
@@ -313,7 +349,10 @@ class Semester:
 			end_date = isoformat(end_date)
 			
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, )
 			cur.execute('''
@@ -332,11 +371,12 @@ class Semester:
 							
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return semesters
 	
 	@staticmethod
-	def select_by_all(name='*', start_date='*', end_date='*'):
+	def select_by_all(name='*', start_date='*', end_date='*', connection=None):
 		''' Return a list of Semesters using any combination of filters. '''
 		semesters = []
 		
@@ -346,7 +386,10 @@ class Semester:
 			end_date = isoformat(end_date)
 			
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, name,)
 			cur.execute('''
@@ -365,7 +408,8 @@ class Semester:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return semesters
 	
 	def __init__(self, name, term_one, term_two):
@@ -373,7 +417,7 @@ class Semester:
 		self.term_one = term_one	# A or C term
 		self.term_two = term_two	# B or D term
 		
-	def fetch_days_off(self):
+	def fetch_days_off(self, connection=None):
 		''' Fetch all daysoff table entries for this Semester from the database. 
 		Returns a list of date objects. '''
 		result = []
@@ -392,7 +436,10 @@ class Semester:
 			else:
 				raise TypeError
 		
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start, end,)
 			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', params)
@@ -401,13 +448,17 @@ class Semester:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return result
 			
-	def update(self):
+	def update(self, connection=None):
 		''' Update an existing Semester record in the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name, self.term_one.name, self.term_two.name, self.name,)
 			cur.execute('''UPDATE semesters 
@@ -416,41 +467,53 @@ class Semester:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def insert(self):
+	def insert(self, connection=None):
 		''' Write the Semester to the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name, self.term_one.name, self.term_two.name,)
 			cur.execute('INSERT INTO semesters VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def delete(self):
+	def delete(self, connection=None):
 		''' Delete the Semester from the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name,)
 			cur.execute('DELETE FROM semesters WHERE name=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 
 class Student:
 	''' A Student who has signed into the attendance system. 
 	The student's RFID ID number is the primary key column.	'''
 	
 	@staticmethod
-	def select_by_id(id):
+	def select_by_id(id, connection=None):
 		''' Return the Student of given ID. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (id,)
 			cur.execute('SELECT * FROM students WHERE id=?', params)
@@ -462,15 +525,19 @@ class Student:
 			
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return student
 	
 	@staticmethod
-	def select_by_name(fname='*', lname='*'):
+	def select_by_name(fname='*', lname='*', connection=None):
 		''' Return the Student(s) of given name. '''
 		students = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (fname, lname,)
 			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', params)
@@ -480,15 +547,19 @@ class Student:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return students
 	
 	@staticmethod
-	def select_by_email(email):
+	def select_by_email(email, connection=None):
 		''' Return the Student(s) with given email address. '''
 		students = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (email,)
 			cur.execute('SELECT * FROM students WHERE email=?', params)
@@ -498,15 +569,19 @@ class Student:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return students
 	
 	@staticmethod
-	def select_by_standing(good_standing):
+	def select_by_standing(good_standing, connection=None):
 		''' Return the list of Students of given standing. '''
 		students = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (int(good_standing),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', params)
@@ -516,15 +591,19 @@ class Student:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return students
 	
 	@staticmethod
-	def select_by_group(group_id, in_group=True):
+	def select_by_group(group_id, in_group=True, connection=None):
 		''' Return the list of Students in some group (or not). '''
 		students = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			params = (group_id,)			
 			if in_group == True:
 				cur.execute("""SELECT * FROM students WHERE id IN
@@ -539,15 +618,19 @@ class Student:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return students
 	
 	@staticmethod
-	def select_by_current(current=True):
+	def select_by_current(current=True, connection=None):
 		''' Return the list of current Students on the roster (or not). '''
 		students = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (int(current),)
 			cur.execute('SELECT * FROM students WHERE current=?', params)
@@ -557,11 +640,12 @@ class Student:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return students
 		
 	@staticmethod
-	def select_by_all(id='*', fname='*', lname='*', email='*', standing='*', current='*'):
+	def select_by_all(id='*', fname='*', lname='*', email='*', standing='*', current='*', connection=None):
 		''' Return a list of Students using any combination of filters. '''
 		if shm != '*':
 			shm = int(shm)
@@ -578,7 +662,10 @@ class Student:
 		students = []
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (id, fname, lname, email, shm, standing, credit, current,)
 			cur.execute('''SELECT * FROM students WHERE id=? INTERSECT 
@@ -593,16 +680,20 @@ class Student:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return students
 	
 	@staticmethod
-	def merge(old, new):
+	def merge(old, new, connection=None):
 		''' Merge the records of one student into another, deleting the first.
 		This should be used when a student replaces their ID card, as the new
 		ID card will have a different RFID number. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (new.rfid, old.rfid, )
 			cur.execute('UPDATE excuses SET student=? WHERE student=?', params)
@@ -613,9 +704,10 @@ class Student:
 		
 		finally:
 			cur.close()
-			con.close()
-			new.fetch_signins()
-			new.fetch_excuses()
+			if connection is None:
+				con.close()
+			new.fetch_signins(connection)
+			new.fetch_excuses(connection)
 	
 	def __init__(self, r, fn, ln, email, standing=True, current=True):
 		self.rfid = r		# Numeric ID seen by the RFID reader
@@ -634,22 +726,25 @@ class Student:
 	def __del__(self):
 		self.delete()
 	
-	def fetch_signins(self):
+	def fetch_signins(self, connection=None):
 		''' Fetch all Signins by this Student from the database. '''
-		self.signins = Signin.select_by_student(self.rfid)
+		self.signins = Signin.select_by_student(self.rfid, connection)
 	
-	def fetch_excuses(self):
+	def fetch_excuses(self, connection=None):
 		''' Fetch all Excuses by this Student from the database. '''
-		self.excuses = Excuse.select_by_student(self.rfid)
+		self.excuses = Excuse.select_by_student(self.rfid, connection)
 	
-	def fetch_absences(self):
+	def fetch_absences(self, connection=None):
 		''' Fetch all Absences by this Student from the database. '''
-		self.absences = Absence.select_by_student(self.rfid)
+		self.absences = Absence.select_by_student(self.rfid, connection)
 	
-	def fetch_groups(self):
+	def fetch_groups(self, connection=None):
 		''' Fetch all Groups this Student is a member of from the database. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name,)
 			cur.execute("""SELECT * FROM groups WHERE name IN
@@ -662,25 +757,33 @@ class Student:
 			
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def join_group(self, group):
+	def join_group(self, group, connection=None):
 		''' Add the Student to a Group. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name, group.id,)
 			cur.execute('INSERT INTO group_memberships VALUES (?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			self.groups.append(group)
 	
-	def leave_group(self, group):
+	def leave_group(self, group, connection=None):
 		''' Remove the Student from a Group. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name, group.id,)
 			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
@@ -688,12 +791,16 @@ class Student:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def update(self):
+	def update(self, connection=None):
 		''' Update an existing Student record in the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current, self.rfid,)
 			cur.execute('''UPDATE students 
@@ -702,31 +809,40 @@ class Student:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def insert(self):
+	def insert(self, connection=None):
 		''' Write the Student to the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.rfid, self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current,)
 			cur.execute('INSERT INTO students VALUES (?,?,?,?,?,?,?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def delete(self):
+	def delete(self, connection=None):
 		''' Delete the Student from the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.rfid,)
 			cur.execute('DELETE FROM students WHERE id=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 
 class Group:
 	''' A group of students. This is usually an ensemble. 
@@ -734,11 +850,14 @@ class Group:
 	ensemble for WPI course credit. '''
 	
 	@staticmethod
-	def select_by_id(gid):
+	def select_by_id(gid, connection=None):
 		''' Return the Group(s) of given ID. '''
 		groups = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (gid,)
 			cur.execute('SELECT * FROM groups WHERE id=?', params)
@@ -748,15 +867,19 @@ class Group:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return groups
 	
 	@staticmethod
-	def select_by_name(name='*'):
+	def select_by_name(name='*', connection=None):
 		''' Return the Group(s) of given name. '''
 		groups = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (name,)
 			cur.execute('SELECT * FROM groups WHERE name=?', params)
@@ -766,15 +889,19 @@ class Group:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return groups
 		
 	@staticmethod
-	def select_by_semester(semester='*'):
+	def select_by_semester(semester='*', connection=None):
 		''' Return the Group(s) of given Semester. '''
 		groups = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (semester,)
 			cur.execute('SELECT * FROM groups WHERE semester=?', params)
@@ -784,7 +911,8 @@ class Group:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return groups
 	
 	def __init__(self, id, name, semester, students=[]):
@@ -793,27 +921,34 @@ class Group:
 		self.semester = semester
 		self.members = students
 		
-	def fetch_members(self):
+	def fetch_members(self, connection=None):
 		''' Fetch all Students in this group from the database. '''
 		self.members = Student.select_by_group(self.id, True)
 	
-	def add_member(self, student):
+	def add_member(self, student, connection=None):
 		''' Add a new member to the group. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (student.name, self.id,)
 			cur.execute('INSERT OR ABORT INTO group_memberships VALUES (?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			self.members.append(student)
 	
-	def remove_member(self, student):
+	def remove_member(self, student, connection=None):
 		''' Remove a member from the group. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (student.name, self.id,)
 			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
@@ -821,45 +956,58 @@ class Group:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 		
-	def update(self):
+	def update(self, connection=None):
 		''' Update an existing Group record in the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.id, self.name, self.semester, self.id,)
 			cur.execute('UPDATE groups SET id=?, name=?, semester=? WHERE id=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def insert(self):
+	def insert(self, connection=None):
 		''' Write the Group to the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.id, self.name, self.semester,)
 			cur.execute('INSERT INTO groups VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def delete(self):
+	def delete(self, connection=None):
 		''' Delete the Group from the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.id,)
 			cur.execute('DELETE FROM groups WHERE id=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			
-	def read_gc_roster(self, infile):
+	def read_gc_roster(self, infile, connection=None):
 		''' Parse the group's roster into the database using the Glee Club roster format. '''
 		book = Workbook(infile)
 		sheet = book['Sheet1']
@@ -874,11 +1022,11 @@ class Group:
 			if row == 1: # skip header
 				continue
 			student = Student(cells[rfid_col].value, cells[fname_col].value, cells[lname_col].value, cells[email_col].value)
-			if Student.select_by_id(student.id) is None:	# Not in DB
-				student.insert()
+			if Student.select_by_id(student.id, connection) is None:	# Not in DB
+				student.insert(connection)
 			else:
-				student.update()
-			self.add_member(student)
+				student.update(connection)
+			self.add_member(student, connection)
 			
 
 class CreditGroup(Group):
@@ -886,11 +1034,14 @@ class CreditGroup(Group):
 	CreditGroups are still stored in the same groups table in the DB. '''
 	
 	@staticmethod
-	def select_by_id(gid):
+	def select_by_id(gid, connection=None):
 		''' Return the CreditGroup(s) of given ID. '''
 		groups = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (gid,)
 			cur.execute('SELECT * FROM groups WHERE id=?', params)
@@ -900,15 +1051,19 @@ class CreditGroup(Group):
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return groups
 	
 	@staticmethod
-	def select_by_name(name='*'):
+	def select_by_name(name='*', connection=None):
 		''' Return the CreditGroup(s) of given name. '''
 		groups = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (name,)
 			cur.execute('SELECT * FROM groups WHERE name=?', params)
@@ -918,15 +1073,19 @@ class CreditGroup(Group):
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return groups
 		
 	@staticmethod
-	def select_by_semester(semester='*'):
+	def select_by_semester(semester='*', connection=None):
 		''' Return the CreditGroup(s) of given Semester. '''
 		groups = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (semester,)
 			cur.execute('SELECT * FROM groups WHERE semester=?', params)
@@ -936,10 +1095,11 @@ class CreditGroup(Group):
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return groups
 	
-	def read_gc_roster(self, infile):
+	def read_gc_roster(self, infile, connection=None):
 		''' Parse the credit group's roster into the database using the Glee Club roster format. 
 		Run this version of the roster parser with "for credit" subgroups in the DB. '''
 		book = Workbook(infile)
@@ -956,11 +1116,11 @@ class CreditGroup(Group):
 				continue
 			if '1' in cells[cred_col].value or 'y' in string.lower(cells[cred_col].value) or 't' in string.lower(cells[cred_col].value):
 				student = Student(cells[rfid_col].value, cells[fname_col].value, cells[lname_col].value, cells[email_col].value)
-				if Student.select_by_id(student.id) is None:	# Not in DB
-					student.insert()
+				if Student.select_by_id(student.id, connection) is None:	# Not in DB
+					student.insert(connection)
 				else:
-					student.update()
-				self.add_member(student)		
+					student.update(connection)
+				self.add_member(student, connection)		
 
 class Absence:
 	''' An instance of a Student not singing into an Event.
@@ -970,11 +1130,14 @@ class Absence:
 	TYPE_UNEXCUSED = "Unexcused"
 	
 	@staticmethod
-	def select_by_student(student_id='*'):
+	def select_by_student(student_id='*', connection=None):
 		''' Return the list of Absences by a Student. '''
 		absences = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (student_id,)
 			cur.execute('SELECT * FROM absences WHERE student=?', params)
@@ -984,15 +1147,19 @@ class Absence:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return absences
 	
 	@staticmethod
-	def select_by_type(absence_type='*'):
+	def select_by_type(absence_type='*', connection=None):
 		''' Return the list of Absences of a given ABSENCE.TYPE_. '''
 		absences = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (absence_type,)
 			cur.execute('SELECT * FROM absences WHERE type=?', params)
@@ -1002,11 +1169,12 @@ class Absence:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return absences
 		
 	@staticmethod
-	def select_by_event_dt(event_dt='*'):
+	def select_by_event_dt(event_dt='*', connection=None):
 		''' Return the list of Absences of a given datetime. '''
 		absences = []
 		
@@ -1014,7 +1182,10 @@ class Absence:
 			event_dt = isoformat(event_dt)
 			
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (event_dt,)
 			cur.execute('SELECT * FROM absences WHERE eventdt=?', params)
@@ -1024,17 +1195,21 @@ class Absence:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return absences
 	
 	@staticmethod
-	def select_by_excuse(excuse_id='*'):
+	def select_by_excuse(excuse_id='*', connection=None):
 		''' Return the list of Absences of a given excuse ID.
 		Should only return one, but returning a list in case of
 		data integrity issues related to Excuse-Event mis-assignment. '''
 		absences = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (excuse_id,)
 			cur.execute('SELECT * FROM absences WHERE excuseid=?', params)
@@ -1044,11 +1219,12 @@ class Absence:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return absences
 	
 	@staticmethod
-	def select_by_all(student_id='*', absence_type='*', event_dt='*', excuse_id='*'):
+	def select_by_all(student_id='*', absence_type='*', event_dt='*', excuse_id='*', connection=None):
 		''' Return the list of Absences using any combination of filters. '''
 		absences = []
 		
@@ -1056,7 +1232,10 @@ class Absence:
 			event_dt = isoformat(event_dt)
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (student_id, absence_type, event_dt, excuse_id,)
 			cur.execute('''SELECT * FROM absences WHERE student=? INTERSECT
@@ -1069,7 +1248,8 @@ class Absence:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return absences
 	
 	def __init__(self, student_id, t, event_dt, excuse_id=None):
@@ -1081,10 +1261,13 @@ class Absence:
 	def __del__(self):
 		self.delete()
 		
-	def update(self):
+	def update(self, connection=None):
 		''' Update an existing Absence record in the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.student, self.type, self.event_dt, self.excuse_id, self.student, self.event_dt,)
 			cur.execute('''UPDATE absences 
@@ -1093,31 +1276,40 @@ class Absence:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def insert(self):
+	def insert(self, connection=None):
 		''' Write the Absence to the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.student, self.type, self.event_dt, self.excuse_id,)
 			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def delete(self):
+	def delete(self, connection=None):
 		''' Delete the Absence from the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.student, self.event_dt,)
 			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
 class Excuse:
 	''' A Student's excuse for missing an Event sent to gc-excuse. 
@@ -1128,10 +1320,13 @@ class Excuse:
 	EXCUSES_CLOSES = datetime.timedelta(0, 0, 0, 0, 0, 6, 0)	# 6 hours after
 	
 	@staticmethod
-	def select_by_id(excuse_id):
+	def select_by_id(excuse_id, connection=None):
 		''' Return the Excuse of given unique ID. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (excuse_id,)
 			cur.execute('SELECT * FROM excuses WHERE id=?', params)
@@ -1143,15 +1338,19 @@ class Excuse:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return excuse
 	
 	@staticmethod
-	def select_by_student(student_id='*'):
+	def select_by_student(student_id='*', connection=None):
 		''' Return the list of Excuses by a Student. '''
 		excuses = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (student_id,)
 			cur.execute('SELECT * FROM excuses WHERE student=?', params)
@@ -1161,11 +1360,12 @@ class Excuse:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return excuses
 	
 	@staticmethod
-	def select_by_datetime(start_dt='*', end_dt='*'):
+	def select_by_datetime(start_dt='*', end_dt='*', connection=None):
 		''' Return the list of Excuses in a given datetime range. '''
 		
 		if type(start_dt == datetime):
@@ -1175,7 +1375,10 @@ class Excuse:
 		
 		excuses = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', params)
@@ -1185,11 +1388,12 @@ class Excuse:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return excuses
 		
 	@staticmethod
-	def select_by_event_datetime(event_dt='*'):
+	def select_by_event_datetime(event_dt='*', connection=None):
 		''' Return the list of Excuses associated with a given Event. '''
 		excuses = []
 		
@@ -1197,7 +1401,10 @@ class Excuse:
 			event_dt = isoformat(event_dt)
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (event_dt,)
 			cur.execute('SELECT * FROM excuses WHERE eventdt=?', params)
@@ -1207,11 +1414,12 @@ class Excuse:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return excuses
 		
 	@staticmethod
-	def select_by_all(excuse_id='*', student_id='*', start_dt='*', end_dt='*', event_dt='*'):
+	def select_by_all(excuse_id='*', student_id='*', start_dt='*', end_dt='*', event_dt='*', connection=None):
 		''' Return a list of Excuses using any combination of filters. '''
 		excuses = []
 		
@@ -1223,7 +1431,10 @@ class Excuse:
 			event_dt = isoformat(event_dt)
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (excuse_id, student_id, start_dt, end_dt, event_dt,)
 			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT 
@@ -1236,7 +1447,8 @@ class Excuse:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return excuses
 	 
 	def __init__(self, id, dt, event_dt, reason, s):
@@ -1249,10 +1461,13 @@ class Excuse:
 	def __del__(self):
 		self.delete()
 		
-	def update(self):
+	def update(self, connection=None):
 		''' Update an existing Excuse record in the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.excuse_dt, self.event_dt, self.reason, self.student, self.id,)
 			cur.execute('''UPDATE excuses 
@@ -1261,12 +1476,16 @@ class Excuse:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def insert(self):
+	def insert(self, connection=None):
 		''' Write the Excuse to the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.excuse_dt, self.event_dt, self.reason, self.student,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
@@ -1274,30 +1493,38 @@ class Excuse:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def delete(self):
+	def delete(self, connection=None):
 		''' Delete the Excuse from the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.id,)
 			cur.execute('DELETE FROM excuses WHERE id=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
 class Signin:
 	''' Corresponds to a row in the RFID output file. 
 	The datetime and student ID are the primary key colums.'''
 	
 	@staticmethod
-	def select_by_student(id):
+	def select_by_student(id, connection=None):
 		''' Return the list of Signins by a Student. '''
 		signins = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (id,)
 			cur.execute('SELECT * FROM signins WHERE student=?', params)
@@ -1307,11 +1534,12 @@ class Signin:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return signins
 	
 	@staticmethod
-	def select_by_datetime(start_dt, end_dt):
+	def select_by_datetime(start_dt, end_dt, connection=None):
 		''' Return the list of Signins in a given datetime range. '''
 		signins = []
 		
@@ -1321,7 +1549,10 @@ class Signin:
 			end_dt = isoformat(end_dt)
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', params)
@@ -1331,11 +1562,12 @@ class Signin:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return signins
 	
 	@staticmethod
-	def select_by_event_datetime(event_dt):
+	def select_by_event_datetime(event_dt, connection=None):
 		''' Return the list of Signins associated with a given Event. '''
 		signins = []
 		
@@ -1343,7 +1575,10 @@ class Signin:
 			event_dt = isoformat(event_dt)
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (isoformat(event_dt),)
 			cur.execute('SELECT * FROM signins WHERE eventdt=?', params)
@@ -1353,11 +1588,12 @@ class Signin:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return signins
 	
 	@staticmethod
-	def select_by_all(id='*', start_dt='*', end_dt='*', event_dt='*'):
+	def select_by_all(id='*', start_dt='*', end_dt='*', event_dt='*', connection=None):
 		''' Return a list of Signins using any combination of filters. '''
 		signins = []
 		
@@ -1369,7 +1605,10 @@ class Signin:
 			event_dt = isoformat(event_dt)
 			
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (id, start_dt, end_dt, event_dt,)
 			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
@@ -1381,7 +1620,8 @@ class Signin:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return signins
 	
 	def __init__(self, dt, event_dt, s):
@@ -1392,10 +1632,13 @@ class Signin:
 	def __del__(self):
 		self.delete()
 		
-	def update(self):
+	def update(self, connection=None):
 		''' Update an existing Signin record in the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.signin_dt, self.event_dt, self.student, self.event_dt, self.student,)
 			cur.execute('''UPDATE signins 
@@ -1404,31 +1647,40 @@ class Signin:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def insert(self):
+	def insert(self, connection=None):
 		''' Write the Signin to the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.signin_dt, self.event_dt, self.student,)
 			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def delete(self):
+	def delete(self, connection=None):
 		''' Delete the Signin from the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.signin_dt, self.student,)
 			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 
 class Event:
 	''' An event where attendance is taken. 
@@ -1443,11 +1695,14 @@ class Event:
 	ATTENDANCE_CLOSES = datetime.timedelta(0, 0, 0, 0, 30, 1, 0)	# 90 minutes after
 	
 	@staticmethod
-	def select_by_name(name):
+	def select_by_name(name, connection=None):
 		''' Return the list of Events of a given name. '''
 		events = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (name,)
 			cur.execute('SELECT * FROM events WHERE eventname=?', params)
@@ -1457,11 +1712,12 @@ class Event:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return events
 	
 	@staticmethod
-	def select_by_datetime(start_dt, end_dt):
+	def select_by_datetime(start_dt, end_dt, connection=None):
 		''' Return the list of Events in a given datetime range. '''
 		events = []
 		
@@ -1471,7 +1727,10 @@ class Event:
 			end_dt = isoformat(end_dt)
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params)
@@ -1481,15 +1740,19 @@ class Event:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return events
 	
 	@staticmethod
-	def select_by_type(type):
+	def select_by_type(type, connection=None):
 		''' Return the list of Events of a given type. '''
 		events = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (type,)
 			cur.execute('SELECT * FROM events WHERE eventtype=?', params)
@@ -1499,15 +1762,19 @@ class Event:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return events
 	
 	@staticmethod
-	def select_by_group(group):
+	def select_by_group(group, connection=None):
 		''' Return the list of Events of a given group. '''
 		events = []
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (group,)
 			cur.execute('SELECT * FROM events WHERE group=?', params)
@@ -1517,11 +1784,12 @@ class Event:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return events
 	
 	@staticmethod
-	def select_by_all(name, start_dt, end_dt, type, group):
+	def select_by_all(name, start_dt, end_dt, type, group, connection=None):
 		''' Return a list of Events using any combination of filters. '''
 		events = []
 		
@@ -1531,7 +1799,10 @@ class Event:
 			end_dt = isoformat(end_dt)
 		
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (name, start_dt, end_dt, type, group,)
 			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
@@ -1544,7 +1815,8 @@ class Event:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 			return events
 	
 	def __init__(self, name, dt, t, group):
@@ -1559,22 +1831,25 @@ class Event:
 	def __del__(self):
 		self.delete()
 		
-	def fetch_signins(self):
+	def fetch_signins(self, connection=None):
 		''' Fetch all Signins for this Event from the database. '''
-		self.signins = Signin.select_by_datetime(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES)
+		self.signins = Signin.select_by_datetime(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES, connection)
 	
-	def fetch_excuses(self):
+	def fetch_excuses(self, connection=None):
 		''' Fetch all Excuses for this Event from the database. '''
-		self.excuses = Excuse.select_by_datetime(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES)
+		self.excuses = Excuse.select_by_datetime(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES, connection)
 		
-	def fetch_absences(self):
+	def fetch_absences(self, connection=None):
 		''' Fetch all Absences for this Event from the database. '''
-		self.absences = Absence.select_by_event_dt(self.event_dt)
+		self.absences = Absence.select_by_event_dt(self.event_dt, connection)
 	
-	def update(self):
+	def update(self, connection=None):
 		''' Update an existing Event record in the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name, self.event_dt, self.event_type, self.group.id, self.event_dt,)
 			cur.execute('''UPDATE events 
@@ -1583,30 +1858,39 @@ class Event:
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def insert(self):
+	def insert(self, connection=None):
 		''' Write the Event to the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.name, self.event_dt, self.event_type, self.group.id,)
 			cur.execute('INSERT INTO events VALUES (?,?,?,?)', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 	
-	def delete(self):
+	def delete(self, connection=None):
 		''' Delete the Event from the DB. '''
 		try:
-			(con, cur) = gcdb.con_cursor()
+			if connection is None:
+				(con, cur) = gcdb.con_cursor()
+			else:
+				cur = connection.cursor()
 			
 			params = (self.event_dt,)
 			cur.execute('DELETE FROM events WHERE dt=?', params)
 				
 		finally:
 			cur.close()
-			con.close()
+			if connection is None:
+				con.close()
 
 	
