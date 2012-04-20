@@ -879,6 +879,29 @@ class Group:
 			else:
 				student.update()
 			self.add_member(student)
+			
+	def read_gc_credit_roster(self, infile):
+		''' Parse the credit group's roster into the database using the Glee Club roster format. 
+		Run this version of the roster parser with "for credit" subgroups in the DB. '''
+		book = Workbook(infile)
+		sheet = book['Sheet1']
+		rfid_col = 0
+		fname_col = 1
+		lname_col = 2
+		email_col = 3
+		shm_col = 4
+		cred_col = 5
+		officer_col = 6
+		for row, cells in sheet.rows().iteritems():	# row is the row number
+			if row == 1: # skip header
+				continue
+			if '1' in cells[cred_col].value or 'y' in string.lower(cells[cred_col].value) or 't' in string.lower(cells[cred_col].value):
+				student = Student(cells[rfid_col].value, cells[fname_col].value, cells[lname_col].value, cells[email_col].value)
+				if Student.select_by_id(student.id) is None:	# Not in DB
+					student.insert()
+				else:
+					student.update()
+				self.add_member(student)
 				
 
 class Absence:
