@@ -656,7 +656,7 @@ class Student:
 					(SELECT DISTINCT group FROM group_memberships WHERE student=?)""", params)
 			rows = cur.fetchall()
 			for row in rows:
-				group = Group(row[0])
+				group = Group(row[0], row[1], row[2])
 				group.fetch_members()
 				self.groups.append(group)
 			
