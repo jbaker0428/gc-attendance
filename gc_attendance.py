@@ -88,7 +88,7 @@ class AttendanceDB:
 			cur.close()
 			con.close()
 	
-	def read_attendance(self, infile, connection=None):
+	def read_attendance(self, infile, db=gcdb, connection=None):
 		''' Parse the attendance record spreadsheet and write to the database. ''' 
 		try:
 			signins = []
@@ -107,7 +107,7 @@ class AttendanceDB:
 					signins.append(record)
 			
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -116,7 +116,7 @@ class AttendanceDB:
 				if Student.select_by_id(t[3]) == None:
 					new_student = Student(t[3], 'NULL', 'NULL', 'NULL')
 					print 'Adding unknown member to database, RFID# = ', t[3]
-					new_student.insert(connection)
+					new_student.insert(db, connection)
 			cur.executemany('INSERT OR ABORT INTO signins VALUES (?,?,?)', signins)
 			
 		finally:
@@ -130,11 +130,11 @@ class Term:
 	''' Corresponds to one 7-week term on WPI's academic calendar. '''
 	
 	@staticmethod
-	def select_by_name(name='*', connection=None):
+	def select_by_name(name='*', db=gcdb, connection=None):
 		''' Return the Term of given name. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -153,7 +153,7 @@ class Term:
 			return term
 	
 	@staticmethod
-	def select_by_date(start_date='*', end_date='*', connection=None):
+	def select_by_date(start_date='*', end_date='*', db=gcdb, connection=None):
 		''' Return the list of Terms in a given datetime range. 
 		Any Term whose startdate or enddate column falls within the
 		given range will be returned. '''
@@ -166,7 +166,7 @@ class Term:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -184,7 +184,7 @@ class Term:
 			return terms
 	
 	@staticmethod
-	def select_by_all(name='*', start_date='*', end_date='*', connection=None):
+	def select_by_all(name='*', start_date='*', end_date='*', db=gcdb, connection=None):
 		''' Return a list of Terms using any combination of filters. '''
 		terms = []
 		
@@ -195,7 +195,7 @@ class Term:
 			
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -221,7 +221,7 @@ class Term:
 		for d in days_off:
 			self.days_off.append(d)	
 	
-	def fetch_days_off(self, connection=None):
+	def fetch_days_off(self, db=gcdb, connection=None):
 		''' Fetch all daysoff table entries for this Term from the database. 
 		Returns a list of date objects. '''
 		result = []
@@ -241,7 +241,7 @@ class Term:
 				raise TypeError
 		
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -256,11 +256,11 @@ class Term:
 				con.close()
 			return result
 			
-	def update(self, connection=None):
+	def update(self, db=gcdb, connection=None):
 		''' Update an existing Term record in the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -274,11 +274,11 @@ class Term:
 			if connection is None:
 				con.close()
 	
-	def insert(self, connection=None):
+	def insert(self, db=gcdb, connection=None):
 		''' Write the Term to the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -290,11 +290,11 @@ class Term:
 			if connection is None:
 				con.close()
 	
-	def delete(self, connection=None):
+	def delete(self, db=gcdb, connection=None):
 		''' Delete the Term from the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -310,11 +310,11 @@ class Semester:
 	''' Corresponds to one 2-term semester on WPI's academic calendar. '''
 	
 	@staticmethod
-	def select_by_name(name='*', connection=None):
+	def select_by_name(name='*', db=gcdb, connection=None):
 		''' Return the Semester of given name. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -335,7 +335,7 @@ class Semester:
 			return semester
 	
 	@staticmethod
-	def select_by_date(start_date='*', end_date='*', connection=None):
+	def select_by_date(start_date='*', end_date='*', db=gcdb, connection=None):
 		''' Return the list of Semesters in a given datetime range. 
 		Any Semester whose startdate or enddate falls within the
 		given range will be returned. '''
@@ -350,7 +350,7 @@ class Semester:
 			
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -376,7 +376,7 @@ class Semester:
 			return semesters
 	
 	@staticmethod
-	def select_by_all(name='*', start_date='*', end_date='*', connection=None):
+	def select_by_all(name='*', start_date='*', end_date='*', db=gcdb, connection=None):
 		''' Return a list of Semesters using any combination of filters. '''
 		semesters = []
 		
@@ -387,7 +387,7 @@ class Semester:
 			
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -417,7 +417,7 @@ class Semester:
 		self.term_one = term_one	# A or C term
 		self.term_two = term_two	# B or D term
 		
-	def fetch_days_off(self, connection=None):
+	def fetch_days_off(self, db=gcdb, connection=None):
 		''' Fetch all daysoff table entries for this Semester from the database. 
 		Returns a list of date objects. '''
 		result = []
@@ -437,7 +437,7 @@ class Semester:
 				raise TypeError
 		
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -452,11 +452,11 @@ class Semester:
 				con.close()
 			return result
 			
-	def update(self, connection=None):
+	def update(self, db=gcdb, connection=None):
 		''' Update an existing Semester record in the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -470,11 +470,11 @@ class Semester:
 			if connection is None:
 				con.close()
 	
-	def insert(self, connection=None):
+	def insert(self, db=gcdb, connection=None):
 		''' Write the Semester to the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -486,11 +486,11 @@ class Semester:
 			if connection is None:
 				con.close()
 	
-	def delete(self, connection=None):
+	def delete(self, db=gcdb, connection=None):
 		''' Delete the Semester from the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -507,11 +507,11 @@ class Student:
 	The student's RFID ID number is the primary key column.	'''
 	
 	@staticmethod
-	def select_by_id(id, connection=None):
+	def select_by_id(id, db=gcdb, connection=None):
 		''' Return the Student of given ID. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -530,12 +530,12 @@ class Student:
 			return student
 	
 	@staticmethod
-	def select_by_name(fname='*', lname='*', connection=None):
+	def select_by_name(fname='*', lname='*', db=gcdb, connection=None):
 		''' Return the Student(s) of given name. '''
 		students = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -552,12 +552,12 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_email(email, connection=None):
+	def select_by_email(email, db=gcdb, connection=None):
 		''' Return the Student(s) with given email address. '''
 		students = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -574,12 +574,12 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_standing(good_standing, connection=None):
+	def select_by_standing(good_standing, db=gcdb, connection=None):
 		''' Return the list of Students of given standing. '''
 		students = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -596,12 +596,12 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_group(group_id, in_group=True, connection=None):
+	def select_by_group(group_id, in_group=True, db=gcdb, connection=None):
 		''' Return the list of Students in some group (or not). '''
 		students = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			params = (group_id,)			
@@ -623,12 +623,12 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_current(current=True, connection=None):
+	def select_by_current(current=True, db=gcdb, connection=None):
 		''' Return the list of current Students on the roster (or not). '''
 		students = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -645,7 +645,7 @@ class Student:
 			return students
 		
 	@staticmethod
-	def select_by_all(id='*', fname='*', lname='*', email='*', standing='*', current='*', connection=None):
+	def select_by_all(id='*', fname='*', lname='*', email='*', standing='*', current='*', db=gcdb, connection=None):
 		''' Return a list of Students using any combination of filters. '''
 		if shm != '*':
 			shm = int(shm)
@@ -663,7 +663,7 @@ class Student:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -685,13 +685,13 @@ class Student:
 			return students
 	
 	@staticmethod
-	def merge(old, new, connection=None):
+	def merge(old, new, db=gcdb, connection=None):
 		''' Merge the records of one student into another, deleting the first.
 		This should be used when a student replaces their ID card, as the new
 		ID card will have a different RFID number. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -706,8 +706,8 @@ class Student:
 			cur.close()
 			if connection is None:
 				con.close()
-			new.fetch_signins(connection)
-			new.fetch_excuses(connection)
+			new.fetch_signins(db, connection)
+			new.fetch_excuses(db, connection)
 	
 	def __init__(self, r, fn, ln, email, standing=True, current=True):
 		self.rfid = r		# Numeric ID seen by the RFID reader
@@ -726,23 +726,23 @@ class Student:
 	def __del__(self):
 		self.delete()
 	
-	def fetch_signins(self, connection=None):
+	def fetch_signins(self, db=gcdb, connection=None):
 		''' Fetch all Signins by this Student from the database. '''
-		self.signins = Signin.select_by_student(self.rfid, connection)
+		self.signins = Signin.select_by_student(self.rfid, db, connection)
 	
-	def fetch_excuses(self, connection=None):
+	def fetch_excuses(self, db=gcdb, connection=None):
 		''' Fetch all Excuses by this Student from the database. '''
-		self.excuses = Excuse.select_by_student(self.rfid, connection)
+		self.excuses = Excuse.select_by_student(self.rfid, db, connection)
 	
-	def fetch_absences(self, connection=None):
+	def fetch_absences(self, db=gcdb, connection=None):
 		''' Fetch all Absences by this Student from the database. '''
-		self.absences = Absence.select_by_student(self.rfid, connection)
+		self.absences = Absence.select_by_student(self.rfid, db, connection)
 	
-	def fetch_groups(self, connection=None):
+	def fetch_groups(self, db=gcdb, connection=None):
 		''' Fetch all Groups this Student is a member of from the database. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -760,11 +760,11 @@ class Student:
 			if connection is None:
 				con.close()
 	
-	def join_group(self, group, connection=None):
+	def join_group(self, group, db=gcdb, connection=None):
 		''' Add the Student to a Group. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -777,11 +777,11 @@ class Student:
 				con.close()
 			self.groups.append(group)
 	
-	def leave_group(self, group, connection=None):
+	def leave_group(self, group, db=gcdb, connection=None):
 		''' Remove the Student from a Group. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -794,11 +794,11 @@ class Student:
 			if connection is None:
 				con.close()
 	
-	def update(self, connection=None):
+	def update(self, db=gcdb, connection=None):
 		''' Update an existing Student record in the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -812,11 +812,11 @@ class Student:
 			if connection is None:
 				con.close()
 	
-	def insert(self, connection=None):
+	def insert(self, db=gcdb, connection=None):
 		''' Write the Student to the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -828,11 +828,11 @@ class Student:
 			if connection is None:
 				con.close()
 	
-	def delete(self, connection=None):
+	def delete(self, db=gcdb, connection=None):
 		''' Delete the Student from the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -850,12 +850,12 @@ class Group:
 	ensemble for WPI course credit. '''
 	
 	@staticmethod
-	def select_by_id(gid, connection=None):
+	def select_by_id(gid, db=gcdb, connection=None):
 		''' Return the Group(s) of given ID. '''
 		groups = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -872,12 +872,12 @@ class Group:
 			return groups
 	
 	@staticmethod
-	def select_by_name(name='*', connection=None):
+	def select_by_name(name='*', db=gcdb, connection=None):
 		''' Return the Group(s) of given name. '''
 		groups = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -894,12 +894,12 @@ class Group:
 			return groups
 		
 	@staticmethod
-	def select_by_semester(semester='*', connection=None):
+	def select_by_semester(semester='*', db=gcdb, connection=None):
 		''' Return the Group(s) of given Semester. '''
 		groups = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -921,15 +921,15 @@ class Group:
 		self.semester = semester
 		self.members = students
 		
-	def fetch_members(self, connection=None):
+	def fetch_members(self, db=gcdb, connection=None):
 		''' Fetch all Students in this group from the database. '''
 		self.members = Student.select_by_group(self.id, True)
 	
-	def add_member(self, student, connection=None):
+	def add_member(self, student, db=gcdb, connection=None):
 		''' Add a new member to the group. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -942,11 +942,11 @@ class Group:
 				con.close()
 			self.members.append(student)
 	
-	def remove_member(self, student, connection=None):
+	def remove_member(self, student, db=gcdb, connection=None):
 		''' Remove a member from the group. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -959,11 +959,11 @@ class Group:
 			if connection is None:
 				con.close()
 		
-	def update(self, connection=None):
+	def update(self, db=gcdb, connection=None):
 		''' Update an existing Group record in the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -975,11 +975,11 @@ class Group:
 			if connection is None:
 				con.close()
 	
-	def insert(self, connection=None):
+	def insert(self, db=gcdb, connection=None):
 		''' Write the Group to the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -991,11 +991,11 @@ class Group:
 			if connection is None:
 				con.close()
 	
-	def delete(self, connection=None):
+	def delete(self, db=gcdb, connection=None):
 		''' Delete the Group from the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1007,7 +1007,7 @@ class Group:
 			if connection is None:
 				con.close()
 			
-	def read_gc_roster(self, infile, connection=None):
+	def read_gc_roster(self, infile, db=gcdb, connection=None):
 		''' Parse the group's roster into the database using the Glee Club roster format. '''
 		book = Workbook(infile)
 		sheet = book['Sheet1']
@@ -1022,11 +1022,11 @@ class Group:
 			if row == 1: # skip header
 				continue
 			student = Student(cells[rfid_col].value, cells[fname_col].value, cells[lname_col].value, cells[email_col].value)
-			if Student.select_by_id(student.id, connection) is None:	# Not in DB
-				student.insert(connection)
+			if Student.select_by_id(student.id, db, connection) is None:	# Not in DB
+				student.insert(db, connection)
 			else:
-				student.update(connection)
-			self.add_member(student, connection)
+				student.update(db, connection)
+			self.add_member(student, db, connection)
 			
 
 class CreditGroup(Group):
@@ -1034,12 +1034,12 @@ class CreditGroup(Group):
 	CreditGroups are still stored in the same groups table in the DB. '''
 	
 	@staticmethod
-	def select_by_id(gid, connection=None):
+	def select_by_id(gid, db=gcdb, connection=None):
 		''' Return the CreditGroup(s) of given ID. '''
 		groups = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1056,12 +1056,12 @@ class CreditGroup(Group):
 			return groups
 	
 	@staticmethod
-	def select_by_name(name='*', connection=None):
+	def select_by_name(name='*', db=gcdb, connection=None):
 		''' Return the CreditGroup(s) of given name. '''
 		groups = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1078,12 +1078,12 @@ class CreditGroup(Group):
 			return groups
 		
 	@staticmethod
-	def select_by_semester(semester='*', connection=None):
+	def select_by_semester(semester='*', db=gcdb, connection=None):
 		''' Return the CreditGroup(s) of given Semester. '''
 		groups = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1099,7 +1099,7 @@ class CreditGroup(Group):
 				con.close()
 			return groups
 	
-	def read_gc_roster(self, infile, connection=None):
+	def read_gc_roster(self, infile, db=gcdb, connection=None):
 		''' Parse the credit group's roster into the database using the Glee Club roster format. 
 		Run this version of the roster parser with "for credit" subgroups in the DB. '''
 		book = Workbook(infile)
@@ -1116,11 +1116,11 @@ class CreditGroup(Group):
 				continue
 			if '1' in cells[cred_col].value or 'y' in string.lower(cells[cred_col].value) or 't' in string.lower(cells[cred_col].value):
 				student = Student(cells[rfid_col].value, cells[fname_col].value, cells[lname_col].value, cells[email_col].value)
-				if Student.select_by_id(student.id, connection) is None:	# Not in DB
-					student.insert(connection)
+				if Student.select_by_id(student.id, db, connection) is None:	# Not in DB
+					student.insert(db, connection)
 				else:
-					student.update(connection)
-				self.add_member(student, connection)		
+					student.update(db, connection)
+				self.add_member(student, db, connection)		
 
 class Absence:
 	''' An instance of a Student not singing into an Event.
@@ -1130,12 +1130,12 @@ class Absence:
 	TYPE_UNEXCUSED = "Unexcused"
 	
 	@staticmethod
-	def select_by_student(student_id='*', connection=None):
+	def select_by_student(student_id='*', db=gcdb, connection=None):
 		''' Return the list of Absences by a Student. '''
 		absences = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1152,12 +1152,12 @@ class Absence:
 			return absences
 	
 	@staticmethod
-	def select_by_type(absence_type='*', connection=None):
+	def select_by_type(absence_type='*', db=gcdb, connection=None):
 		''' Return the list of Absences of a given ABSENCE.TYPE_. '''
 		absences = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1174,7 +1174,7 @@ class Absence:
 			return absences
 		
 	@staticmethod
-	def select_by_event_dt(event_dt='*', connection=None):
+	def select_by_event_dt(event_dt='*', db=gcdb, connection=None):
 		''' Return the list of Absences of a given datetime. '''
 		absences = []
 		
@@ -1183,7 +1183,7 @@ class Absence:
 			
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1200,14 +1200,14 @@ class Absence:
 			return absences
 	
 	@staticmethod
-	def select_by_excuse(excuse_id='*', connection=None):
+	def select_by_excuse(excuse_id='*', db=gcdb, connection=None):
 		''' Return the list of Absences of a given excuse ID.
 		Should only return one, but returning a list in case of
 		data integrity issues related to Excuse-Event mis-assignment. '''
 		absences = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1224,7 +1224,7 @@ class Absence:
 			return absences
 	
 	@staticmethod
-	def select_by_all(student_id='*', absence_type='*', event_dt='*', excuse_id='*', connection=None):
+	def select_by_all(student_id='*', absence_type='*', event_dt='*', excuse_id='*', db=gcdb, connection=None):
 		''' Return the list of Absences using any combination of filters. '''
 		absences = []
 		
@@ -1233,7 +1233,7 @@ class Absence:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1261,11 +1261,11 @@ class Absence:
 	def __del__(self):
 		self.delete()
 		
-	def update(self, connection=None):
+	def update(self, db=gcdb, connection=None):
 		''' Update an existing Absence record in the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1279,11 +1279,11 @@ class Absence:
 			if connection is None:
 				con.close()
 	
-	def insert(self, connection=None):
+	def insert(self, db=gcdb, connection=None):
 		''' Write the Absence to the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1295,11 +1295,11 @@ class Absence:
 			if connection is None:
 				con.close()
 	
-	def delete(self, connection=None):
+	def delete(self, db=gcdb, connection=None):
 		''' Delete the Absence from the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1320,11 +1320,11 @@ class Excuse:
 	EXCUSES_CLOSES = datetime.timedelta(0, 0, 0, 0, 0, 6, 0)	# 6 hours after
 	
 	@staticmethod
-	def select_by_id(excuse_id, connection=None):
+	def select_by_id(excuse_id, db=gcdb, connection=None):
 		''' Return the Excuse of given unique ID. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1343,12 +1343,12 @@ class Excuse:
 			return excuse
 	
 	@staticmethod
-	def select_by_student(student_id='*', connection=None):
+	def select_by_student(student_id='*', db=gcdb, connection=None):
 		''' Return the list of Excuses by a Student. '''
 		excuses = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1365,7 +1365,7 @@ class Excuse:
 			return excuses
 	
 	@staticmethod
-	def select_by_datetime(start_dt='*', end_dt='*', connection=None):
+	def select_by_datetime(start_dt='*', end_dt='*', db=gcdb, connection=None):
 		''' Return the list of Excuses in a given datetime range. '''
 		
 		if type(start_dt == datetime):
@@ -1376,7 +1376,7 @@ class Excuse:
 		excuses = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1393,7 +1393,7 @@ class Excuse:
 			return excuses
 		
 	@staticmethod
-	def select_by_event_datetime(event_dt='*', connection=None):
+	def select_by_event_datetime(event_dt='*', db=gcdb, connection=None):
 		''' Return the list of Excuses associated with a given Event. '''
 		excuses = []
 		
@@ -1402,7 +1402,7 @@ class Excuse:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1419,7 +1419,7 @@ class Excuse:
 			return excuses
 		
 	@staticmethod
-	def select_by_all(excuse_id='*', student_id='*', start_dt='*', end_dt='*', event_dt='*', connection=None):
+	def select_by_all(excuse_id='*', student_id='*', start_dt='*', end_dt='*', event_dt='*', db=gcdb, connection=None):
 		''' Return a list of Excuses using any combination of filters. '''
 		excuses = []
 		
@@ -1432,7 +1432,7 @@ class Excuse:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1461,11 +1461,11 @@ class Excuse:
 	def __del__(self):
 		self.delete()
 		
-	def update(self, connection=None):
+	def update(self, db=gcdb, connection=None):
 		''' Update an existing Excuse record in the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1479,11 +1479,11 @@ class Excuse:
 			if connection is None:
 				con.close()
 	
-	def insert(self, connection=None):
+	def insert(self, db=gcdb, connection=None):
 		''' Write the Excuse to the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1496,11 +1496,11 @@ class Excuse:
 			if connection is None:
 				con.close()
 	
-	def delete(self, connection=None):
+	def delete(self, db=gcdb, connection=None):
 		''' Delete the Excuse from the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1517,12 +1517,12 @@ class Signin:
 	The datetime and student ID are the primary key colums.'''
 	
 	@staticmethod
-	def select_by_student(id, connection=None):
+	def select_by_student(id, db=gcdb, connection=None):
 		''' Return the list of Signins by a Student. '''
 		signins = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1539,7 +1539,7 @@ class Signin:
 			return signins
 	
 	@staticmethod
-	def select_by_datetime(start_dt, end_dt, connection=None):
+	def select_by_datetime(start_dt, end_dt, db=gcdb, connection=None):
 		''' Return the list of Signins in a given datetime range. '''
 		signins = []
 		
@@ -1550,7 +1550,7 @@ class Signin:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1567,7 +1567,7 @@ class Signin:
 			return signins
 	
 	@staticmethod
-	def select_by_event_datetime(event_dt, connection=None):
+	def select_by_event_datetime(event_dt, db=gcdb, connection=None):
 		''' Return the list of Signins associated with a given Event. '''
 		signins = []
 		
@@ -1576,7 +1576,7 @@ class Signin:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1593,7 +1593,7 @@ class Signin:
 			return signins
 	
 	@staticmethod
-	def select_by_all(id='*', start_dt='*', end_dt='*', event_dt='*', connection=None):
+	def select_by_all(id='*', start_dt='*', end_dt='*', event_dt='*', db=gcdb, connection=None):
 		''' Return a list of Signins using any combination of filters. '''
 		signins = []
 		
@@ -1606,7 +1606,7 @@ class Signin:
 			
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1632,11 +1632,11 @@ class Signin:
 	def __del__(self):
 		self.delete()
 		
-	def update(self, connection=None):
+	def update(self, db=gcdb, connection=None):
 		''' Update an existing Signin record in the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1650,11 +1650,11 @@ class Signin:
 			if connection is None:
 				con.close()
 	
-	def insert(self, connection=None):
+	def insert(self, db=gcdb, connection=None):
 		''' Write the Signin to the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1666,11 +1666,11 @@ class Signin:
 			if connection is None:
 				con.close()
 	
-	def delete(self, connection=None):
+	def delete(self, db=gcdb, connection=None):
 		''' Delete the Signin from the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1695,12 +1695,12 @@ class Event:
 	ATTENDANCE_CLOSES = datetime.timedelta(0, 0, 0, 0, 30, 1, 0)	# 90 minutes after
 	
 	@staticmethod
-	def select_by_name(name, connection=None):
+	def select_by_name(name, db=gcdb, connection=None):
 		''' Return the list of Events of a given name. '''
 		events = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1717,7 +1717,7 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_datetime(start_dt, end_dt, connection=None):
+	def select_by_datetime(start_dt, end_dt, db=gcdb, connection=None):
 		''' Return the list of Events in a given datetime range. '''
 		events = []
 		
@@ -1728,7 +1728,7 @@ class Event:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1745,12 +1745,12 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_type(type, connection=None):
+	def select_by_type(type, db=gcdb, connection=None):
 		''' Return the list of Events of a given type. '''
 		events = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1767,12 +1767,12 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_group(group, connection=None):
+	def select_by_group(group, db=gcdb, connection=None):
 		''' Return the list of Events of a given group. '''
 		events = []
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1789,7 +1789,7 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_all(name, start_dt, end_dt, type, group, connection=None):
+	def select_by_all(name, start_dt, end_dt, type, group, db=gcdb, connection=None):
 		''' Return a list of Events using any combination of filters. '''
 		events = []
 		
@@ -1800,7 +1800,7 @@ class Event:
 		
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1831,23 +1831,23 @@ class Event:
 	def __del__(self):
 		self.delete()
 		
-	def fetch_signins(self, connection=None):
+	def fetch_signins(self, db=gcdb, connection=None):
 		''' Fetch all Signins for this Event from the database. '''
-		self.signins = Signin.select_by_datetime(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES, connection)
+		self.signins = Signin.select_by_datetime(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES, db, connection)
 	
-	def fetch_excuses(self, connection=None):
+	def fetch_excuses(self, db=gcdb, connection=None):
 		''' Fetch all Excuses for this Event from the database. '''
-		self.excuses = Excuse.select_by_datetime(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES, connection)
+		self.excuses = Excuse.select_by_datetime(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES, db, connection)
 		
-	def fetch_absences(self, connection=None):
+	def fetch_absences(self, db=gcdb, connection=None):
 		''' Fetch all Absences for this Event from the database. '''
-		self.absences = Absence.select_by_event_dt(self.event_dt, connection)
+		self.absences = Absence.select_by_event_dt(self.event_dt, db, connection)
 	
-	def update(self, connection=None):
+	def update(self, db=gcdb, connection=None):
 		''' Update an existing Event record in the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1861,11 +1861,11 @@ class Event:
 			if connection is None:
 				con.close()
 	
-	def insert(self, connection=None):
+	def insert(self, db=gcdb, connection=None):
 		''' Write the Event to the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
@@ -1877,11 +1877,11 @@ class Event:
 			if connection is None:
 				con.close()
 	
-	def delete(self, connection=None):
+	def delete(self, db=gcdb, connection=None):
 		''' Delete the Event from the DB. '''
 		try:
 			if connection is None:
-				(con, cur) = gcdb.con_cursor()
+				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
