@@ -1138,7 +1138,15 @@ class Absence:
 			params = (student_id,)
 			cur.execute('SELECT * FROM absences WHERE student=?', params)
 			for row in cur.fetchall():
-				absence = Absence(row[0], row[1], row[2], row[3])
+				if row[2] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+				if row[3] == 'NULL':
+					excuse = None
+				else:
+					excuse = Excuse.select_by_id(row[3], db, connection)
+				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1160,7 +1168,15 @@ class Absence:
 			params = (absence_type,)
 			cur.execute('SELECT * FROM absences WHERE type=?', params)
 			for row in cur.fetchall():
-				absence = Absence(row[0], row[1], row[2], row[3])
+				if row[2] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+				if row[3] == 'NULL':
+					excuse = None
+				else:
+					excuse = Excuse.select_by_id(row[3], db, connection)
+				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1186,7 +1202,15 @@ class Absence:
 			params = (event_dt,)
 			cur.execute('SELECT * FROM absences WHERE eventdt=?', params)
 			for row in cur.fetchall():
-				absence = Absence(row[0], row[1], row[2], row[3])
+				if row[2] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+				if row[3] == 'NULL':
+					excuse = None
+				else:
+					excuse = Excuse.select_by_id(row[3], db, connection)
+				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1210,7 +1234,15 @@ class Absence:
 			params = (excuse_id,)
 			cur.execute('SELECT * FROM absences WHERE excuseid=?', params)
 			for row in cur.fetchall():
-				absence = Absence(row[0], row[1], row[2], row[3])
+				if row[2] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+				if row[3] == 'NULL':
+					excuse = None
+				else:
+					excuse = Excuse.select_by_id(row[3], db, connection)
+				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1239,7 +1271,15 @@ class Absence:
 			SELECT * FROM absences WHERE eventdt=? INTERSECT
 			SELECT * FROM absences WHERE excuseid=?''', params)
 			for row in cur.fetchall():
-				absence = Absence(row[0], row[1], row[2], row[3])
+				if row[2] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+				if row[3] == 'NULL':
+					excuse = None
+				else:
+					excuse = Excuse.select_by_id(row[3], db, connection)
+				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1248,11 +1288,11 @@ class Absence:
 				con.close()
 			return absences
 	
-	def __init__(self, student_id, t, event_dt, excuse_id=None):
+	def __init__(self, student_id, t, event, excuse=None):
 		self.student = student_id
 		self.type = t				# An Absence.TYPE_ string constant
-		self.event_dt = event_dt	# Get the actual event via dt lookup
-		self.excuse_id = excuse_id
+		self.event = event		# An Event object
+		self.excuse = excuse	# An Excuse object
 	
 	def update(self, db=gcdb, connection=None):
 		''' Update an existing Absence record in the DB. '''
@@ -1262,7 +1302,7 @@ class Absence:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.student, self.type, self.event_dt, self.excuse_id, self.student, self.event_dt,)
+			params = (self.student, self.type, self.event.event_dt, self.excuse.id, self.student, self.event.event_dt,)
 			cur.execute('''UPDATE absences 
 			SET student=?, type=?, eventdt=?, excuseid=? 
 			WHERE student=? AND eventdt=?''', params)
@@ -1280,7 +1320,7 @@ class Absence:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.student, self.type, self.event_dt, self.excuse_id,)
+			params = (self.student, self.type, self.event.event_dt, self.excuse_id,)
 			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', params)
 				
 		finally:
@@ -1296,7 +1336,7 @@ class Absence:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.student, self.event_dt,)
+			params = (self.student, self.event.event_dt,)
 			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', params)
 				
 		finally:
@@ -1325,7 +1365,11 @@ class Excuse:
 			cur.execute('SELECT * FROM excuses WHERE id=?', params)
 			row = cur.fetchone()
 			if row != None:
-				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
+				if row[2] == 'NULL':
+					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 			else:
 				excuse = None
 				
@@ -1348,7 +1392,11 @@ class Excuse:
 			params = (student_id,)
 			cur.execute('SELECT * FROM excuses WHERE student=?', params)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
+				if row[2] == 'NULL':
+					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1358,7 +1406,7 @@ class Excuse:
 			return excuses
 	
 	@staticmethod
-	def select_by_datetime(start_dt='*', end_dt='*', db=gcdb, connection=None):
+	def select_by_datetime_range(start_dt='*', end_dt='*', db=gcdb, connection=None):
 		''' Return the list of Excuses in a given datetime range. '''
 		
 		if type(start_dt == datetime):
@@ -1376,7 +1424,11 @@ class Excuse:
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
+				if row[2] == 'NULL':
+					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1402,7 +1454,11 @@ class Excuse:
 			params = (event_dt,)
 			cur.execute('SELECT * FROM excuses WHERE eventdt=?', params)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
+				if row[2] == 'NULL':
+					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1435,7 +1491,11 @@ class Excuse:
 			SELECT * FROM excuses WHERE dt BETWEEN ? AND ? INTERSECT 
 			SELECT * FROM excuses WHERE eventdt=?''', params)
 			for row in cur.fetchall():
-				excuse = Excuse(row[0], row[1], row[2], row[3], row[4])
+				if row[2] == 'NULL':
+					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+				else:
+					event = Event.select_by_datetime(row[2], db, connection)
+					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1444,10 +1504,10 @@ class Excuse:
 				con.close()
 			return excuses
 	 
-	def __init__(self, id, dt, event_dt, reason, s):
+	def __init__(self, id, dt, event, reason, s):
 		self.id = id				# Unique primary key
 		self.excuse_dt = dt			# a datetime object
-		self.event_dt = event_dt	# a datetime object or 'NULL'
+		self.event = event			# an Event object
 		self.reason = reason		# Student's message to gc-excuse
 		self.student = s			# RFID number
 	
@@ -1459,7 +1519,7 @@ class Excuse:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.excuse_dt, self.event_dt, self.reason, self.student, self.id,)
+			params = (self.excuse_dt, self.event.event_dt, self.reason, self.student, self.id,)
 			cur.execute('''UPDATE excuses 
 			SET dt=?, eventdt=?, reason=?, student=? 
 			WHERE id=?''', params)
@@ -1477,7 +1537,7 @@ class Excuse:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.excuse_dt, self.event_dt, self.reason, self.student,)
+			params = (self.excuse_dt, self.event.event_dt, self.reason, self.student,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
 			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
 				
@@ -1519,7 +1579,15 @@ class Signin:
 			params = (id,)
 			cur.execute('SELECT * FROM signins WHERE student=?', params)
 			for row in cur.fetchall():
-				signin = Signin(row[0], row[1], row[2])
+				if row[1] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[1], db, connection)[0]
+				if row[2] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[2], db, connection)
+				signin = Signin(row[0], event, student)
 				signins.append(signin)
 				
 		finally:
@@ -1547,7 +1615,15 @@ class Signin:
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
-				signin = Signin(row[0], row[1], row[2])
+				if row[1] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[1], db, connection)[0]
+				if row[2] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[2], db, connection)
+				signin = Signin(row[0], event, student)
 				signins.append(signin)
 				
 		finally:
@@ -1573,7 +1649,15 @@ class Signin:
 			params = (isoformat(event_dt),)
 			cur.execute('SELECT * FROM signins WHERE eventdt=?', params)
 			for row in cur.fetchall():
-				signin = Signin(row[0], row[1], row[2])
+				if row[1] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[1], db, connection)[0]
+				if row[2] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[2], db, connection)
+				signin = Signin(row[0], event, student)
 				signins.append(signin)
 				
 		finally:
@@ -1605,7 +1689,15 @@ class Signin:
 			 SELECT * FROM signins WHERE dt BETWEEN ? AND ? INTERSECT 
 			 SELECT * FROM signins WHERE eventdt=?''', params)
 			for row in cur.fetchall():
-				signin = Signin(row[0], row[1], row[2])
+				if row[1] == 'NULL':
+					event = None
+				else:
+					event = Event.select_by_datetime(row[1], db, connection)[0]
+				if row[2] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[2], db, connection)
+				signin = Signin(row[0], event, student)
 				signins.append(signin)
 				
 		finally:
@@ -1614,10 +1706,10 @@ class Signin:
 				con.close()
 			return signins
 	
-	def __init__(self, dt, event_dt, s):
+	def __init__(self, dt, event, student):
 		self.signin_dt = dt			# a datetime object
-		self.event_dt = event_dt	# a datetime object or 'NULL'
-		self.student = s			# RFID number
+		self.event = event			# an Event object
+		self.student = student		# a Student object
 	
 	def update(self, db=gcdb, connection=None):
 		''' Update an existing Signin record in the DB. '''
@@ -1627,7 +1719,7 @@ class Signin:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.signin_dt, self.event_dt, self.student, self.event_dt, self.student,)
+			params = (self.signin_dt, self.event.event_dt, self.student.rfid, self.event.event_dt, self.student.rfid,)
 			cur.execute('''UPDATE signins 
 			SET dt=?, eventdt=?, student=? 
 			WHERE dt=? AND student=?''', params)
@@ -1645,7 +1737,7 @@ class Signin:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.signin_dt, self.event_dt, self.student,)
+			params = (self.signin_dt, self.event.event_dt, self.student.rfid,)
 			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', params)
 				
 		finally:
@@ -1661,7 +1753,7 @@ class Signin:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.signin_dt, self.student,)
+			params = (self.signin_dt, self.student.rfid,)
 			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', params)
 				
 		finally:
@@ -1704,7 +1796,33 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_datetime(start_dt, end_dt, db=gcdb, connection=None):
+	def select_by_datetime(event_dt, db=gcdb, connection=None):
+		''' Return the list of Events of a specific datetime. '''
+		events = []
+		
+		if type(event_dt == datetime):
+			event_dt = isoformat(event_dt)
+		
+		try:
+			if connection is None:
+				(con, cur) = db.con_cursor()
+			else:
+				cur = connection.cursor()
+			
+			params = (event_dt,)
+			cur.execute('SELECT * FROM events WHERE dt=?', params)
+			for row in cur.fetchall():
+				event = Event(row[0], row[1], row[2], row[3])
+				events.append(event)
+				
+		finally:
+			cur.close()
+			if connection is None:
+				con.close()
+			return events
+	
+	@staticmethod
+	def select_by_datetime_range(start_dt, end_dt, db=gcdb, connection=None):
 		''' Return the list of Events in a given datetime range. '''
 		events = []
 		
@@ -1808,7 +1926,7 @@ class Event:
 	
 	def __init__(self, name, dt, t, group):
 		self.event_name = name
-		self.event_dt = dt	# a datetime object, primary key
+		self.event = dt	# a datetime object, primary key
 		self.event_type = t	# One of the Event.TYPE_ constants 
 		self.group = group	# Roster to check against
 		self.signins = []
@@ -1817,15 +1935,15 @@ class Event:
 	
 	def fetch_signins(self, db=gcdb, connection=None):
 		''' Fetch all Signins for this Event from the database. '''
-		self.signins = Signin.select_by_datetime(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES, db, connection)
+		self.signins = Signin.select_by_datetime(self.event+Event.ATTENDANCE_OPENS, self.event+Event.ATTENDANCE_CLOSES, db, connection)
 	
 	def fetch_excuses(self, db=gcdb, connection=None):
 		''' Fetch all Excuses for this Event from the database. '''
-		self.excuses = Excuse.select_by_datetime(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES, db, connection)
+		self.excuses = Excuse.select_by_datetime(self.event+Excuse.EXCUSES_OPENS, self.event+Excuse.EXCUSES_CLOSES, db, connection)
 		
 	def fetch_absences(self, db=gcdb, connection=None):
 		''' Fetch all Absences for this Event from the database. '''
-		self.absences = Absence.select_by_event_dt(self.event_dt, db, connection)
+		self.absences = Absence.select_by_event_dt(self.event, db, connection)
 	
 	def update(self, db=gcdb, connection=None):
 		''' Update an existing Event record in the DB. '''
@@ -1835,7 +1953,7 @@ class Event:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.name, self.event_dt, self.event_type, self.group.id, self.event_dt,)
+			params = (self.name, self.event, self.event_type, self.group.id, self.event,)
 			cur.execute('''UPDATE events 
 			SET eventname=?, dt=?, type=?, group=? 
 			WHERE dt=?''', params)
@@ -1853,7 +1971,7 @@ class Event:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.name, self.event_dt, self.event_type, self.group.id,)
+			params = (self.name, self.event, self.event_type, self.group.id,)
 			cur.execute('INSERT INTO events VALUES (?,?,?,?)', params)
 				
 		finally:
@@ -1869,7 +1987,7 @@ class Event:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.event_dt,)
+			params = (self.event,)
 			cur.execute('DELETE FROM events WHERE dt=?', params)
 				
 		finally:
