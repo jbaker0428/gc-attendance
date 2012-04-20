@@ -1473,6 +1473,7 @@ class Event:
 		self.group = group	# Roster to check against
 		self.signins = []
 		self.excuses = []
+		self.absences = []
 	
 	def __del__(self):
 		self.delete()
@@ -1484,6 +1485,10 @@ class Event:
 	def fetch_excuses(self):
 		''' Fetch all Excuses for this Event from the database. '''
 		self.excuses = Excuse.select_by_datetime(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES)
+		
+	def fetch_absences(self):
+		''' Fetch all Absences for this Event from the database. '''
+		self.absences = Absence.select_by_event_dt(self.event_dt)
 	
 	def update(self):
 		''' Update an existing Event record in the DB. '''
