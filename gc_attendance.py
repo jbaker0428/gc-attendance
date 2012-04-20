@@ -880,7 +880,66 @@ class Group:
 				student.update()
 			self.add_member(student)
 			
-	def read_gc_credit_roster(self, infile):
+
+class CreditGroup(Group):
+	''' Subclass of Group for "participating for class credit" groups. 
+	CreditGroups are still stored in the same groups table in the DB. '''
+	
+	@staticmethod
+	def select_by_id(gid):
+		''' Return the CreditGroup(s) of given ID. '''
+		groups = []
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (gid,)
+			cur.execute('SELECT * FROM groups WHERE id=?', params)
+			for row in cur.fetchall():
+				group = CreditGroup(row[0], row[1], row[2])
+				groups.append(group)
+				
+		finally:
+			cur.close()
+			con.close()
+			return groups
+	
+	@staticmethod
+	def select_by_name(name='*'):
+		''' Return the CreditGroup(s) of given name. '''
+		groups = []
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (name,)
+			cur.execute('SELECT * FROM groups WHERE name=?', params)
+			for row in cur.fetchall():
+				group = CreditGroup(row[0], row[1], row[2])
+				groups.append(group)
+				
+		finally:
+			cur.close()
+			con.close()
+			return groups
+		
+	@staticmethod
+	def select_by_semester(semester='*'):
+		''' Return the CreditGroup(s) of given Semester. '''
+		groups = []
+		try:
+			(con, cur) = gcdb.con_cursor()
+			
+			params = (semester,)
+			cur.execute('SELECT * FROM groups WHERE semester=?', params)
+			for row in cur.fetchall():
+				group = CreditGroup(row[0], row[1], row[2])
+				groups.append(group)
+				
+		finally:
+			cur.close()
+			con.close()
+			return groups
+	
+	def read_gc_roster(self, infile):
 		''' Parse the credit group's roster into the database using the Glee Club roster format. 
 		Run this version of the roster parser with "for credit" subgroups in the DB. '''
 		book = Workbook(infile)
@@ -901,8 +960,7 @@ class Group:
 					student.insert()
 				else:
 					student.update()
-				self.add_member(student)
-				
+				self.add_member(student)		
 
 class Absence:
 	''' An instance of a Student not singing into an Event.
