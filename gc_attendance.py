@@ -116,7 +116,7 @@ class AttendanceDB:
 				if Student.select_by_id(t[3]) == None:
 					new_student = Student(t[3], 'NULL', 'NULL', 'NULL')
 					print 'Adding unknown member to database, RFID# = ', t[3]
-					new_student.insert()
+					new_student.insert(connection)
 			cur.executemany('INSERT OR ABORT INTO signins VALUES (?,?,?)', signins)
 			
 		finally:
