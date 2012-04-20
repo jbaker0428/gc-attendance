@@ -748,7 +748,7 @@ class Student:
 			rows = cur.fetchall()
 			for row in rows:
 				group = Group(row[0], row[1], row[2])
-				group.fetch_members()
+				group.fetch_members(db, connection)
 				self.groups.append(group)
 			
 		finally:
