@@ -26,7 +26,6 @@ class AttendanceDB:
 		''' Create the database tables. '''
 		try:
 			(con, cur) = self.con_cursor()
-			# TODO: Add error handling clauses to the foreign key constraints
 			cur.execute('''CREATE TABLE IF NOT EXISTS students
 			(id INTEGER PRIMARY KEY, 
 			fname TEXT, 
