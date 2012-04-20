@@ -858,7 +858,11 @@ class Group:
 			params = (gid,)
 			cur.execute('SELECT * FROM groups WHERE id=?', params)
 			for row in cur.fetchall():
-				group = Group(row[0], row[1], row[2])
+				if row[2] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[2], db, connection)
+				group = Group(row[0], row[1], semester)
 				groups.append(group)
 				
 		finally:
@@ -880,7 +884,11 @@ class Group:
 			params = (name,)
 			cur.execute('SELECT * FROM groups WHERE name=?', params)
 			for row in cur.fetchall():
-				group = Group(row[0], row[1], row[2])
+				if row[2] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[2], db, connection)
+				group = Group(row[0], row[1], semester)
 				groups.append(group)
 				
 		finally:
@@ -902,7 +910,11 @@ class Group:
 			params = (semester,)
 			cur.execute('SELECT * FROM groups WHERE semester=?', params)
 			for row in cur.fetchall():
-				group = Group(row[0], row[1], row[2])
+				if row[2] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[2], db, connection)
+				group = Group(row[0], row[1], semester)
 				groups.append(group)
 				
 		finally:
@@ -963,7 +975,7 @@ class Group:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.id, self.name, self.semester, self.id,)
+			params = (self.id, self.name, self.semester.name, self.id,)
 			cur.execute('UPDATE groups SET id=?, name=?, semester=? WHERE id=?', params)
 				
 		finally:
@@ -979,7 +991,7 @@ class Group:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.id, self.name, self.semester,)
+			params = (self.id, self.name, self.semester.name,)
 			cur.execute('INSERT INTO groups VALUES (?,?,?)', params)
 				
 		finally:
@@ -1042,7 +1054,11 @@ class CreditGroup(Group):
 			params = (gid,)
 			cur.execute('SELECT * FROM groups WHERE id=?', params)
 			for row in cur.fetchall():
-				group = CreditGroup(row[0], row[1], row[2])
+				if row[2] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[2], db, connection)
+				group = CreditGroup(row[0], row[1], semester)
 				groups.append(group)
 				
 		finally:
@@ -1064,7 +1080,11 @@ class CreditGroup(Group):
 			params = (name,)
 			cur.execute('SELECT * FROM groups WHERE name=?', params)
 			for row in cur.fetchall():
-				group = CreditGroup(row[0], row[1], row[2])
+				if row[2] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[2], db, connection)
+				group = CreditGroup(row[0], row[1], semester)
 				groups.append(group)
 				
 		finally:
@@ -1086,7 +1106,11 @@ class CreditGroup(Group):
 			params = (semester,)
 			cur.execute('SELECT * FROM groups WHERE semester=?', params)
 			for row in cur.fetchall():
-				group = CreditGroup(row[0], row[1], row[2])
+				if row[2] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[2], db, connection)
+				group = CreditGroup(row[0], row[1], semester)
 				groups.append(group)
 				
 		finally:
