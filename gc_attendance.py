@@ -722,9 +722,6 @@ class Student:
 		self.absences = []
 		self.groups = []
 		
-	def __del__(self):
-		self.delete()
-	
 	def fetch_signins(self, db=gcdb, connection=None):
 		''' Fetch all Signins by this Student from the database. '''
 		self.signins = Signin.select_by_student(self.rfid, db, connection)
@@ -1257,9 +1254,6 @@ class Absence:
 		self.event_dt = event_dt	# Get the actual event via dt lookup
 		self.excuse_id = excuse_id
 	
-	def __del__(self):
-		self.delete()
-		
 	def update(self, db=gcdb, connection=None):
 		''' Update an existing Absence record in the DB. '''
 		try:
@@ -1457,9 +1451,6 @@ class Excuse:
 		self.reason = reason		# Student's message to gc-excuse
 		self.student = s			# RFID number
 	
-	def __del__(self):
-		self.delete()
-		
 	def update(self, db=gcdb, connection=None):
 		''' Update an existing Excuse record in the DB. '''
 		try:
@@ -1628,9 +1619,6 @@ class Signin:
 		self.event_dt = event_dt	# a datetime object or 'NULL'
 		self.student = s			# RFID number
 	
-	def __del__(self):
-		self.delete()
-		
 	def update(self, db=gcdb, connection=None):
 		''' Update an existing Signin record in the DB. '''
 		try:
@@ -1827,9 +1815,6 @@ class Event:
 		self.excuses = []
 		self.absences = []
 	
-	def __del__(self):
-		self.delete()
-		
 	def fetch_signins(self, db=gcdb, connection=None):
 		''' Fetch all Signins for this Event from the database. '''
 		self.signins = Signin.select_by_datetime(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES, db, connection)
