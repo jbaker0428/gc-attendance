@@ -1397,7 +1397,11 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
+				if row[4] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[4], db, connection)
+				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
 			else:
 				excuse = None
 				
@@ -1425,7 +1429,11 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
+				if row[4] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[4], db, connection)
+				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
 				excuses.append(excuse)
 				
 		finally:
@@ -1458,7 +1466,11 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
+				if row[4] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[4], db, connection)
+				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
 				excuses.append(excuse)
 				
 		finally:
@@ -1489,7 +1501,11 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
+				if row[4] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[4], db, connection)
+				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
 				excuses.append(excuse)
 				
 		finally:
@@ -1527,7 +1543,11 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
+				if row[4] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[4], db, connection)
+				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
 				excuses.append(excuse)
 				
 		finally:
@@ -1541,7 +1561,7 @@ class Excuse:
 		self.excuse_dt = dt			# a datetime object
 		self.event = event			# an Event object
 		self.reason = reason		# Student's message to gc-excuse
-		self.student = s			# RFID number
+		self.student = s			# a Student object
 	
 	def update(self, db=gcdb, connection=None):
 		''' Update an existing Excuse record in the DB. '''
@@ -1552,7 +1572,7 @@ class Excuse:
 				con = connection
 				cur = con.cursor()
 			
-			params = (isoformat(self.excuse_dt), isoformat(self.event.event_dt), self.reason, self.student, self.id,)
+			params = (isoformat(self.excuse_dt), isoformat(self.event.event_dt), self.reason, self.student.rfid, self.id,)
 			cur.execute('''UPDATE excuses 
 			SET dt=?, eventdt=?, reason=?, student=? 
 			WHERE id=?''', params)
@@ -1571,7 +1591,7 @@ class Excuse:
 				con = connection
 				cur = con.cursor()
 			
-			params = (isoformat(self.excuse_dt), isoformat(self.event.event_dt), self.reason, self.student,)
+			params = (isoformat(self.excuse_dt), isoformat(self.event.event_dt), self.reason, self.student.rfid,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
 			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
 				
