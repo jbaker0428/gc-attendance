@@ -41,7 +41,8 @@ class AttendanceDB:
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
 			(student INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			group INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE
+			group INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE,
+			credit INTEGER NOT NULL
 			PRIMARY KEY(student, group))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS absences
@@ -125,6 +126,15 @@ class AttendanceDB:
 				con.close()
 
 gcdb = AttendanceDB()
+
+class RosterException(Exception):
+	''' Exception raised when something goes wrong parsing a roster spreadsheet. '''
+	def __init__(self, source, text):
+		self.source = source
+		self.text = text
+	def __str__(self):
+		return repr(self.text)
+		
 
 class Term:
 	''' Corresponds to one 7-week term on WPI's academic calendar. '''
@@ -716,7 +726,6 @@ class Student:
 		self.email = email
 		self.shm = shm
 		self.good_standing = standing
-		self.credit = cred	# Taking GC for class credit
 		self.current = current # Set false when no longer in active roster
 		self.signins = []
 		self.excuses = []
@@ -757,7 +766,7 @@ class Student:
 			if connection is None:
 				con.close()
 	
-	def join_group(self, group, db=gcdb, connection=None):
+	def join_group(self, group, credit, db=gcdb, connection=None):
 		''' Add the Student to a Group. '''
 		try:
 			if connection is None:
@@ -765,8 +774,8 @@ class Student:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.name, group.id,)
-			cur.execute('INSERT INTO group_memberships VALUES (?,?)', params)
+			params = (self.name, group.id, int(credit))
+			cur.execute('INSERT INTO group_memberships VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -799,9 +808,9 @@ class Student:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current, self.rfid,)
+			params = (self.fname, self.lname, self.email, self.good_standing, self.current, self.rfid,)
 			cur.execute('''UPDATE students 
-			SET fname=?, lname=?, email=?, shm=?, goodstanding=?, credit=?, current=? 
+			SET fname=?, lname=?, email=?, goodstanding=?, current=? 
 			WHERE id=?''', params)
 				
 		finally:
@@ -817,8 +826,8 @@ class Student:
 			else:
 				cur = connection.cursor()
 			
-			params = (self.rfid, self.fname, self.lname, self.email, self.shm, self.good_standing, self.credit, self.current,)
-			cur.execute('INSERT INTO students VALUES (?,?,?,?,?,?,?,?)', params)
+			params = (self.rfid, self.fname, self.lname, self.email, self.good_standing, self.current,)
+			cur.execute('INSERT INTO students VALUES (?,?,?,?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -842,9 +851,7 @@ class Student:
 				con.close()
 
 class Group:
-	''' A group of students. This is usually an ensemble. 
-	However, it can also be the group of students participating in an
-	ensemble for WPI course credit. '''
+	''' A group of students. This is usually an ensemble's roster for a semester. '''
 	
 	@staticmethod
 	def select_by_id(gid, db=gcdb, connection=None):
@@ -934,7 +941,7 @@ class Group:
 		''' Fetch all Students in this group from the database. '''
 		self.members = Student.select_by_group(self.id, True)
 	
-	def add_member(self, student, db=gcdb, connection=None):
+	def add_member(self, student, credit, db=gcdb, connection=None):
 		''' Add a new member to the group. '''
 		try:
 			if connection is None:
@@ -942,8 +949,8 @@ class Group:
 			else:
 				cur = connection.cursor()
 			
-			params = (student.name, self.id,)
-			cur.execute('INSERT OR ABORT INTO group_memberships VALUES (?,?)', params)
+			params = (student.name, self.id, int(credit),)
+			cur.execute('INSERT OR ABORT INTO group_memberships VALUES (?,?,?)', params)
 				
 		finally:
 			cur.close()
@@ -1035,113 +1042,13 @@ class Group:
 				student.insert(db, connection)
 			else:
 				student.update(db, connection)
-			self.add_member(student, db, connection)
-			
-
-class CreditGroup(Group):
-	''' Subclass of Group for "participating for class credit" groups. 
-	CreditGroups are still stored in the same groups table in the DB. '''
-	
-	@staticmethod
-	def select_by_id(gid, db=gcdb, connection=None):
-		''' Return the CreditGroup(s) of given ID. '''
-		groups = []
-		try:
-			if connection is None:
-				(con, cur) = db.con_cursor()
-			else:
-				cur = connection.cursor()
-			
-			params = (gid,)
-			cur.execute('SELECT * FROM groups WHERE id=?', params)
-			for row in cur.fetchall():
-				if row[2] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[2], db, connection)
-				group = CreditGroup(row[0], row[1], semester)
-				groups.append(group)
-				
-		finally:
-			cur.close()
-			if connection is None:
-				con.close()
-			return groups
-	
-	@staticmethod
-	def select_by_name(name='*', db=gcdb, connection=None):
-		''' Return the CreditGroup(s) of given name. '''
-		groups = []
-		try:
-			if connection is None:
-				(con, cur) = db.con_cursor()
-			else:
-				cur = connection.cursor()
-			
-			params = (name,)
-			cur.execute('SELECT * FROM groups WHERE name=?', params)
-			for row in cur.fetchall():
-				if row[2] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[2], db, connection)
-				group = CreditGroup(row[0], row[1], semester)
-				groups.append(group)
-				
-		finally:
-			cur.close()
-			if connection is None:
-				con.close()
-			return groups
-		
-	@staticmethod
-	def select_by_semester(semester='*', db=gcdb, connection=None):
-		''' Return the CreditGroup(s) of given Semester. '''
-		groups = []
-		try:
-			if connection is None:
-				(con, cur) = db.con_cursor()
-			else:
-				cur = connection.cursor()
-			
-			params = (semester,)
-			cur.execute('SELECT * FROM groups WHERE semester=?', params)
-			for row in cur.fetchall():
-				if row[2] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[2], db, connection)
-				group = CreditGroup(row[0], row[1], semester)
-				groups.append(group)
-				
-		finally:
-			cur.close()
-			if connection is None:
-				con.close()
-			return groups
-	
-	def read_gc_roster(self, infile, db=gcdb, connection=None):
-		''' Parse the credit group's roster into the database using the Glee Club roster format. 
-		Run this version of the roster parser with "for credit" subgroups in the DB. '''
-		book = Workbook(infile)
-		sheet = book['Sheet1']
-		rfid_col = 0
-		fname_col = 1
-		lname_col = 2
-		email_col = 3
-		shm_col = 4
-		cred_col = 5
-		officer_col = 6
-		for row, cells in sheet.rows().iteritems():	# row is the row number
-			if row == 1: # skip header
-				continue
 			if '1' in cells[cred_col].value or 'y' in string.lower(cells[cred_col].value) or 't' in string.lower(cells[cred_col].value):
-				student = Student(cells[rfid_col].value, cells[fname_col].value, cells[lname_col].value, cells[email_col].value)
-				if Student.select_by_id(student.id, db, connection) is None:	# Not in DB
-					student.insert(db, connection)
-				else:
-					student.update(db, connection)
-				self.add_member(student, db, connection)		
+				credit = True
+			elif '0' in cells[cred_col].value or 'n' in string.lower(cells[cred_col].value) or 'f' in string.lower(cells[cred_col].value):
+				credit = False
+			else:
+				raise RosterException(self.read_gc_roster.__name__, "Failure parsing contents of credit column in roster row " + row)
+			self.add_member(student, credit, db, connection)
 
 class Absence:
 	''' An instance of a Student not singing into an Event.
