@@ -2136,8 +2136,8 @@ class Event:
 				con = connection
 				cur = con.cursor()
 			
-			params = (isoformat(self.event_dt),)
-			cur.execute('DELETE FROM events WHERE dt=?', params)
+			params = (isoformat(self.event_dt), self.group.id,)
+			cur.execute('DELETE FROM events WHERE dt=? AND group=?', params)
 				
 		finally:
 			cur.close()
