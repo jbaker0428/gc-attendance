@@ -1138,6 +1138,10 @@ class Absence:
 			params = (student_id,)
 			cur.execute('SELECT * FROM absences WHERE student=?', params)
 			for row in cur.fetchall():
+				if row[0] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[0], db, connection)
 				if row[2] == 'NULL':
 					event = None
 				else:
@@ -1146,7 +1150,7 @@ class Absence:
 					excuse = None
 				else:
 					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(row[0], row[1], event, excuse)
+				absence = Absence(student, row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1169,6 +1173,10 @@ class Absence:
 			params = (absence_type,)
 			cur.execute('SELECT * FROM absences WHERE type=?', params)
 			for row in cur.fetchall():
+				if row[0] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[0], db, connection)
 				if row[2] == 'NULL':
 					event = None
 				else:
@@ -1177,7 +1185,7 @@ class Absence:
 					excuse = None
 				else:
 					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(row[0], row[1], event, excuse)
+				absence = Absence(student, row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1204,6 +1212,10 @@ class Absence:
 			params = (event_dt,)
 			cur.execute('SELECT * FROM absences WHERE eventdt=?', params)
 			for row in cur.fetchall():
+				if row[0] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[0], db, connection)
 				if row[2] == 'NULL':
 					event = None
 				else:
@@ -1212,7 +1224,7 @@ class Absence:
 					excuse = None
 				else:
 					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(row[0], row[1], event, excuse)
+				absence = Absence(student, row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1237,6 +1249,10 @@ class Absence:
 			params = (excuse_id,)
 			cur.execute('SELECT * FROM absences WHERE excuseid=?', params)
 			for row in cur.fetchall():
+				if row[0] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[0], db, connection)
 				if row[2] == 'NULL':
 					event = None
 				else:
@@ -1245,7 +1261,7 @@ class Absence:
 					excuse = None
 				else:
 					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(row[0], row[1], event, excuse)
+				absence = Absence(student, row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1275,6 +1291,10 @@ class Absence:
 			SELECT * FROM absences WHERE eventdt=? INTERSECT
 			SELECT * FROM absences WHERE excuseid=?''', params)
 			for row in cur.fetchall():
+				if row[0] == 'NULL':
+					student = None
+				else:
+					student = Student.select_by_id(row[0], db, connection)
 				if row[2] == 'NULL':
 					event = None
 				else:
@@ -1283,7 +1303,7 @@ class Absence:
 					excuse = None
 				else:
 					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(row[0], row[1], event, excuse)
+				absence = Absence(student, row[1], event, excuse)
 				absences.append(absence)
 				
 		finally:
@@ -1292,8 +1312,8 @@ class Absence:
 				con.close()
 			return absences
 	
-	def __init__(self, student_id, t, event, excuse=None):
-		self.student = student_id
+	def __init__(self, student, t, event, excuse=None):
+		self.student = student	# A Student object
 		self.type = t				# An Absence.TYPE_ string constant
 		self.event = event		# An Event object
 		self.excuse = excuse	# An Excuse object
@@ -1307,7 +1327,7 @@ class Absence:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.student, self.type, convert_timestamp(self.event.event_dt), self.excuse.id, self.student, convert_timestamp(self.event.event_dt),)
+			params = (self.student.rfid, self.type, isoformat(self.event.event_dt), self.excuse.id, self.student.rfid, isoformat(self.event.event_dt),)
 			cur.execute('''UPDATE absences 
 			SET student=?, type=?, eventdt=?, excuseid=? 
 			WHERE student=? AND eventdt=?''', params)
@@ -1326,7 +1346,7 @@ class Absence:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.student, self.type, convert_timestamp(self.event.event_dt), self.excuse_id,)
+			params = (self.student, self.type, isoformat(self.event.event_dt), self.excuse_id,)
 			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', params)
 				
 		finally:
@@ -1343,7 +1363,7 @@ class Absence:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.student, convert_timestamp(self.event.event_dt),)
+			params = (self.student.rfid, isoformat(self.event.event_dt),)
 			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', params)
 				
 		finally:
