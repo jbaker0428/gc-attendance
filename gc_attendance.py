@@ -148,7 +148,8 @@ class Term:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (name,)
 			cur.execute('SELECT * FROM terms WHERE name=?', params)
@@ -180,7 +181,8 @@ class Term:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start_date, end_date, start_date, end_date,)
 			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
@@ -209,7 +211,8 @@ class Term:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start_date, end_date, start_date, end_date, name,)
 			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
@@ -255,7 +258,8 @@ class Term:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start, end,)
 			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', params)
@@ -274,7 +278,8 @@ class Term:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name, self.start_date, self.end_date, self.name,)
 			cur.execute('''UPDATE terms 
@@ -292,7 +297,8 @@ class Term:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name, self.start_date, self.end_date, )
 			cur.execute('INSERT INTO terms VALUES (?,?,?)', params)
@@ -308,7 +314,8 @@ class Term:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name,)
 			cur.execute('DELETE FROM terms WHERE name=?', params)
@@ -328,14 +335,15 @@ class Semester:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (name,)
 			cur.execute('SELECT * FROM semester WHERE name=?', params)
 			row = cur.fetchone()
 			if row != None:
-				t1 = Term.select_by_name(row[1])
-				t2 = Term.select_by_name(row[2])
+				t1 = Term.select_by_name(row[1], db, con)
+				t2 = Term.select_by_name(row[2], db, con)
 				semester = Term(row[0], t1, t2)
 			else:
 				semester = None
@@ -364,7 +372,8 @@ class Semester:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, )
 			cur.execute('''
@@ -376,8 +385,8 @@ class Semester:
 			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?)
 			 ''', params)
 			for row in cur.fetchall():
-				t1 = Term.select_by_name(row[1])
-				t2 = Term.select_by_name(row[2])
+				t1 = Term.select_by_name(row[1], db, con)
+				t2 = Term.select_by_name(row[2], db, con)
 				semester = Semester(row[0], t1, t2)
 				semesters.append(semester)
 							
@@ -401,7 +410,8 @@ class Semester:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, name,)
 			cur.execute('''
@@ -413,8 +423,8 @@ class Semester:
 			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) INTERSECT 
 			SELECT * FROM terms WHERE name=?''', params)
 			for row in cur.fetchall():
-				t1 = Term.select_by_name(row[1])
-				t2 = Term.select_by_name(row[2])
+				t1 = Term.select_by_name(row[1], db, con)
+				t2 = Term.select_by_name(row[2], db, con)
 				semester = Semester(row[0], t1, t2)
 				semesters.append(semester)
 				
@@ -451,7 +461,8 @@ class Semester:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start, end,)
 			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', params)
@@ -470,7 +481,8 @@ class Semester:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name, self.term_one.name, self.term_two.name, self.name,)
 			cur.execute('''UPDATE semesters 
@@ -488,7 +500,8 @@ class Semester:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name, self.term_one.name, self.term_two.name,)
 			cur.execute('INSERT INTO semesters VALUES (?,?,?)', params)
@@ -504,7 +517,8 @@ class Semester:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name,)
 			cur.execute('DELETE FROM semesters WHERE name=?', params)
@@ -525,7 +539,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (id,)
 			cur.execute('SELECT * FROM students WHERE id=?', params)
@@ -549,7 +564,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (fname, lname,)
 			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', params)
@@ -571,7 +587,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (email,)
 			cur.execute('SELECT * FROM students WHERE email=?', params)
@@ -593,7 +610,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (int(good_standing),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', params)
@@ -615,7 +633,9 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
+			
 			params = (group_id,)			
 			if in_group == True:
 				cur.execute("""SELECT * FROM students WHERE id IN
@@ -642,7 +662,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (int(current),)
 			cur.execute('SELECT * FROM students WHERE current=?', params)
@@ -659,15 +680,9 @@ class Student:
 	@staticmethod
 	def select_by_all(id='*', fname='*', lname='*', email='*', standing='*', current='*', db=gcdb, connection=None):
 		''' Return a list of Students using any combination of filters. '''
-		if shm != '*':
-			shm = int(shm)
-			
 		if standing != '*':
 			standing = int(standing)
 			
-		if credit != '*':
-			credit = int(credit)
-		
 		if current != '*':
 			current = int(current)
 			
@@ -677,9 +692,10 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
-			params = (id, fname, lname, email, shm, standing, credit, current,)
+			params = (id, fname, lname, email, standing, current,)
 			cur.execute('''SELECT * FROM students WHERE id=? INTERSECT 
 			SELECT * FROM students WHERE fname=? INTERSECT 
 			SELECT * FROM students WHERE lname=? INTERSECT 
@@ -705,7 +721,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (new.rfid, old.rfid, )
 			cur.execute('UPDATE excuses SET student=? WHERE student=?', params)
@@ -726,7 +743,6 @@ class Student:
 		self.fname = fn
 		self.lname = ln
 		self.email = email
-		self.shm = shm
 		self.good_standing = standing
 		self.current = current # Set false when no longer in active roster
 		self.signins = []
@@ -752,7 +768,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name,)
 			cur.execute("""SELECT * FROM groups WHERE name IN
@@ -760,7 +777,7 @@ class Student:
 			rows = cur.fetchall()
 			for row in rows:
 				group = Group(row[0], row[1], row[2])
-				group.fetch_members(db, connection)
+				group.fetch_members(db, con)
 				self.groups.append(group)
 			
 		finally:
@@ -774,7 +791,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name, group.id, int(credit))
 			cur.execute('INSERT INTO group_memberships VALUES (?,?,?)', params)
@@ -791,7 +809,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name, group.id,)
 			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
@@ -808,7 +827,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.fname, self.lname, self.email, self.good_standing, self.current, self.rfid,)
 			cur.execute('''UPDATE students 
@@ -826,7 +846,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.rfid, self.fname, self.lname, self.email, self.good_standing, self.current,)
 			cur.execute('INSERT INTO students VALUES (?,?,?,?,?,?)', params)
@@ -842,7 +863,8 @@ class Student:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.rfid,)
 			cur.execute('DELETE FROM students WHERE id=?', params)
@@ -871,7 +893,8 @@ class Group:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (gid,)
 			cur.execute('SELECT * FROM groups WHERE id=?', params)
@@ -883,7 +906,7 @@ class Group:
 				if row[2] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[2], db, connection)
+					semester = Semester.select_by_name(row[2], db, con)
 				group = Group(row[0], organization, semester)
 				groups.append(group)
 				
@@ -908,7 +931,8 @@ class Group:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (org,)
 			cur.execute('SELECT * FROM groups WHERE organization=?', params)
@@ -920,7 +944,7 @@ class Group:
 				if row[2] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[2], db, connection)
+					semester = Semester.select_by_name(row[2], db, con)
 				group = Group(row[0], organization, semester)
 				groups.append(group)
 				
@@ -945,7 +969,8 @@ class Group:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (sem,)
 			cur.execute('SELECT * FROM groups WHERE semester=?', params)
@@ -957,7 +982,7 @@ class Group:
 				if row[2] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[2], db, connection)
+					semester = Semester.select_by_name(row[2], db, con)
 				group = Group(row[0], organization, semester)
 				groups.append(group)
 				
@@ -983,7 +1008,8 @@ class Group:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (student.name, self.id, int(credit),)
 			cur.execute('INSERT OR ABORT INTO group_memberships VALUES (?,?,?)', params)
@@ -1000,7 +1026,8 @@ class Group:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (student.name, self.id,)
 			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
@@ -1017,7 +1044,8 @@ class Group:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.id, self.name, self.semester.name, self.id,)
 			cur.execute('UPDATE groups SET id=?, name=?, semester=? WHERE id=?', params)
@@ -1033,7 +1061,8 @@ class Group:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.id, self.name, self.semester.name,)
 			cur.execute('INSERT INTO groups VALUES (?,?,?)', params)
@@ -1049,7 +1078,8 @@ class Group:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.id,)
 			cur.execute('DELETE FROM groups WHERE id=?', params)
@@ -1101,7 +1131,8 @@ class Absence:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (student_id,)
 			cur.execute('SELECT * FROM absences WHERE student=?', params)
@@ -1109,11 +1140,11 @@ class Absence:
 				if row[2] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 				if row[3] == 'NULL':
 					excuse = None
 				else:
-					excuse = Excuse.select_by_id(row[3], db, connection)
+					excuse = Excuse.select_by_id(row[3], db, con)
 				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
@@ -1131,7 +1162,8 @@ class Absence:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (absence_type,)
 			cur.execute('SELECT * FROM absences WHERE type=?', params)
@@ -1139,11 +1171,11 @@ class Absence:
 				if row[2] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 				if row[3] == 'NULL':
 					excuse = None
 				else:
-					excuse = Excuse.select_by_id(row[3], db, connection)
+					excuse = Excuse.select_by_id(row[3], db, con)
 				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
@@ -1165,7 +1197,8 @@ class Absence:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (event_dt,)
 			cur.execute('SELECT * FROM absences WHERE eventdt=?', params)
@@ -1173,11 +1206,11 @@ class Absence:
 				if row[2] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 				if row[3] == 'NULL':
 					excuse = None
 				else:
-					excuse = Excuse.select_by_id(row[3], db, connection)
+					excuse = Excuse.select_by_id(row[3], db, con)
 				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
@@ -1197,7 +1230,8 @@ class Absence:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (excuse_id,)
 			cur.execute('SELECT * FROM absences WHERE excuseid=?', params)
@@ -1205,11 +1239,11 @@ class Absence:
 				if row[2] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 				if row[3] == 'NULL':
 					excuse = None
 				else:
-					excuse = Excuse.select_by_id(row[3], db, connection)
+					excuse = Excuse.select_by_id(row[3], db, con)
 				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
@@ -1231,7 +1265,8 @@ class Absence:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (student_id, absence_type, event_dt, excuse_id,)
 			cur.execute('''SELECT * FROM absences WHERE student=? INTERSECT
@@ -1242,11 +1277,11 @@ class Absence:
 				if row[2] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 				if row[3] == 'NULL':
 					excuse = None
 				else:
-					excuse = Excuse.select_by_id(row[3], db, connection)
+					excuse = Excuse.select_by_id(row[3], db, con)
 				absence = Absence(row[0], row[1], event, excuse)
 				absences.append(absence)
 				
@@ -1268,7 +1303,8 @@ class Absence:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.student, self.type, self.event.event_dt, self.excuse.id, self.student, self.event.event_dt,)
 			cur.execute('''UPDATE absences 
@@ -1286,7 +1322,8 @@ class Absence:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.student, self.type, self.event.event_dt, self.excuse_id,)
 			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', params)
@@ -1302,7 +1339,8 @@ class Absence:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.student, self.event.event_dt,)
 			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', params)
@@ -1327,7 +1365,8 @@ class Excuse:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (excuse_id,)
 			cur.execute('SELECT * FROM excuses WHERE id=?', params)
@@ -1336,7 +1375,7 @@ class Excuse:
 				if row[2] == 'NULL':
 					excuse = Excuse(row[0], row[1], None, row[3], row[4])
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 			else:
 				excuse = None
@@ -1355,7 +1394,8 @@ class Excuse:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (student_id,)
 			cur.execute('SELECT * FROM excuses WHERE student=?', params)
@@ -1363,7 +1403,7 @@ class Excuse:
 				if row[2] == 'NULL':
 					excuse = Excuse(row[0], row[1], None, row[3], row[4])
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
@@ -1387,7 +1427,8 @@ class Excuse:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', params)
@@ -1395,7 +1436,7 @@ class Excuse:
 				if row[2] == 'NULL':
 					excuse = Excuse(row[0], row[1], None, row[3], row[4])
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
@@ -1417,7 +1458,8 @@ class Excuse:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (event_dt,)
 			cur.execute('SELECT * FROM excuses WHERE eventdt=?', params)
@@ -1425,7 +1467,7 @@ class Excuse:
 				if row[2] == 'NULL':
 					excuse = Excuse(row[0], row[1], None, row[3], row[4])
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
@@ -1451,7 +1493,8 @@ class Excuse:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (excuse_id, student_id, start_dt, end_dt, event_dt,)
 			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT 
@@ -1462,7 +1505,7 @@ class Excuse:
 				if row[2] == 'NULL':
 					excuse = Excuse(row[0], row[1], None, row[3], row[4])
 				else:
-					event = Event.select_by_datetime(row[2], db, connection)
+					event = Event.select_by_datetime(row[2], db, con)
 					excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
@@ -1485,7 +1528,8 @@ class Excuse:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.excuse_dt, self.event.event_dt, self.reason, self.student, self.id,)
 			cur.execute('''UPDATE excuses 
@@ -1503,7 +1547,8 @@ class Excuse:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.excuse_dt, self.event.event_dt, self.reason, self.student,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
@@ -1520,7 +1565,8 @@ class Excuse:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.id,)
 			cur.execute('DELETE FROM excuses WHERE id=?', params)
@@ -1542,7 +1588,8 @@ class Signin:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (id,)
 			cur.execute('SELECT * FROM signins WHERE student=?', params)
@@ -1550,11 +1597,11 @@ class Signin:
 				if row[1] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[1], db, connection)[0]
+					event = Event.select_by_datetime(row[1], db, con)[0]
 				if row[2] == 'NULL':
 					student = None
 				else:
-					student = Student.select_by_id(row[2], db, connection)
+					student = Student.select_by_id(row[2], db, con)
 				signin = Signin(row[0], event, student)
 				signins.append(signin)
 				
@@ -1578,7 +1625,8 @@ class Signin:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', params)
@@ -1586,11 +1634,11 @@ class Signin:
 				if row[1] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[1], db, connection)[0]
+					event = Event.select_by_datetime(row[1], db, con)[0]
 				if row[2] == 'NULL':
 					student = None
 				else:
-					student = Student.select_by_id(row[2], db, connection)
+					student = Student.select_by_id(row[2], db, con)
 				signin = Signin(row[0], event, student)
 				signins.append(signin)
 				
@@ -1612,7 +1660,8 @@ class Signin:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (isoformat(event_dt),)
 			cur.execute('SELECT * FROM signins WHERE eventdt=?', params)
@@ -1620,11 +1669,11 @@ class Signin:
 				if row[1] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[1], db, connection)[0]
+					event = Event.select_by_datetime(row[1], db, con)[0]
 				if row[2] == 'NULL':
 					student = None
 				else:
-					student = Student.select_by_id(row[2], db, connection)
+					student = Student.select_by_id(row[2], db, con)
 				signin = Signin(row[0], event, student)
 				signins.append(signin)
 				
@@ -1650,7 +1699,8 @@ class Signin:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (id, start_dt, end_dt, event_dt,)
 			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
@@ -1660,11 +1710,11 @@ class Signin:
 				if row[1] == 'NULL':
 					event = None
 				else:
-					event = Event.select_by_datetime(row[1], db, connection)[0]
+					event = Event.select_by_datetime(row[1], db, con)[0]
 				if row[2] == 'NULL':
 					student = None
 				else:
-					student = Student.select_by_id(row[2], db, connection)
+					student = Student.select_by_id(row[2], db, con)
 				signin = Signin(row[0], event, student)
 				signins.append(signin)
 				
@@ -1691,7 +1741,8 @@ class Signin:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (isoformat(self.signin_dt - time_window), isoformat(self.signin_dt + time_window), self.student.rfid,) 
 			cur.execute('''SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
@@ -1701,11 +1752,11 @@ class Signin:
 				if row[3] == 'NULL':
 					group = None
 				else:
-					group = Group.select_by_id(row[3], db, connection)
+					group = Group.select_by_id(row[3], db, con)
 				if row[4] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[4], db, connection)
+					semester = Semester.select_by_name(row[4], db, con)
 				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 		
@@ -1721,7 +1772,8 @@ class Signin:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.signin_dt, self.event.event_dt, self.student.rfid, self.event.event_dt, self.student.rfid,)
 			cur.execute('''UPDATE signins 
@@ -1739,7 +1791,8 @@ class Signin:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.signin_dt, self.event.event_dt, self.student.rfid,)
 			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', params)
@@ -1755,7 +1808,8 @@ class Signin:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.signin_dt, self.student.rfid,)
 			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', params)
@@ -1785,7 +1839,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (name,)
 			cur.execute('SELECT * FROM events WHERE eventname=?', params)
@@ -1793,11 +1848,11 @@ class Event:
 				if row[3] == 'NULL':
 					group = None
 				else:
-					group = Group.select_by_id(row[3], db, connection)
+					group = Group.select_by_id(row[3], db, con)
 				if row[4] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[4], db, connection)
+					semester = Semester.select_by_name(row[4], db, con)
 				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
@@ -1819,7 +1874,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (event_dt,)
 			cur.execute('SELECT * FROM events WHERE dt=?', params)
@@ -1827,11 +1883,11 @@ class Event:
 				if row[3] == 'NULL':
 					group = None
 				else:
-					group = Group.select_by_id(row[3], db, connection)
+					group = Group.select_by_id(row[3], db, con)
 				if row[4] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[4], db, connection)
+					semester = Semester.select_by_name(row[4], db, con)
 				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
@@ -1855,7 +1911,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params)
@@ -1863,11 +1920,11 @@ class Event:
 				if row[3] == 'NULL':
 					group = None
 				else:
-					group = Group.select_by_id(row[3], db, connection)
+					group = Group.select_by_id(row[3], db, con)
 				if row[4] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[4], db, connection)
+					semester = Semester.select_by_name(row[4], db, con)
 				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
@@ -1885,7 +1942,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (type,)
 			cur.execute('SELECT * FROM events WHERE eventtype=?', params)
@@ -1893,11 +1951,11 @@ class Event:
 				if row[3] == 'NULL':
 					group = None
 				else:
-					group = Group.select_by_id(row[3], db, connection)
+					group = Group.select_by_id(row[3], db, con)
 				if row[4] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[4], db, connection)
+					semester = Semester.select_by_name(row[4], db, con)
 				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
@@ -1915,7 +1973,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (group,)
 			cur.execute('SELECT * FROM events WHERE group=?', params)
@@ -1923,11 +1982,11 @@ class Event:
 				if row[3] == 'NULL':
 					group = None
 				else:
-					group = Group.select_by_id(row[3], db, connection)
+					group = Group.select_by_id(row[3], db, con)
 				if row[4] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[4], db, connection)
+					semester = Semester.select_by_name(row[4], db, con)
 				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
@@ -1945,7 +2004,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (semester,)
 			cur.execute('SELECT * FROM events WHERE semester=?', params)
@@ -1953,11 +2013,11 @@ class Event:
 				if row[3] == 'NULL':
 					semester = None
 				else:
-					semester = Group.select_by_id(row[3], db, connection)
+					semester = Group.select_by_id(row[3], db, con)
 				if row[4] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[4], db, connection)
+					semester = Semester.select_by_name(row[4], db, con)
 				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
@@ -1981,7 +2041,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (name, start_dt, end_dt, type, group, semester,)
 			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
@@ -1993,11 +2054,11 @@ class Event:
 				if row[3] == 'NULL':
 					group = None
 				else:
-					group = Group.select_by_id(row[3], db, connection)
+					group = Group.select_by_id(row[3], db, con)
 				if row[4] == 'NULL':
 					semester = None
 				else:
-					semester = Semester.select_by_name(row[4], db, connection)
+					semester = Semester.select_by_name(row[4], db, con)
 				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
@@ -2035,7 +2096,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name, self.event, self.event_type, self.group.id, self.event,)
 			cur.execute('''UPDATE events 
@@ -2053,7 +2115,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.name, self.event, self.event_type, self.group.id,)
 			cur.execute('INSERT INTO events VALUES (?,?,?,?)', params)
@@ -2069,7 +2132,8 @@ class Event:
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
-				cur = connection.cursor()
+				con = connection
+				cur = con.cursor()
 			
 			params = (self.event,)
 			cur.execute('DELETE FROM events WHERE dt=?', params)
