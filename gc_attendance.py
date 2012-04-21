@@ -1374,10 +1374,10 @@ class Excuse:
 			row = cur.fetchone()
 			if row != None:
 				if row[2] == 'NULL':
-					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-					excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], row[1], event, row[3], row[4])
 			else:
 				excuse = None
 				
@@ -1402,10 +1402,10 @@ class Excuse:
 			cur.execute('SELECT * FROM excuses WHERE student=?', params)
 			for row in cur.fetchall():
 				if row[2] == 'NULL':
-					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-					excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1435,10 +1435,10 @@ class Excuse:
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
 				if row[2] == 'NULL':
-					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-					excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1466,10 +1466,10 @@ class Excuse:
 			cur.execute('SELECT * FROM excuses WHERE eventdt=?', params)
 			for row in cur.fetchall():
 				if row[2] == 'NULL':
-					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-					excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1504,10 +1504,10 @@ class Excuse:
 			SELECT * FROM excuses WHERE eventdt=?''', params)
 			for row in cur.fetchall():
 				if row[2] == 'NULL':
-					excuse = Excuse(row[0], row[1], None, row[3], row[4])
+					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-					excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], row[1], event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
