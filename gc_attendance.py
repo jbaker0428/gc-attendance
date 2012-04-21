@@ -155,7 +155,7 @@ class Term:
 			cur.execute('SELECT * FROM terms WHERE name=?', params)
 			row = cur.fetchone()
 			if row != None:
-				term = Term(row[0], row[1], row[2])
+				term = Term(row[0], convert_date(row[1]), convert_date(row[2]))
 			else:
 				term = None
 				
@@ -188,7 +188,7 @@ class Term:
 			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
 			SELECT * FROM terms WHERE enddate BETWEEN ? AND ?''', params)
 			for row in cur.fetchall():
-				term = Term(row[0], row[1], row[2])
+				term = Term(row[0], convert_date(row[1]), convert_date(row[2]))
 				terms.append(term)
 				
 		finally:
@@ -219,7 +219,7 @@ class Term:
 			SELECT * FROM terms WHERE enddate BETWEEN ? AND ? INTERSECT
 			SELECT * FROM terms WHERE name=?''', params)
 			for row in cur.fetchall():
-				term = Term(row[0], row[1], row[2])
+				term = Term(row[0], convert_date(row[1]), convert_date(row[2]))
 				terms.append(term)
 				
 		finally:
@@ -281,7 +281,7 @@ class Term:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.name, self.start_date, self.end_date, self.name,)
+			params = (self.name, isoformat(self.start_date), isoformat(self.end_date), self.name,)
 			cur.execute('''UPDATE terms 
 			SET name=?, startdate=?, enddate=? 
 			WHERE name=?''', params)
@@ -300,7 +300,7 @@ class Term:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.name, self.start_date, self.end_date, )
+			params = (self.name, isoformat(self.start_date), isoformat(self.end_date), )
 			cur.execute('INSERT INTO terms VALUES (?,?,?)', params)
 				
 		finally:
@@ -1307,7 +1307,7 @@ class Absence:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.student, self.type, self.event.event_dt, self.excuse.id, self.student, self.event.event_dt,)
+			params = (self.student, self.type, convert_timestamp(self.event.event_dt), self.excuse.id, self.student, convert_timestamp(self.event.event_dt),)
 			cur.execute('''UPDATE absences 
 			SET student=?, type=?, eventdt=?, excuseid=? 
 			WHERE student=? AND eventdt=?''', params)
@@ -1326,7 +1326,7 @@ class Absence:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.student, self.type, self.event.event_dt, self.excuse_id,)
+			params = (self.student, self.type, convert_timestamp(self.event.event_dt), self.excuse_id,)
 			cur.execute('INSERT INTO absences VALUES (?,?,?,?)', params)
 				
 		finally:
@@ -1343,7 +1343,7 @@ class Absence:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.student, self.event.event_dt,)
+			params = (self.student, convert_timestamp(self.event.event_dt),)
 			cur.execute('DELETE FROM absences WHERE student=? AND eventdt=?', params)
 				
 		finally:
@@ -1377,7 +1377,7 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
 			else:
 				excuse = None
 				
@@ -1405,7 +1405,7 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1438,7 +1438,7 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1469,7 +1469,7 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1507,7 +1507,7 @@ class Excuse:
 					event = None
 				else:
 					event = Event.select_by_datetime(row[2], db, con)[0]
-				excuse = Excuse(row[0], row[1], event, row[3], row[4])
+				excuse = Excuse(row[0], convert_timestamp(row[1]), event, row[3], row[4])
 				excuses.append(excuse)
 				
 		finally:
@@ -1532,7 +1532,7 @@ class Excuse:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.excuse_dt, self.event.event_dt, self.reason, self.student, self.id,)
+			params = (isoformat(self.excuse_dt), isoformat(self.event.event_dt), self.reason, self.student, self.id,)
 			cur.execute('''UPDATE excuses 
 			SET dt=?, eventdt=?, reason=?, student=? 
 			WHERE id=?''', params)
@@ -1551,7 +1551,7 @@ class Excuse:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.excuse_dt, self.event.event_dt, self.reason, self.student,)
+			params = (isoformat(self.excuse_dt), isoformat(self.event.event_dt), self.reason, self.student,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
 			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
 				
@@ -1603,7 +1603,7 @@ class Signin:
 					student = None
 				else:
 					student = Student.select_by_id(row[2], db, con)
-				signin = Signin(row[0], event, student)
+				signin = Signin(convert_timestamp(row[0]), event, student)
 				signins.append(signin)
 				
 		finally:
@@ -1640,7 +1640,7 @@ class Signin:
 					student = None
 				else:
 					student = Student.select_by_id(row[2], db, con)
-				signin = Signin(row[0], event, student)
+				signin = Signin(convert_timestamp(row[0]), event, student)
 				signins.append(signin)
 				
 		finally:
@@ -1675,7 +1675,7 @@ class Signin:
 					student = None
 				else:
 					student = Student.select_by_id(row[2], db, con)
-				signin = Signin(row[0], event, student)
+				signin = Signin(convert_timestamp(row[0]), event, student)
 				signins.append(signin)
 				
 		finally:
@@ -1716,7 +1716,7 @@ class Signin:
 					student = None
 				else:
 					student = Student.select_by_id(row[2], db, con)
-				signin = Signin(row[0], event, student)
+				signin = Signin(convert_timestamp(row[0]), event, student)
 				signins.append(signin)
 				
 		finally:
@@ -1758,7 +1758,7 @@ class Signin:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[4], db, con)
-				event = Event(row[0], row[1], row[2], group, semester)
+				event = Event(row[0], convert_timestamp(row[1]), row[2], group, semester)
 				events.append(event)
 		
 		finally:
@@ -1776,7 +1776,7 @@ class Signin:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.signin_dt, self.event.event_dt, self.student.rfid, self.event.event_dt, self.student.rfid,)
+			params = (isoformat(self.signin_dt), isoformat(self.event.event_dt), self.student.rfid, isoformat(self.event.event_dt), self.student.rfid,)
 			cur.execute('''UPDATE signins 
 			SET dt=?, eventdt=?, student=? 
 			WHERE dt=? AND student=?''', params)
@@ -1795,7 +1795,7 @@ class Signin:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.signin_dt, self.event.event_dt, self.student.rfid,)
+			params = (isoformat(self.signin_dt), isoformat(self.event.event_dt), self.student.rfid,)
 			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', params)
 				
 		finally:
@@ -1812,7 +1812,7 @@ class Signin:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.signin_dt, self.student.rfid,)
+			params = (isoformat(self.signin_dt), self.student.rfid,)
 			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', params)
 				
 		finally:
@@ -1854,7 +1854,7 @@ class Event:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[4], db, con)
-				event = Event(row[0], row[1], row[2], group, semester)
+				event = Event(row[0], convert_timestamp(row[1]), row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1889,7 +1889,7 @@ class Event:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[4], db, con)
-				event = Event(row[0], row[1], row[2], group, semester)
+				event = Event(row[0], convert_timestamp(row[1]), row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1926,7 +1926,7 @@ class Event:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[4], db, con)
-				event = Event(row[0], row[1], row[2], group, semester)
+				event = Event(row[0], convert_timestamp(row[1]), row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1957,7 +1957,7 @@ class Event:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[4], db, con)
-				event = Event(row[0], row[1], row[2], group, semester)
+				event = Event(row[0], convert_timestamp(row[1]), row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1988,7 +1988,7 @@ class Event:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[4], db, con)
-				event = Event(row[0], row[1], row[2], group, semester)
+				event = Event(row[0], convert_timestamp(row[1]), row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -2019,7 +2019,7 @@ class Event:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[4], db, con)
-				event = Event(row[0], row[1], row[2], group, semester)
+				event = Event(row[0], convert_timestamp(row[1]), row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -2060,7 +2060,7 @@ class Event:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[4], db, con)
-				event = Event(row[0], row[1], row[2], group, semester)
+				event = Event(row[0], convert_timestamp(row[1]), row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -2100,7 +2100,7 @@ class Event:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.name, self.event_dt, self.event_type, self.group.id, self.event_dt,)
+			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id, isoformat(self.event_dt),)
 			cur.execute('''UPDATE events 
 			SET eventname=?, dt=?, type=?, group=? 
 			WHERE dt=?''', params)
@@ -2119,7 +2119,7 @@ class Event:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.name, self.event_dt, self.event_type, self.group.id,)
+			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id,)
 			cur.execute('INSERT INTO events VALUES (?,?,?,?)', params)
 				
 		finally:
@@ -2136,7 +2136,7 @@ class Event:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.event_dt,)
+			params = (isoformat(self.event_dt),)
 			cur.execute('DELETE FROM events WHERE dt=?', params)
 				
 		finally:
