@@ -34,9 +34,11 @@ class AttendanceDB:
 			goodstanding INTEGER, 
 			current INTEGER)''')
 			
+			cur.execute('CREATE TABLE IF NOT EXISTS organizations (name TEXT PRIMARY KEY)')
+			
 			cur.execute('''CREATE TABLE IF NOT EXISTS groups 
 			(id INTEGER PRIMARY KEY, 
-			name TEXT NOT NULL, 
+			organization TEXT REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCAD, 
 			semester TEXT NOT NULL REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
@@ -850,8 +852,16 @@ class Student:
 			if connection is None:
 				con.close()
 
+class Organization:
+	'''An organization that uses the RFID reader for attendance. '''
+	
+	def __init__(self, name):
+		self.name = name
+
 class Group:
-	''' A group of students. This is usually an ensemble's roster for a semester. '''
+	''' A group of students. 
+	This is usually an ensemble's roster for a semester. 
+	Each Group has a parent Organization.'''
 	
 	@staticmethod
 	def select_by_id(gid, db=gcdb, connection=None):
@@ -866,11 +876,15 @@ class Group:
 			params = (gid,)
 			cur.execute('SELECT * FROM groups WHERE id=?', params)
 			for row in cur.fetchall():
+				if row[1] == 'NULL':
+					organization = None
+				else:
+					organization = Organization(row[1])
 				if row[2] == 'NULL':
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[2], db, connection)
-				group = Group(row[0], row[1], semester)
+				group = Group(row[0], organization, semester)
 				groups.append(group)
 				
 		finally:
@@ -880,23 +894,34 @@ class Group:
 			return groups
 	
 	@staticmethod
-	def select_by_name(name='*', db=gcdb, connection=None):
-		''' Return the Group(s) of given name. '''
+	def select_by_organization(organization='*', db=gcdb, connection=None):
+		''' Return the Group(s) of given parent Organization name. '''
 		groups = []
 		try:
+			if hasattr(organization, name):	# Probably an Organization object
+				org = organization.name
+			elif isinstance(organization, basestring):
+				org = organization
+			else:
+				raise TypeError
+				
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
-			params = (name,)
-			cur.execute('SELECT * FROM groups WHERE name=?', params)
+			params = (org,)
+			cur.execute('SELECT * FROM groups WHERE organization=?', params)
 			for row in cur.fetchall():
+				if row[1] == 'NULL':
+					organization = None
+				else:
+					organization = Organization(row[1])
 				if row[2] == 'NULL':
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[2], db, connection)
-				group = Group(row[0], row[1], semester)
+				group = Group(row[0], organization, semester)
 				groups.append(group)
 				
 		finally:
@@ -918,11 +943,15 @@ class Group:
 			params = (semester,)
 			cur.execute('SELECT * FROM groups WHERE semester=?', params)
 			for row in cur.fetchall():
+				if row[1] == 'NULL':
+					organization = None
+				else:
+					organization = Organization(row[1])
 				if row[2] == 'NULL':
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[2], db, connection)
-				group = Group(row[0], row[1], semester)
+				group = Group(row[0], organization, semester)
 				groups.append(group)
 				
 		finally:
@@ -931,9 +960,9 @@ class Group:
 				con.close()
 			return groups
 	
-	def __init__(self, id, name, semester, students=[]):
+	def __init__(self, id, organization, semester, students=[]):
 		self.id = id
-		self.name = name
+		self.organization = organization
 		self.semester = semester
 		self.members = students
 		
