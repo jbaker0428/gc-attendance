@@ -935,12 +935,19 @@ class Group:
 		''' Return the Group(s) of given Semester. '''
 		groups = []
 		try:
+			if hasattr(semester, term_one):	# Probably a Semester object
+				sem = semester.name
+			elif isinstance(semester, basestring):
+				sem = semester
+			else:
+				raise TypeError
+			
 			if connection is None:
 				(con, cur) = db.con_cursor()
 			else:
 				cur = connection.cursor()
 			
-			params = (semester,)
+			params = (sem,)
 			cur.execute('SELECT * FROM groups WHERE semester=?', params)
 			for row in cur.fetchall():
 				if row[1] == 'NULL':
