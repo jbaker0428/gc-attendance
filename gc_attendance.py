@@ -68,7 +68,8 @@ class AttendanceDB:
 			(eventname TEXT, 
 			dt TEXT PRIMARY KEY, 
 			eventtype TEXT,
-			group INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
+			group INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE 
+			semester TEXT REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS terms
 			(name TEXT PRIMARY KEY,
@@ -1810,7 +1811,15 @@ class Event:
 			params = (name,)
 			cur.execute('SELECT * FROM events WHERE eventname=?', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2], row[3])
+				if row[3] == 'NULL':
+					group = None
+				else:
+					group = Group.select_by_id(row[3], db, connection)
+				if row[4] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[4], db, connection)
+				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1836,7 +1845,15 @@ class Event:
 			params = (event_dt,)
 			cur.execute('SELECT * FROM events WHERE dt=?', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2], row[3])
+				if row[3] == 'NULL':
+					group = None
+				else:
+					group = Group.select_by_id(row[3], db, connection)
+				if row[4] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[4], db, connection)
+				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1864,7 +1881,15 @@ class Event:
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2], row[3])
+				if row[3] == 'NULL':
+					group = None
+				else:
+					group = Group.select_by_id(row[3], db, connection)
+				if row[4] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[4], db, connection)
+				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1886,7 +1911,15 @@ class Event:
 			params = (type,)
 			cur.execute('SELECT * FROM events WHERE eventtype=?', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2], row[3])
+				if row[3] == 'NULL':
+					group = None
+				else:
+					group = Group.select_by_id(row[3], db, connection)
+				if row[4] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[4], db, connection)
+				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1908,7 +1941,15 @@ class Event:
 			params = (group,)
 			cur.execute('SELECT * FROM events WHERE group=?', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2], row[3])
+				if row[3] == 'NULL':
+					group = None
+				else:
+					group = Group.select_by_id(row[3], db, connection)
+				if row[4] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[4], db, connection)
+				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1918,7 +1959,37 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_all(name, start_dt, end_dt, type, group, db=gcdb, connection=None):
+	def select_by_semester(semester, db=gcdb, connection=None):
+		''' Return the list of Events in a given Semester. '''
+		events = []
+		try:
+			if connection is None:
+				(con, cur) = db.con_cursor()
+			else:
+				cur = connection.cursor()
+			
+			params = (semester,)
+			cur.execute('SELECT * FROM events WHERE semester=?', params)
+			for row in cur.fetchall():
+				if row[3] == 'NULL':
+					semester = None
+				else:
+					semester = Group.select_by_id(row[3], db, connection)
+				if row[4] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[4], db, connection)
+				event = Event(row[0], row[1], row[2], group, semester)
+				events.append(event)
+				
+		finally:
+			cur.close()
+			if connection is None:
+				con.close()
+			return events
+	
+	@staticmethod
+	def select_by_all(name, start_dt, end_dt, type, group, semester, db=gcdb, connection=None):
 		''' Return a list of Events using any combination of filters. '''
 		events = []
 		
@@ -1933,13 +2004,22 @@ class Event:
 			else:
 				cur = connection.cursor()
 			
-			params = (name, start_dt, end_dt, type, group,)
+			params = (name, start_dt, end_dt, type, group, semester,)
 			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
 			SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
 			SELECT * FROM events WHERE eventtype=? INTERSECT 
-			SELECT * FROM events WHERE group=?''', params)
+			SELECT * FROM events WHERE group=? INTERSECT 
+			SELECT * FROM events WHERE semester=?''', params)
 			for row in cur.fetchall():
-				event = Event(row[0], row[1], row[2], row[3])
+				if row[3] == 'NULL':
+					group = None
+				else:
+					group = Group.select_by_id(row[3], db, connection)
+				if row[4] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[4], db, connection)
+				event = Event(row[0], row[1], row[2], group, semester)
 				events.append(event)
 				
 		finally:
@@ -1948,11 +2028,12 @@ class Event:
 				con.close()
 			return events
 	
-	def __init__(self, name, dt, t, group):
+	def __init__(self, name, dt, t, group, semester):
 		self.event_name = name
-		self.event = dt	# a datetime object, primary key
-		self.event_type = t	# One of the Event.TYPE_ constants 
-		self.group = group	# Roster to check against
+		self.event = dt		# a datetime object, primary key
+		self.event_type = t		# One of the Event.TYPE_ constants 
+		self.group = group		# Roster to check against
+		self.semester = semester	# A Semester object
 		self.signins = []
 		self.excuses = []
 		self.absences = []
