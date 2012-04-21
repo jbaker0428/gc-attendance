@@ -1736,6 +1736,42 @@ class Signin:
 		self.event = event			# an Event object
 		self.student = student		# a Student object
 	
+	def guess_event(self, db=gcdb, connection=None):
+		''' Search the database for events that this Signin might correspond to.
+		Likely events are defined as starting within 2 hours of self.signin_dt
+		(to allow for showing up and/or signing in late) and are held by a group
+		that self.student is a member of.
+		Returns a list of Event objects without setting self.event directly. '''
+		time_window = datetime.timedelta(0, 0, 0, 0, 0, 2, 0)	# 2 hours
+		try:
+			events = []
+			if connection is None:
+				(con, cur) = db.con_cursor()
+			else:
+				cur = connection.cursor()
+			
+			params = (isoformat(self.signin_dt - time_window), isoformat(self.signin_dt + time_window), self.student.rfid,) 
+			cur.execute('''SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
+			SELECT * FROM events WHERE group IN 
+			(SELECT group FROM group_memberships WHERE student=?)''')
+			for row in cur.fetchall():
+				if row[3] == 'NULL':
+					group = None
+				else:
+					group = Group.select_by_id(row[3], db, connection)
+				if row[4] == 'NULL':
+					semester = None
+				else:
+					semester = Semester.select_by_name(row[4], db, connection)
+				event = Event(row[0], row[1], row[2], group, semester)
+				events.append(event)
+		
+		finally:
+			cur.close()
+			if connection is None:
+				con.close()
+			return events
+	
 	def update(self, db=gcdb, connection=None):
 		''' Update an existing Signin record in the DB. '''
 		try:
