@@ -1293,9 +1293,9 @@ class Absence:
 				con.close()
 			return absences
 	
-	def __init__(self, student, t, event, excuse=None):
+	def __init__(self, student, type, event, excuse=None):
 		self.student = student	# A Student object
-		self.type = t				# An Absence.TYPE_ string constant
+		self.type = type				# An Absence.TYPE_ string constant
 		self.event = event		# An Event object
 		self.excuse = excuse	# An Excuse object
 	
