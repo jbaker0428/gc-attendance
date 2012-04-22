@@ -55,7 +55,7 @@ class AttendanceDB:
 			CONSTRAINT pk_absence PRIMARY KEY (eventdt, student))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS excuses
-			(id INTGER PRIMARY KEY
+			(id INTGER PRIMARY KEY,
 			dt TEXT, 
 			eventdt TEXT REFERENCES events(dt) ON DELETE CASCADE ON UPDATE CASCADE,
 			reason TEXT, 
@@ -71,7 +71,7 @@ class AttendanceDB:
 			(eventname TEXT, 
 			dt TEXT PRIMARY KEY, 
 			eventtype TEXT,
-			group INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE 
+			group INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE, 
 			semester TEXT REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS terms
