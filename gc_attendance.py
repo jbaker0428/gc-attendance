@@ -38,7 +38,7 @@ class AttendanceDB:
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS groups 
 			(id INTEGER PRIMARY KEY, 
-			organization TEXT REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCAD, 
+			organization TEXT REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
 			semester TEXT NOT NULL REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
