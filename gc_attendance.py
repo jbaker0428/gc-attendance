@@ -1090,8 +1090,8 @@ class Group:
 				con = connection
 				cur = con.cursor()
 			
-			params = (self.id, self.name, self.semester.name,)
-			cur.execute('INSERT INTO groups VALUES (?,?,?)', params)
+			params = (self.name, self.semester.name,)
+			cur.execute('INSERT INTO groups VALUES (NULL,?,?)', params)
 				
 		finally:
 			cur.close()
