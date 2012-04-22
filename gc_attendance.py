@@ -883,6 +883,30 @@ class Organization:
 	def new_from_row(row):
 		''' Given an organization row from the DB, returns an Organization object. '''
 		return Organization(row[0])
+	
+	@staticmethod
+	def select_by_name(name='*', db=gcdb, connection=None):
+		''' Return the Organization of given name. '''
+		try:
+			if connection is None:
+				(con, cur) = db.con_cursor()
+			else:
+				con = connection
+				cur = con.cursor()
+			
+			params = (name,)
+			cur.execute('SELECT * FROM organizations WHERE name=?', params)
+			row = cur.fetchone()
+			if row != None:
+				organization = Organization.new_from_row(row, db, con)
+			else:
+				organization = None
+				
+		finally:
+			cur.close()
+			if connection is None:
+				con.close()
+			return organization
 
 	def __init__(self, name):
 		self.name = name
@@ -898,6 +922,7 @@ class Group:
 		if row[1] == 'NULL':
 			organization = None
 		else:
+			# TODO: If/when Organizations get more attribs, replace this with a select_by_name call
 			organization = Organization(row[1])
 		if row[2] == 'NULL':
 			semester = None
