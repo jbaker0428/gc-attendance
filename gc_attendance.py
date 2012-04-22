@@ -143,6 +143,11 @@ class Term:
 	''' Corresponds to one 7-week term on WPI's academic calendar. '''
 	
 	@staticmethod
+	def new_from_row(row):
+		''' Given a term row from the DB, returns a Term object. '''
+		return Term(row[0], convert_date(row[1]), convert_date(row[2]))
+	
+	@staticmethod
 	def select_by_name(name='*', db=gcdb, connection=None):
 		''' Return the Term of given name. '''
 		try:
@@ -156,7 +161,7 @@ class Term:
 			cur.execute('SELECT * FROM terms WHERE name=?', params)
 			row = cur.fetchone()
 			if row != None:
-				term = Term(row[0], convert_date(row[1]), convert_date(row[2]))
+				term = Term.new_from_row(row, db, con)
 			else:
 				term = None
 				
@@ -189,8 +194,7 @@ class Term:
 			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
 			SELECT * FROM terms WHERE enddate BETWEEN ? AND ?''', params)
 			for row in cur.fetchall():
-				term = Term(row[0], convert_date(row[1]), convert_date(row[2]))
-				terms.append(term)
+				terms.append(Term.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -220,8 +224,7 @@ class Term:
 			SELECT * FROM terms WHERE enddate BETWEEN ? AND ? INTERSECT
 			SELECT * FROM terms WHERE name=?''', params)
 			for row in cur.fetchall():
-				term = Term(row[0], convert_date(row[1]), convert_date(row[2]))
-				terms.append(term)
+				terms.append(Term.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -330,6 +333,13 @@ class Semester:
 	''' Corresponds to one 2-term semester on WPI's academic calendar. '''
 	
 	@staticmethod
+	def new_from_row(row, db=gcdb, connection=None):
+		''' Given a semester row from the DB, returns a Semester object. '''
+		t1 = Term.select_by_name(row[1], db, connnection)
+		t2 = Term.select_by_name(row[2], db, connnection)
+		semester = Semester(row[0], t1, t2)
+				
+	@staticmethod
 	def select_by_name(name='*', db=gcdb, connection=None):
 		''' Return the Semester of given name. '''
 		try:
@@ -343,9 +353,7 @@ class Semester:
 			cur.execute('SELECT * FROM semester WHERE name=?', params)
 			row = cur.fetchone()
 			if row != None:
-				t1 = Term.select_by_name(row[1], db, con)
-				t2 = Term.select_by_name(row[2], db, con)
-				semester = Term(row[0], t1, t2)
+				semester = Semester.new_from_row(row, db, con)
 			else:
 				semester = None
 				
@@ -386,10 +394,7 @@ class Semester:
 			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?)
 			 ''', params)
 			for row in cur.fetchall():
-				t1 = Term.select_by_name(row[1], db, con)
-				t2 = Term.select_by_name(row[2], db, con)
-				semester = Semester(row[0], t1, t2)
-				semesters.append(semester)
+				semesters.append(Semester.new_from_row(row, db, con))
 							
 		finally:
 			cur.close()
@@ -424,10 +429,7 @@ class Semester:
 			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) INTERSECT 
 			SELECT * FROM terms WHERE name=?''', params)
 			for row in cur.fetchall():
-				t1 = Term.select_by_name(row[1], db, con)
-				t2 = Term.select_by_name(row[2], db, con)
-				semester = Semester(row[0], t1, t2)
-				semesters.append(semester)
+				semesters.append(Semester.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -532,7 +534,12 @@ class Semester:
 class Student:
 	''' A Student who has signed into the attendance system. 
 	The student's RFID ID number is the primary key column.	'''
-	
+
+	@staticmethod
+	def new_from_row(row):
+		''' Given a student row from the DB, returns a Student object. '''
+		return Student(row[0], row[1], row[2], row[3], row[4], row[5])
+
 	@staticmethod
 	def select_by_id(id, db=gcdb, connection=None):
 		''' Return the Student of given ID. '''
@@ -547,7 +554,7 @@ class Student:
 			cur.execute('SELECT * FROM students WHERE id=?', params)
 			row = cur.fetchone()
 			if row != None:
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
+				student = Student.new_from_row(row, db, con)
 			else:
 				student = None
 			
@@ -571,8 +578,7 @@ class Student:
 			params = (fname, lname,)
 			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', params)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
-				students.append(student)
+				students.append(Student.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -594,8 +600,7 @@ class Student:
 			params = (email,)
 			cur.execute('SELECT * FROM students WHERE email=?', params)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
-				students.append(student)
+				students.append(Student.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -617,8 +622,7 @@ class Student:
 			params = (int(good_standing),)
 			cur.execute('SELECT * FROM students WHERE goodstanding=?', params)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
-				students.append(student)
+				students.append(Student.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -646,8 +650,7 @@ class Student:
 				(SELECT DISTINCT student FROM group_memberships WHERE id=?)""", params)
 
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
-				students.append(student)
+				students.append(Student.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -669,8 +672,7 @@ class Student:
 			params = (int(current),)
 			cur.execute('SELECT * FROM students WHERE current=?', params)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
-				students.append(student)
+				students.append(Student.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -704,8 +706,7 @@ class Student:
 			SELECT * FROM students WHERE goodstanding=? INTERSECT 
 			SELECT * FROM students WHERE current=?''', params)
 			for row in cur.fetchall():
-				student = Student(row[0], row[1], row[2], row[3], row[4], row[5])
-				students.append(student)
+				students.append(Student.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -877,7 +878,12 @@ class Student:
 
 class Organization:
 	'''An organization that uses the RFID reader for attendance. '''
-	
+
+	@staticmethod
+	def new_from_row(row):
+		''' Given an organization row from the DB, returns an Organization object. '''
+		return Organization(row[0])
+
 	def __init__(self, name):
 		self.name = name
 
@@ -886,6 +892,19 @@ class Group:
 	This is usually an ensemble's roster for a semester. 
 	Each Group has a parent Organization.'''
 	
+	@staticmethod
+	def new_from_row(row, db=gcdb, connection=None):
+		''' Given a group row from the DB, returns a Group object. '''
+		if row[1] == 'NULL':
+			organization = None
+		else:
+			organization = Organization(row[1])
+		if row[2] == 'NULL':
+			semester = None
+		else:
+			semester = Semester.select_by_name(row[2], db, connection)
+		return Group(row[0], organization, semester)
+				
 	@staticmethod
 	def select_by_id(gid, db=gcdb, connection=None):
 		''' Return the Group of given ID. '''
@@ -900,15 +919,7 @@ class Group:
 			cur.execute('SELECT * FROM groups WHERE id=?', params)
 			row = cur.fetchone()
 			if row != None:
-				if row[1] == 'NULL':
-					organization = None
-				else:
-					organization = Organization(row[1])
-				if row[2] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[2], db, con)
-				group = Group(row[0], organization, semester)
+				group = Group.new_from_row(row, db, con)
 			else:
 				group = None
 				
@@ -939,16 +950,7 @@ class Group:
 			params = (org,)
 			cur.execute('SELECT * FROM groups WHERE organization=?', params)
 			for row in cur.fetchall():
-				if row[1] == 'NULL':
-					organization = None
-				else:
-					organization = Organization(row[1])
-				if row[2] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[2], db, con)
-				group = Group(row[0], organization, semester)
-				groups.append(group)
+				groups.append(Group.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -977,16 +979,7 @@ class Group:
 			params = (sem,)
 			cur.execute('SELECT * FROM groups WHERE semester=?', params)
 			for row in cur.fetchall():
-				if row[1] == 'NULL':
-					organization = None
-				else:
-					organization = Organization(row[1])
-				if row[2] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[2], db, con)
-				group = Group(row[0], organization, semester)
-				groups.append(group)
+				groups.append(Group.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1126,6 +1119,23 @@ class Absence:
 	TYPE_UNEXCUSED = "Unexcused"
 	
 	@staticmethod
+	def new_from_row(row, db=gcdb, connection=None):
+		''' Given an absence row from the DB, returns an Absence object. '''
+		if row[0] == 'NULL':
+			student = None
+		else:
+			student = Student.select_by_id(row[0], db, connection)
+		if row[2] == 'NULL':
+			event = None
+		else:
+			event = Event.select_by_id(row[2], db, connection)[0]
+		if row[3] == 'NULL':
+			excuse = None
+		else:
+			excuse = Excuse.select_by_id(row[3], db, connection)
+		return Absence(student, row[1], event, excuse)
+		
+	@staticmethod
 	def select_by_student(student_id='*', db=gcdb, connection=None):
 		''' Return the list of Absences by a Student. '''
 		absences = []
@@ -1139,20 +1149,7 @@ class Absence:
 			params = (student_id,)
 			cur.execute('SELECT * FROM absences WHERE student=?', params)
 			for row in cur.fetchall():
-				if row[0] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[0], db, connection)
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[3] == 'NULL':
-					excuse = None
-				else:
-					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(student, row[1], event, excuse)
-				absences.append(absence)
+				absences.append(Absence.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1174,20 +1171,7 @@ class Absence:
 			params = (absence_type,)
 			cur.execute('SELECT * FROM absences WHERE type=?', params)
 			for row in cur.fetchall():
-				if row[0] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[0], db, connection)
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[3] == 'NULL':
-					excuse = None
-				else:
-					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(student, row[1], event, excuse)
-				absences.append(absence)
+				absences.append(Absence.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1213,20 +1197,7 @@ class Absence:
 			params = (event_id,)
 			cur.execute('SELECT * FROM absences WHERE event=?', params)
 			for row in cur.fetchall():
-				if row[0] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[0], db, connection)
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[3] == 'NULL':
-					excuse = None
-				else:
-					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(student, row[1], event, excuse)
-				absences.append(absence)
+				absences.append(Absence.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1250,20 +1221,7 @@ class Absence:
 			params = (excuse_id,)
 			cur.execute('SELECT * FROM absences WHERE excuseid=?', params)
 			for row in cur.fetchall():
-				if row[0] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[0], db, connection)
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[3] == 'NULL':
-					excuse = None
-				else:
-					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(student, row[1], event, excuse)
-				absences.append(absence)
+				absences.append(Absence.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1292,20 +1250,7 @@ class Absence:
 			SELECT * FROM absences WHERE event=? INTERSECT
 			SELECT * FROM absences WHERE excuseid=?''', params)
 			for row in cur.fetchall():
-				if row[0] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[0], db, connection)
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[3] == 'NULL':
-					excuse = None
-				else:
-					excuse = Excuse.select_by_id(row[3], db, con)
-				absence = Absence(student, row[1], event, excuse)
-				absences.append(absence)
+				absences.append(Absence.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1381,6 +1326,19 @@ class Excuse:
 	EXCUSES_CLOSES = datetime.timedelta(0, 0, 0, 0, 0, 6, 0)	# 6 hours after
 	
 	@staticmethod
+	def new_from_row(row, db=gcdb, connection=None):
+		''' Given an excuse row from the DB, returns an Excuse object. '''
+		if row[2] == 'NULL':
+			event = None
+		else:
+			event = Event.select_by_id(row[2], db, connection)[0]
+		if row[4] == 'NULL':
+			student = None
+		else:
+			student = Student.select_by_id(row[4], db, connection)
+		return Excuse(row[0], convert_timestamp(row[1]), event, row[3], student)
+	
+	@staticmethod
 	def select_by_id(excuse_id, db=gcdb, connection=None):
 		''' Return the Excuse of given unique ID. '''
 		try:
@@ -1394,15 +1352,7 @@ class Excuse:
 			cur.execute('SELECT * FROM excuses WHERE id=?', params)
 			row = cur.fetchone()
 			if row != None:
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[4] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[4], db, connection)
-				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
+				excuse = Excuse.new_from_row(row, db, con)
 			else:
 				excuse = None
 				
@@ -1426,16 +1376,7 @@ class Excuse:
 			params = (student_id,)
 			cur.execute('SELECT * FROM excuses WHERE student=?', params)
 			for row in cur.fetchall():
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[4] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[4], db, connection)
-				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
-				excuses.append(excuse)
+				excuses.append(Excuse.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1463,16 +1404,7 @@ class Excuse:
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[4] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[4], db, connection)
-				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
-				excuses.append(excuse)
+				excuses.append(Excuse.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1498,16 +1430,7 @@ class Excuse:
 			params = (event_id,)
 			cur.execute('SELECT * FROM excuses WHERE event=?', params)
 			for row in cur.fetchall():
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[4] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[4], db, connection)
-				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
-				excuses.append(excuse)
+				excuses.append(Excuse.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1540,16 +1463,7 @@ class Excuse:
 			SELECT * FROM excuses WHERE dt BETWEEN ? AND ? INTERSECT 
 			SELECT * FROM excuses WHERE event=?''', params)
 			for row in cur.fetchall():
-				if row[2] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[2], db, con)[0]
-				if row[4] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[4], db, connection)
-				excuse = Excuse(int(row[0]), convert_timestamp(row[1]), event, row[3], student)
-				excuses.append(excuse)
+				excuses.append(Excuse.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1623,6 +1537,19 @@ class Signin:
 	The datetime and student ID are the primary key colums.'''
 	
 	@staticmethod
+	def new_from_row(row, db=gcdb, connection=None):
+		''' Given a signin row from the DB, returns a signin object. '''
+		if row[1] == 'NULL':
+			event = None
+		else:
+			event = Event.select_by_id(row[1], db, connection)[0]
+		if row[2] == 'NULL':
+			student = None
+		else:
+			student = Student.select_by_id(row[2], db, connection)
+		return Signin(convert_timestamp(row[0]), event, student)
+		
+	@staticmethod
 	def select_by_student(id, db=gcdb, connection=None):
 		''' Return the list of Signins by a Student. '''
 		signins = []
@@ -1636,16 +1563,7 @@ class Signin:
 			params = (id,)
 			cur.execute('SELECT * FROM signins WHERE student=?', params)
 			for row in cur.fetchall():
-				if row[1] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[1], db, con)[0]
-				if row[2] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[2], db, con)
-				signin = Signin(convert_timestamp(row[0]), event, student)
-				signins.append(signin)
+				signins.append(Signin.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1673,16 +1591,7 @@ class Signin:
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
-				if row[1] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[1], db, con)[0]
-				if row[2] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[2], db, con)
-				signin = Signin(convert_timestamp(row[0]), event, student)
-				signins.append(signin)
+				signins.append(Signin.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1708,16 +1617,7 @@ class Signin:
 			params = (isoformat(event_id),)
 			cur.execute('SELECT * FROM signins WHERE event=?', params)
 			for row in cur.fetchall():
-				if row[1] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[1], db, con)[0]
-				if row[2] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[2], db, con)
-				signin = Signin(convert_timestamp(row[0]), event, student)
-				signins.append(signin)
+				signins.append(Signin.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1749,16 +1649,7 @@ class Signin:
 			 SELECT * FROM signins WHERE dt BETWEEN ? AND ? INTERSECT 
 			 SELECT * FROM signins WHERE event=?''', params)
 			for row in cur.fetchall():
-				if row[1] == 'NULL':
-					event = None
-				else:
-					event = Event.select_by_id(row[1], db, con)[0]
-				if row[2] == 'NULL':
-					student = None
-				else:
-					student = Student.select_by_id(row[2], db, con)
-				signin = Signin(convert_timestamp(row[0]), event, student)
-				signins.append(signin)
+				signins.append(Signin.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1874,6 +1765,19 @@ class Event:
 	ATTENDANCE_CLOSES = datetime.timedelta(0, 0, 0, 0, 30, 1, 0)	# 90 minutes after
 	
 	@staticmethod
+	def new_from_row(row, db=gcdb, connection=None):
+		''' Given an event row from the DB, returns an Event object. '''
+		if row[4] == 'NULL':
+			group = None
+		else:
+			group = Group.select_by_id(row[4], db, connection)
+		if row[5] == 'NULL':
+			semester = None
+		else:
+			semester = Semester.select_by_name(row[5], db, connection)
+		return Event(row[0], row[1], convert_timestamp(row[2]), row[3], group, semester)
+
+	@staticmethod
 	def select_by_id(event_id, db=gcdb, connection=None):
 		''' Return the Event of given unique ID. '''
 		try:
@@ -1887,15 +1791,7 @@ class Event:
 			cur.execute('SELECT * FROM events WHERE id=?', params)
 			row = cur.fetchone()
 			if row != None:
-				if row[4] == 'NULL':
-					group = None
-				else:
-					group = Group.select_by_id(row[4], db, con)
-				if row[5] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[5], db, con)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
+				event = Event.new_from_row(row, db, con)
 			else:
 				event = None
 				
@@ -1919,16 +1815,7 @@ class Event:
 			params = (name,)
 			cur.execute('SELECT * FROM events WHERE eventname=?', params)
 			for row in cur.fetchall():
-				if row[4] == 'NULL':
-					group = None
-				else:
-					group = Group.select_by_id(row[4], db, con)
-				if row[5] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[5], db, con)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
-				events.append(event)
+				events.append(Event.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1954,16 +1841,7 @@ class Event:
 			params = (event_dt,)
 			cur.execute('SELECT * FROM events WHERE dt=?', params)
 			for row in cur.fetchall():
-				if row[4] == 'NULL':
-					group = None
-				else:
-					group = Group.select_by_id(row[4], db, con)
-				if row[5] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[5], db, con)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
-				events.append(event)
+				events.append(Event.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -1991,16 +1869,7 @@ class Event:
 			params = (start_dt, end_dt,)
 			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params)
 			for row in cur.fetchall():
-				if row[4] == 'NULL':
-					group = None
-				else:
-					group = Group.select_by_id(row[4], db, con)
-				if row[5] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[5], db, con)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
-				events.append(event)
+				events.append(Event.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -2022,16 +1891,7 @@ class Event:
 			params = (type,)
 			cur.execute('SELECT * FROM events WHERE eventtype=?', params)
 			for row in cur.fetchall():
-				if row[4] == 'NULL':
-					group = None
-				else:
-					group = Group.select_by_id(row[4], db, con)
-				if row[5] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[5], db, con)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
-				events.append(event)
+				events.append(Event.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -2053,16 +1913,7 @@ class Event:
 			params = (group,)
 			cur.execute('SELECT * FROM events WHERE group=?', params)
 			for row in cur.fetchall():
-				if row[4] == 'NULL':
-					group = None
-				else:
-					group = Group.select_by_id(row[4], db, con)
-				if row[5] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[5], db, con)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
-				events.append(event)
+				events.append(Event.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -2084,16 +1935,7 @@ class Event:
 			params = (semester,)
 			cur.execute('SELECT * FROM events WHERE semester=?', params)
 			for row in cur.fetchall():
-				if row[4] == 'NULL':
-					group = None
-				else:
-					group = Group.select_by_id(row[4], db, con)
-				if row[5] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[5], db, con)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
-				events.append(event)
+				events.append(Event.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
@@ -2125,16 +1967,7 @@ class Event:
 			SELECT * FROM events WHERE group=? INTERSECT 
 			SELECT * FROM events WHERE semester=?''', params)
 			for row in cur.fetchall():
-				if row[4] == 'NULL':
-					group = None
-				else:
-					group = Group.select_by_id(row[4], db, con)
-				if row[5] == 'NULL':
-					semester = None
-				else:
-					semester = Semester.select_by_name(row[5], db, con)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
-				events.append(event)
+				events.append(Event.new_from_row(row, db, con))
 				
 		finally:
 			cur.close()
