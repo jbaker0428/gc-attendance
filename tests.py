@@ -7,6 +7,7 @@ class AttendanceTestCase(unittest.TestCase):
 	def setUp(self):
 		unittest.TestCase.setUp(self)
 		self.db = AttendanceDB(os.path.join(os.getcwd(), 'dbtests.sqlite'))
+		self.db.create_tables()
 		self.glee_club = Organization('Glee Club')
 		self.shm = Organization('SHM')
 		self.av = Organization('Alden Voices')
@@ -52,6 +53,31 @@ class AttendanceTestCase(unittest.TestCase):
 		self.rehearsal4 = Event(None, 'Rehearsal', datetime.datetime(2011, 9, 27, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
 		self.rehearsal5 = Event(None, 'Rehearsal', datetime.datetime(2011, 10, 4, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
 		self.rehearsal6 = Event(None, 'Rehearsal', datetime.datetime(2011, 10, 11, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
+	
+	def test_database_funcs(self):
+		''' Basic database functionality tests.
+		Insert an object into the DB, query for it, compare the two, etc. '''
+		try:
+			(con, cur) = self.db.con_cursor()
+			# Table tests
+			cur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+			for row in cur.fetchall():
+				tables.append(row[0])
+			assert 'absences' in tables
+			assert 'daysoff' in tables
+			assert 'events' in tables
+			assert 'excuses' in tables
+			assert 'group_memberships' in tables
+			assert 'groups' in tables
+			assert 'organizations' in tables
+			assert 'semesters' in tables
+			assert 'signins' in tables
+			assert 'students' in tables
+			assert 'terms' in tables
+			
+		finally:
+			cur.close()
+			con.close()
 		
 	def tearDown(self):
 		unittest.TestCase.tearDown(self)
