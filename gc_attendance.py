@@ -22,7 +22,7 @@ class AttendanceDB:
 		cur = con.cursor()
 		return (con, cur)
 	
-	def createTables(self):
+	def create_tables(self):
 		''' Create the database tables. '''
 		try:
 			(con, cur) = self.con_cursor()
