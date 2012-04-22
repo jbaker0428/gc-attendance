@@ -1092,6 +1092,10 @@ class Group:
 			
 			params = (self.name, self.semester.name,)
 			cur.execute('INSERT INTO groups VALUES (NULL,?,?)', params)
+			cur.execute('SELECT id FROM groups WHERE name=? AND value=?', params)
+			row = cur.selectone()
+			if row is not None:
+				self.id = row[0]	# Retrieve the ID as set by the database
 				
 		finally:
 			cur.close()
@@ -1540,6 +1544,11 @@ class Excuse:
 			params = (isoformat(self.excuse_dt), self.event.id, self.reason, self.student.rfid,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
 			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
+			params = (isoformat(self.excuse_dt), self.event.id, self.student.rfid,)
+			cur.execute('SELECT id FROM excuses WHERE dt=? AND event=? AND student=?', params)
+			row = cur.selectone()
+			if row is not None:
+				self.id = row[0]	# Retrieve the ID as set by the database
 				
 		finally:
 			cur.close()
@@ -2059,6 +2068,10 @@ class Event:
 			
 			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id,)
 			cur.execute('INSERT INTO events VALUES (NULL,?,?,?,?)', params)
+			cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group=?', params)
+			row = cur.selectone()
+			if row is not None:
+				self.id = row[0]	# Retrieve the ID as set by the database
 				
 		finally:
 			cur.close()
