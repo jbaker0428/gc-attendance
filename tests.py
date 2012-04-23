@@ -75,6 +75,17 @@ class AttendanceTestCase(unittest.TestCase):
 			assert 'students' in tables
 			assert 'terms' in tables
 			
+			# Term tests
+			self.a_term.insert(self.db, con)
+			self.b_term.insert(self.db, con)
+			terms = Term.select_by_name(self.a_term.name, self.db, con)
+			assert len(terms) == 1
+			selected_a_term = terms[0]
+			terms = Term.select_by_name(self.b_term.name, self.db, con)
+			assert len(terms) == 1
+			selected_b_term = terms[0]
+			# TODO: equality checks
+		
 		finally:
 			cur.close()
 			con.close()
