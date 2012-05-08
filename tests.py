@@ -1,6 +1,7 @@
 import os
 import unittest
 import datetime
+import apsw
 from gc_attendance import *
 
 class AttendanceTestCase(unittest.TestCase):
@@ -58,7 +59,7 @@ class AttendanceTestCase(unittest.TestCase):
 		''' Basic database functionality tests.
 		Insert an object into the DB, query for it, compare the two, etc. '''
 		try:
-			(con, cur) = self.db.con_cursor()
+			cur = self.db.memory.cursor()
 			# Table tests
 			cur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
 			for row in cur.fetchall():
@@ -76,24 +77,23 @@ class AttendanceTestCase(unittest.TestCase):
 			assert 'terms' in tables
 			
 			# Term tests
-			self.a_term.insert(self.db, con)
-			self.b_term.insert(self.db, con)
-			terms = Term.select_by_name(self.a_term.name, self.db, con)
+			self.a_term.insert(self.db.memory)
+			self.b_term.insert(self.db.memory)
+			terms = Term.select_by_name(self.a_term.name, self.db.memory)
 			assert len(terms) == 1
 			selected_a_term = terms[0]
-			terms = Term.select_by_name(self.b_term.name, self.db, con)
+			terms = Term.select_by_name(self.b_term.name, self.db.memory)
 			assert len(terms) == 1
 			selected_b_term = terms[0]
 			# TODO: equality checks
 		
 		finally:
 			cur.close()
-			con.close()
 		
 	def tearDown(self):
 		unittest.TestCase.tearDown(self)
 		del self.db
-		os.remove(os.path.join(os.getcwd(), 'dbtests.sqlite'))
+		#os.remove(os.path.join(os.getcwd(), 'dbtests.sqlite'))
 
 if __name__ == '__main__':
-	unittest.main()	
+	unittest.main()
