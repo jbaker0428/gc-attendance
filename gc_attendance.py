@@ -132,7 +132,14 @@ class RosterException(Exception):
 		self.text = text
 	def __str__(self):
 		return repr(self.text)
-		
+
+class DatabaseException(Exception):
+	''' Exception raised when a SQL operation executed OK, but returned unexpected results. '''
+	def __init__(self, source, text):
+		self.source = source
+		self.text = text
+	def __str__(self):
+		return repr(self.text)
 
 class Term:
 	''' Corresponds to one 7-week term on WPI's academic calendar. '''
@@ -148,14 +155,14 @@ class Term:
 		try:
 			cur = connection.cursor()
 			
-			params = (name,)
-			cur.execute('SELECT * FROM terms WHERE name=?', params)
-			row = cur.fetchone()
-			if row != None:
-				term = Term.new_from_row(row, connection)
-			else:
+			rows = list(cur.execute('SELECT * FROM terms WHERE name=?', (name,)))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(Term.select_by_name.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				term = Term.new_from_row(rows[0], connection)
+			elif len(rows) == 0:
 				term = None
-				
+	
 		finally:
 			cur.close()
 			return term
@@ -174,11 +181,9 @@ class Term:
 		
 		try:
 			cur = connection.cursor()
-			
-			params = (start_date, end_date, start_date, end_date,)
-			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
-			SELECT * FROM terms WHERE enddate BETWEEN ? AND ?''', params)
-			for row in cur.fetchall():
+			sql = 'SELECT * FROM terms WHERE startdate BETWEEN ?1 AND ?2 UNION SELECT * FROM terms WHERE enddate BETWEEN ?1 AND ?2'
+			params = (start_date, end_date,)
+			for row in cur.execute(sql, params):
 				terms.append(Term.new_from_row(row, connection))
 				
 		finally:
@@ -197,12 +202,11 @@ class Term:
 			
 		try:
 			cur = connection.cursor()
-			
-			params = (start_date, end_date, start_date, end_date, name,)
-			cur.execute('''SELECT * FROM terms WHERE startdate BETWEEN ? AND ? UNION
-			SELECT * FROM terms WHERE enddate BETWEEN ? AND ? INTERSECT
-			SELECT * FROM terms WHERE name=?''', params)
-			for row in cur.fetchall():
+			sql = '''SELECT * FROM terms WHERE startdate BETWEEN ?1 AND ?2 UNION
+			SELECT * FROM terms WHERE enddate BETWEEN ?1 AND ?2 INTERSECT
+			SELECT * FROM terms WHERE name=?3'''
+			params = (start_date, end_date, name,)
+			for row in cur.execute(sql, params):
 				terms.append(Term.new_from_row(row, connection))
 				
 		finally:
@@ -238,9 +242,7 @@ class Term:
 		
 			cur = connection.cursor()
 			
-			params = (start, end,)
-			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', (start, end,)):
 				result.append(convert_date(row[0]))
 				
 		finally:
@@ -252,10 +254,8 @@ class Term:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, isoformat(self.start_date), isoformat(self.end_date), self.name,)
-			cur.execute('''UPDATE terms 
-			SET name=?, startdate=?, enddate=? 
-			WHERE name=?''', params)
+			params = (self.name, isoformat(self.start_date), isoformat(self.end_date),)
+			cur.execute('UPDATE terms SET name=?1, startdate=?2, enddate=?3 WHERE name=?1', params)
 				
 		finally:
 			cur.close()
@@ -299,11 +299,12 @@ class Semester:
 			cur = connection.cursor()
 			
 			params = (name,)
-			cur.execute('SELECT * FROM semester WHERE name=?', params)
-			row = cur.fetchone()
-			if row != None:
-				semester = Semester.new_from_row(row, connection)
-			else:
+			rows = list(cur.execute('SELECT * FROM semester WHERE name=?', params))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(Semester.select_by_name.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				semester = Semester.new_from_row(rows[0], connection)
+			elif len(rows) == 0:
 				semester = None
 				
 		finally:
@@ -315,10 +316,7 @@ class Semester:
 		''' Return the list of Semesters in a given datetime range. 
 		Any Semester whose startdate or enddate falls within the
 		given range will be returned. '''
-		terms = []
 		semesters = []
-		tnames = set()
-		snames = set()
 		if type(start_date == date):
 			start_date = isoformat(start_date)
 		if type(end_date == date):
@@ -327,16 +325,16 @@ class Semester:
 		try:
 			cur = connection.cursor()
 			
-			params = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, )
-			cur.execute('''
+			sql = '''
 			SELECT * from semesters WHERE termone IN 
-			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
-			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) 
+			(SELECT name FROM terms WHERE startdate BETWEEN ?1 AND ?2 UNION 
+			SELECT name FROM terms WHERE enddate BETWEEN ?1 AND ?2) 
 			UNION SELECT * from semesters WHERE termtwo IN 
-			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
-			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?)
-			 ''', params)
-			for row in cur.fetchall():
+			(SELECT name FROM terms WHERE startdate BETWEEN ?1 AND ?2 UNION 
+			SELECT name FROM terms WHERE enddate BETWEEN ?1 AND ?2)
+			 '''
+			
+			for row in cur.execute(sql, (start_date, end_date,)):
 				semesters.append(Semester.new_from_row(row, connection))
 							
 		finally:
@@ -356,16 +354,16 @@ class Semester:
 		try:
 			cur = connection.cursor()
 			
-			params = (start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, name,)
-			cur.execute('''
-			SELECT * from semesters WHERE termone IN 
-			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
-			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) 
+			sql = '''SELECT * from semesters WHERE termone IN 
+			(SELECT name FROM terms WHERE startdate BETWEEN ?1 AND ?2 UNION 
+			SELECT name FROM terms WHERE enddate BETWEEN ?1 AND ?2) 
 			UNION SELECT * from semesters WHERE termtwo IN 
-			(SELECT name FROM terms WHERE startdate BETWEEN ? AND ? UNION 
-			SELECT name FROM terms WHERE enddate BETWEEN ? AND ?) INTERSECT 
-			SELECT * FROM terms WHERE name=?''', params)
-			for row in cur.fetchall():
+			(SELECT name FROM terms WHERE startdate BETWEEN ?1 AND ?2 UNION 
+			SELECT name FROM terms WHERE enddate BETWEEN ?1 AND ?2) INTERSECT 
+			SELECT * FROM terms WHERE name=?3'''
+			params = (start_date, end_date, name,)
+			
+			for row in cur.execute(sql, params):
 				semesters.append(Semester.new_from_row(row, connection))
 				
 		finally:
@@ -398,9 +396,7 @@ class Semester:
 		
 			cur = connection.cursor()
 			
-			params = (start, end,)
-			cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM daysoff WHERE date BETWEEN ? AND ?', (start, end,)):
 				result.append(convert_date(row[0]))
 				
 		finally:
@@ -412,10 +408,8 @@ class Semester:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, self.term_one.name, self.term_two.name, self.name,)
-			cur.execute('''UPDATE semesters 
-			SET name=?, termone=?, termtwo=? 
-			WHERE name=?''', params)
+			params = (self.name, self.term_one.name, self.term_two.name,)
+			cur.execute('UPDATE semesters SET name=?1 termone=?2, termtwo=?3 WHERE name=?1', params)
 				
 		finally:
 			cur.close()
@@ -457,12 +451,12 @@ class Student:
 		try:
 			cur = connection.cursor()
 			
-			params = (id,)
-			cur.execute('SELECT * FROM students WHERE id=?', params)
-			row = cur.fetchone()
-			if row != None:
-				student = Student.new_from_row(row, connection)
-			else:
+			rows = list(cur.execute('SELECT * FROM students WHERE id=?', (id,)))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(Student.select_by_id.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				student = Student.new_from_row(rows[0], connection)
+			elif len(rows) == 0:
 				student = None
 			
 		finally:
@@ -475,10 +469,7 @@ class Student:
 		students = []
 		try:
 			cur = connection.cursor()
-			
-			params = (fname, lname,)
-			cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM students WHERE fname=? AND lname=?', (fname, lname,)):
 				students.append(Student.new_from_row(row, connection))
 				
 		finally:
@@ -492,9 +483,7 @@ class Student:
 		try:
 			cur = connection.cursor()
 			
-			params = (email,)
-			cur.execute('SELECT * FROM students WHERE email=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM students WHERE email=?', (email,)):
 				students.append(Student.new_from_row(row, connection))
 				
 		finally:
@@ -508,9 +497,7 @@ class Student:
 		try:
 			cur = connection.cursor()
 			
-			params = (int(good_standing),)
-			cur.execute('SELECT * FROM students WHERE goodstanding=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM students WHERE goodstanding=?', (int(good_standing),)):
 				students.append(Student.new_from_row(row, connection))
 				
 		finally:
@@ -518,21 +505,20 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_group(group_id, in_group=True, connection):
+	def select_by_group(group, in_group=True, connection):
 		''' Return the list of Students in some group (or not). '''
 		students = []
 		try:
 			cur = connection.cursor()
 			
-			params = (group_id,)			
 			if in_group == True:
-				cur.execute("""SELECT * FROM students WHERE id IN
-				(SELECT DISTINCT student FROM group_memberships WHERE id=?)""", params)
+				sql = '''SELECT * FROM students WHERE id IN
+				(SELECT DISTINCT student FROM group_memberships WHERE id=?)'''
 			else:
-				cur.execute("""SELECT * FROM students WHERE id NOT IN
-				(SELECT DISTINCT student FROM group_memberships WHERE id=?)""", params)
+				sql = '''SELECT * FROM students WHERE id NOT IN
+				(SELECT DISTINCT student FROM group_memberships WHERE id=?)'''
 
-			for row in cur.fetchall():
+			for row in cur.execute(sql, (group.id,)):
 				students.append(Student.new_from_row(row, connection))
 				
 		finally:
@@ -546,9 +532,7 @@ class Student:
 		try:
 			cur = connection.cursor()
 			
-			params = (int(current),)
-			cur.execute('SELECT * FROM students WHERE current=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM students WHERE current=?', (int(current),)):
 				students.append(Student.new_from_row(row, connection))
 				
 		finally:
@@ -567,14 +551,9 @@ class Student:
 		try:
 			cur = connection.cursor()
 			
+			sql = 'SELECT * FROM students WHERE id=? AND fname=? AND lname=? AND email=? AND goodstanding=? AND current=?'
 			params = (id, fname, lname, email, standing, current,)
-			cur.execute('''SELECT * FROM students WHERE id=? INTERSECT 
-			SELECT * FROM students WHERE fname=? INTERSECT 
-			SELECT * FROM students WHERE lname=? INTERSECT 
-			SELECT * FROM students WHERE email=? INTERSECT 
-			SELECT * FROM students WHERE goodstanding=? INTERSECT 
-			SELECT * FROM students WHERE current=?''', params)
-			for row in cur.fetchall():
+			for row in cur.execute(sql, params):
 				students.append(Student.new_from_row(row, connection))
 				
 		finally:
@@ -615,15 +594,15 @@ class Student:
 		
 	def fetch_signins(self, connection):
 		''' Fetch all Signins by this Student from the database. '''
-		self.signins = Signin.select_by_student(self.rfid, connection)
+		self.signins = Signin.select_by_student(self, connection)
 	
 	def fetch_excuses(self, connection):
 		''' Fetch all Excuses by this Student from the database. '''
-		self.excuses = Excuse.select_by_student(self.rfid, connection)
+		self.excuses = Excuse.select_by_student(self, connection)
 	
 	def fetch_absences(self, connection):
 		''' Fetch all Absences by this Student from the database. '''
-		self.absences = Absence.select_by_student(self.rfid, connection)
+		self.absences = Absence.select_by_student(self, connection)
 	
 	def fetch_groups(self, connection):
 		''' Fetch all Groups this Student is a member of from the database. '''
@@ -695,8 +674,7 @@ class Student:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.rfid,)
-			cur.execute('DELETE FROM students WHERE id=?', params)
+			cur.execute('DELETE FROM students WHERE id=?', (self.rfid,))
 				
 		finally:
 			cur.close()
@@ -715,12 +693,12 @@ class Organization:
 		try:
 			cur = connection.cursor()
 			
-			params = (name,)
-			cur.execute('SELECT * FROM organizations WHERE name=?', params)
-			row = cur.fetchone()
-			if row != None:
-				organization = Organization.new_from_row(row, connection)
-			else:
+			rows = list(cur.execute('SELECT * FROM organizations WHERE name=?', (name,)))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(Organization.select_by_name.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				organization = Organization.new_from_row(rows[0], connection)
+			elif len(rows) == 0:
 				organization = None
 				
 		finally:
@@ -755,12 +733,12 @@ class Group:
 		try:
 			cur = connection.cursor()
 			
-			params = (gid,)
-			cur.execute('SELECT * FROM groups WHERE id=?', params)
-			row = cur.fetchone()
-			if row != None:
-				group = Group.new_from_row(row, connection)
-			else:
+			rows = list(cur.execute('SELECT * FROM groups WHERE id=?', (gid,)))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(Group.select_by_id.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				group = Group.new_from_row(rows[0], connection)
+			elif len(rows) == 0:
 				group = None
 				
 		finally:
@@ -769,7 +747,7 @@ class Group:
 	
 	@staticmethod
 	def select_by_organization(organization, connection):
-		''' Return the Group(s) of given parent Organization name. '''
+		''' Return the Group(s) of given parent Organization. '''
 		groups = []
 		try:
 			if hasattr(organization, name):	# Probably an Organization object
@@ -781,9 +759,7 @@ class Group:
 				
 			cur = connection.cursor()
 			
-			params = (org,)
-			cur.execute('SELECT * FROM groups WHERE organization=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM groups WHERE organization=?', (org,)):
 				groups.append(Group.new_from_row(row, connection))
 				
 		finally:
@@ -804,9 +780,7 @@ class Group:
 			
 			cur = connection.cursor()
 			
-			params = (sem,)
-			cur.execute('SELECT * FROM groups WHERE semester=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM groups WHERE semester=?', (sem,)):
 				groups.append(Group.new_from_row(row, connection))
 				
 		finally:
@@ -821,15 +795,14 @@ class Group:
 		
 	def fetch_members(self, connection):
 		''' Fetch all Students in this group from the database. '''
-		self.members = Student.select_by_group(self.id, True, connection)
+		self.members = Student.select_by_group(self, True, connection)
 	
 	def add_member(self, student, credit, connection):
 		''' Add a new member to the group. '''
 		try:
 			cur = connection.cursor()
 			
-			params = (student.name, self.id, int(credit),)
-			cur.execute('INSERT OR ABORT INTO group_memberships VALUES (?,?,?)', params)
+			cur.execute('INSERT OR ABORT INTO group_memberships VALUES (?,?,?)', (student.name, self.id, int(credit),))
 				
 		finally:
 			cur.close()
@@ -852,23 +825,27 @@ class Group:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.id, self.name, self.semester.name, self.id,)
-			cur.execute('UPDATE groups SET id=?, name=?, semester=? WHERE id=?', params)
+			params = (self.id, self.name, self.semester.name,)
+			cur.execute('UPDATE groups SET id=?1, name=?2, semester=?3 WHERE id=?1', params)
 				
 		finally:
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Group to the DB. '''
+		''' Write the Group to the DB and retrieve the auto-assigned ID. '''
 		try:
 			cur = connection.cursor()
 			
 			params = (self.name, self.semester.name,)
 			cur.execute('INSERT INTO groups VALUES (NULL,?,?)', params)
-			cur.execute('SELECT id FROM groups WHERE name=? AND value=?', params)
-			row = cur.selectone()	# TODO: This is not a APSW function
-			if row is not None:
-				self.id = row[0]	# Retrieve the ID as set by the database
+			
+			rows = list(cur.execute('SELECT id FROM groups WHERE name=? AND semester=?', params))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				self.id = rows[0][0]
+			elif len(rows) == 0:
+				raise DatabaseException(self.insert.__name__, "Could not retrieve group ID post-insert.")
 				
 		finally:
 			cur.close()
@@ -878,8 +855,7 @@ class Group:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.id,)
-			cur.execute('DELETE FROM groups WHERE id=?', params)
+			cur.execute('DELETE FROM groups WHERE id=?', (self.id,))
 				
 		finally:
 			cur.close()
@@ -936,15 +912,13 @@ class Absence:
 		return Absence(student, row[1], event, excuse)
 		
 	@staticmethod
-	def select_by_student(student_id, connection):
+	def select_by_student(student, connection):
 		''' Return the list of Absences by a Student. '''
 		absences = []
 		try:
 			cur = connection.cursor()
 			
-			params = (student_id,)
-			cur.execute('SELECT * FROM absences WHERE student=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM absences WHERE student=?', (student.id,)):
 				absences.append(Absence.new_from_row(row, connection))
 				
 		finally:
@@ -958,9 +932,7 @@ class Absence:
 		try:
 			cur = connection.cursor()
 			
-			params = (absence_type,)
-			cur.execute('SELECT * FROM absences WHERE type=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM absences WHERE type=?', (absence_type,)):
 				absences.append(Absence.new_from_row(row, connection))
 				
 		finally:
@@ -968,19 +940,14 @@ class Absence:
 			return absences
 		
 	@staticmethod
-	def select_by_event_id(event_id, connection):
+	def select_by_event(event, connection):
 		''' Return the list of Absences of a given datetime. '''
 		absences = []
-		
-		if type(event_id == datetime):
-			event_id = isoformat(event_id)
 			
 		try:
 			cur = connection.cursor()
 			
-			params = (event_id,)
-			cur.execute('SELECT * FROM absences WHERE event=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM absences WHERE event=?', (event.id,)):
 				absences.append(Absence.new_from_row(row, connection))
 				
 		finally:
@@ -996,9 +963,7 @@ class Absence:
 		try:
 			cur = connection.cursor()
 			
-			params = (excuse_id,)
-			cur.execute('SELECT * FROM absences WHERE excuseid=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM absences WHERE excuseid=?', (excuse_id,)):
 				absences.append(Absence.new_from_row(row, connection))
 				
 		finally:
@@ -1016,12 +981,9 @@ class Absence:
 		try:
 			cur = connection.cursor()
 			
+			sql = 'SELECT * FROM absences WHERE student=? AND type=? AND event=? AND excuseid=?'
 			params = (student_id, absence_type, event_id, excuse_id,)
-			cur.execute('''SELECT * FROM absences WHERE student=? INTERSECT
-			SELECT * FROM absences WHERE type=? INTERSECT
-			SELECT * FROM absences WHERE event=? INTERSECT
-			SELECT * FROM absences WHERE excuseid=?''', params)
-			for row in cur.fetchall():
+			for row in cur.execute(sql, params):
 				absences.append(Absence.new_from_row(row, connection))
 				
 		finally:
@@ -1039,10 +1001,8 @@ class Absence:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.student.rfid, self.type, self.event.id, self.excuse.id, self.student.rfid, self.event.id,)
-			cur.execute('''UPDATE absences 
-			SET student=?, type=?, event=?, excuseid=? 
-			WHERE student=? AND event=?''', params)
+			params = (self.student.rfid, self.type, self.event.id, self.excuse.id,)
+			cur.execute('UPDATE absences SET student=?1, type=?2, event=?3, excuseid=?4 WHERE student=?1 AND event=?3', params)
 				
 		finally:
 			cur.close()
@@ -1096,12 +1056,12 @@ class Excuse:
 		try:
 			cur = connection.cursor()
 			
-			params = (excuse_id,)
-			cur.execute('SELECT * FROM excuses WHERE id=?', params)
-			row = cur.fetchone()
-			if row != None:
-				excuse = Excuse.new_from_row(row, connection)
-			else:
+			rows = list(cur.execute('SELECT * FROM excuses WHERE id=?', (excuse_id,)))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(Excuse.select_by_id.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				excuse = Excuse.new_from_row(rows[0], connection)
+			elif len(rows) == 0:
 				excuse = None
 				
 		finally:
@@ -1109,15 +1069,13 @@ class Excuse:
 			return excuse
 	
 	@staticmethod
-	def select_by_student(student_id, connection):
+	def select_by_student(student, connection):
 		''' Return the list of Excuses by a Student. '''
 		excuses = []
 		try:
 			cur = connection.cursor()
 			
-			params = (student_id,)
-			cur.execute('SELECT * FROM excuses WHERE student=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM excuses WHERE student=?', (student.id,)):
 				excuses.append(Excuse.new_from_row(row, connection))
 				
 		finally:
@@ -1138,8 +1096,7 @@ class Excuse:
 			cur = connection.cursor()
 			
 			params = (start_dt, end_dt,)
-			cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM excuses WHERE dt BETWEEN ? AND ?', params):
 				excuses.append(Excuse.new_from_row(row, connection))
 				
 		finally:
@@ -1147,19 +1104,14 @@ class Excuse:
 			return excuses
 		
 	@staticmethod
-	def select_by_event_id(event_id, connection):
+	def select_by_event(event, connection):
 		''' Return the list of Excuses associated with a given Event. '''
 		excuses = []
-		
-		if type(event_id == datetime):
-			event_id = isoformat(event_id)
 		
 		try:
 			cur = connection.cursor()
 			
-			params = (event_id,)
-			cur.execute('SELECT * FROM excuses WHERE event=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM excuses WHERE event=?', (event.id,)):
 				excuses.append(Excuse.new_from_row(row, connection))
 				
 		finally:
@@ -1181,12 +1133,9 @@ class Excuse:
 		try:
 			cur = connection.cursor()
 			
+			sql = '''SELECT * FROM excuses WHERE id=? AND student=? AND (dt BETWEEN ? AND ?) AND event=?''' 
 			params = (excuse_id, student_id, start_dt, end_dt, event_id,)
-			cur.execute('''SELECT * FROM excuses WHERE id=? INTERSECT 
-			SELECT * FROM excuses WHERE student=? INTERSECT 
-			SELECT * FROM excuses WHERE dt BETWEEN ? AND ? INTERSECT 
-			SELECT * FROM excuses WHERE event=?''', params)
-			for row in cur.fetchall():
+			for row in cur.execute(sql, params):
 				excuses.append(Excuse.new_from_row(row, connection))
 				
 		finally:
@@ -1206,26 +1155,28 @@ class Excuse:
 			cur = connection.cursor()
 			
 			params = (isoformat(self.excuse_dt), self.event.id, self.reason, self.student.rfid, self.id,)
-			cur.execute('''UPDATE excuses 
-			SET dt=?, event=?, reason=?, student=? 
-			WHERE id=?''', params)
+			cur.execute('UPDATE excuses SET dt=?, event=?, reason=?, student=? WHERE id=?', params)
 				
 		finally:
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Excuse to the DB. '''
+		''' Write the Excuse to the DB and retrieve the auto-assigned ID. '''
 		try:
 			cur = connection.cursor()
 			
 			params = (isoformat(self.excuse_dt), self.event.id, self.reason, self.student.rfid,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
 			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
+			
 			params = (isoformat(self.excuse_dt), self.event.id, self.student.rfid,)
-			cur.execute('SELECT id FROM excuses WHERE dt=? AND event=? AND student=?', params)
-			row = cur.selectone()
-			if row is not None:
-				self.id = row[0]	# Retrieve the ID as set by the database
+			rows = list(cur.execute('SELECT id FROM excuses WHERE dt=? AND event=? AND student=?', params))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				self.id = rows[0][0]
+			elif len(rows) == 0:
+				raise DatabaseException(self.insert.__name__, "Could not retrieve excuse ID post-insert.")
 				
 		finally:
 			cur.close()
@@ -1235,8 +1186,7 @@ class Excuse:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.id,)
-			cur.execute('DELETE FROM excuses WHERE id=?', params)
+			cur.execute('DELETE FROM excuses WHERE id=?', (self.id,))
 				
 		finally:
 			cur.close()
@@ -1259,15 +1209,13 @@ class Signin:
 		return Signin(convert_timestamp(row[0]), event, student)
 		
 	@staticmethod
-	def select_by_student(id, connection):
+	def select_by_student(student, connection):
 		''' Return the list of Signins by a Student. '''
 		signins = []
 		try:
 			cur = connection.cursor()
 			
-			params = (id,)
-			cur.execute('SELECT * FROM signins WHERE student=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM signins WHERE student=?', (student.id,)):
 				signins.append(Signin.new_from_row(row, connection))
 				
 		finally:
@@ -1288,8 +1236,7 @@ class Signin:
 			cur = connection.cursor()
 			
 			params = (start_dt, end_dt,)
-			cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM signins WHERE dt BETWEEN ? AND ?', params):
 				signins.append(Signin.new_from_row(row, connection))
 				
 		finally:
@@ -1297,19 +1244,14 @@ class Signin:
 			return signins
 	
 	@staticmethod
-	def select_by_event_id(event_id, connection):
+	def select_by_event(event, connection):
 		''' Return the list of Signins associated with a given Event. '''
 		signins = []
-		
-		if type(event_id == datetime):
-			event_id = isoformat(event_id)
 		
 		try:
 			cur = connection.cursor()
 			
-			params = (isoformat(event_id),)
-			cur.execute('SELECT * FROM signins WHERE event=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM signins WHERE event=?', (isoformat(event.id),)):
 				signins.append(Signin.new_from_row(row, connection))
 				
 		finally:
@@ -1331,11 +1273,9 @@ class Signin:
 		try:
 			cur = connection.cursor()
 			
+			sql = 'SELECT * FROM signins WHERE student=? AND (dt BETWEEN ? AND ?) AND event=?'
 			params = (id, start_dt, end_dt, event_id,)
-			cur.execute('''SELECT * FROM signins WHERE student=? INTERSECT
-			 SELECT * FROM signins WHERE dt BETWEEN ? AND ? INTERSECT 
-			 SELECT * FROM signins WHERE event=?''', params)
-			for row in cur.fetchall():
+			for row in cur.execute(sql, params):
 				signins.append(Signin.new_from_row(row, connection))
 				
 		finally:
@@ -1358,16 +1298,14 @@ class Signin:
 			events = []
 			cur = connection.cursor()
 			
+			sql = 'SELECT * FROM events WHERE (dt BETWEEN ? AND ?) AND group IN (SELECT group FROM group_memberships WHERE student=?)'
 			params = (isoformat(self.signin_dt - time_window), isoformat(self.signin_dt + time_window), self.student.rfid,) 
-			cur.execute('''SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
-			SELECT * FROM events WHERE group IN 
-			(SELECT group FROM group_memberships WHERE student=?)''')
-			for row in cur.fetchall():
-				if row[4] == 'NULL':
+			for row in cur.execute(sql, params):
+				if row[4] is None:
 					group = None
 				else:
 					group = Group.select_by_id(row[4], connection)
-				if row[5] == 'NULL':
+				if row[5] is None:
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[5], connection)
@@ -1383,10 +1321,8 @@ class Signin:
 		try:
 			cur = connection.cursor()
 			
-			params = (isoformat(self.signin_dt), self.event.id, self.student.rfid, isoformat(self.signin_dt), self.student.rfid,)
-			cur.execute('''UPDATE signins 
-			SET dt=?, eventdt=?, student=? 
-			WHERE dt=? AND student=?''', params)
+			params = (isoformat(self.signin_dt), self.event.id, self.student.rfid,)
+			cur.execute('UPDATE signins SET dt=?1, event=?2, student=?3 WHERE dt=?1 AND student=?3', params)
 				
 		finally:
 			cur.close()
@@ -1428,11 +1364,11 @@ class Event:
 	@staticmethod
 	def new_from_row(row, connection):
 		''' Given an event row from the DB, returns an Event object. '''
-		if row[4] == 'NULL':
+		if row[4] is None:
 			group = None
 		else:
 			group = Group.select_by_id(row[4], connection)
-		if row[5] == 'NULL':
+		if row[5] is None:
 			semester = None
 		else:
 			semester = Semester.select_by_name(row[5], connection)
@@ -1444,12 +1380,12 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (event_id,)
-			cur.execute('SELECT * FROM events WHERE id=?', params)
-			row = cur.fetchone()
-			if row != None:
-				event = Event.new_from_row(row, connection)
-			else:
+			rows = list(cur.execute('SELECT * FROM events WHERE id=?', (event_id,)))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(Event.select_by_id.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				event = Event.new_from_row(rows[0], connection)
+			elif len(rows) == 0:
 				event = None
 				
 		finally:
@@ -1463,9 +1399,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (name,)
-			cur.execute('SELECT * FROM events WHERE eventname=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM events WHERE eventname=?', (name,)):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1483,9 +1417,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (event_dt,)
-			cur.execute('SELECT * FROM events WHERE dt=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM events WHERE dt=?', (event_dt,)):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1506,8 +1438,7 @@ class Event:
 			cur = connection.cursor()
 			
 			params = (start_dt, end_dt,)
-			cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1521,9 +1452,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (type,)
-			cur.execute('SELECT * FROM events WHERE eventtype=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM events WHERE eventtype=?', (type,)):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1537,9 +1466,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (group,)
-			cur.execute('SELECT * FROM events WHERE group=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM events WHERE group=?', (group,)):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1553,9 +1480,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (semester,)
-			cur.execute('SELECT * FROM events WHERE semester=?', params)
-			for row in cur.fetchall():
+			for row in cur.execute('SELECT * FROM events WHERE semester=?', (semester,)):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1575,13 +1500,9 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
+			sql = 'SELECT * FROM events WHERE eventname=? AND (dt BETWEEN ? AND ?) AND eventtype=? AND group=? AND semester=?'
 			params = (name, start_dt, end_dt, type, group, semester,)
-			cur.execute('''SELECT * FROM events WHERE eventname=? INTERSECT 
-			SELECT * FROM events WHERE dt BETWEEN ? AND ? INTERSECT 
-			SELECT * FROM events WHERE eventtype=? INTERSECT 
-			SELECT * FROM events WHERE group=? INTERSECT 
-			SELECT * FROM events WHERE semester=?''', params)
-			for row in cur.fetchall():
+			for row in cur.execute(sql, params):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1609,32 +1530,34 @@ class Event:
 		
 	def fetch_absences(self, connection):
 		''' Fetch all Absences for this Event from the database. '''
-		self.absences = Absence.select_by_event_id(self.event_dt, connection)
+		self.absences = Absence.select_by_event(self, connection)
 	
 	def update(self, connection):
 		''' Update an existing Event record in the DB. '''
 		try:
 			cur = connection.cursor()
 			
-			params = (self.id, self.name, isoformat(self.event_dt), self.event_type, self.group.id, self.id,)
-			cur.execute('''UPDATE events 
-			SET id=?, eventname=?, dt=?, type=?, group=? 
-			WHERE id=?''', params)
+			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id, self.id,)
+			cur.execute('UPDATE events SET eventname=?, dt=?, type=?, group=? WHERE id=?', params)
 				
 		finally:
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Event to the DB. '''
+		''' Write the Event to the DB and retrieve the auto-assigned ID. '''
 		try:
 			cur = connection.cursor()
 			
 			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id,)
 			cur.execute('INSERT INTO events VALUES (NULL,?,?,?,?)', params)
-			cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group=?', params)
-			row = cur.selectone()
-			if row is not None:
-				self.id = row[0]	# Retrieve the ID as set by the database
+			
+			rows = list(cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group=?', params))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				self.id = rows[0][0]
+			elif len(rows) == 0:
+				raise DatabaseException(self.insert.__name__, "Could not retrieve event ID post-insert.")
 				
 		finally:
 			cur.close()
@@ -1644,8 +1567,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.id,)
-			cur.execute('DELETE FROM events WHERE id=?', params)
+			cur.execute('DELETE FROM events WHERE id=?', (self.id,))
 				
 		finally:
 			cur.close()
