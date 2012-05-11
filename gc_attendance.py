@@ -23,10 +23,10 @@ class AttendanceDB:
 		cur.close()
 		return con
 	
-	def create_tables(self):
+	def create_tables(self, connection):
 		''' Create the database tables. '''
 		try:
-			cur = self.memory.cursor()
+			cur = connection.cursor()
 			cur.execute('''CREATE TABLE IF NOT EXISTS students
 			(id INTEGER PRIMARY KEY, 
 			fname TEXT, 
