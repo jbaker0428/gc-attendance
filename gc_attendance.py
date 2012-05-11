@@ -45,17 +45,18 @@ class AttendanceDB:
 			semester TEXT NOT NULL REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
-			(student INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			group INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			credit INTEGER NOT NULL
-			PRIMARY KEY(student, group))''')
-			
+			(id INTEGER PRIMARY KEY, 
+			student INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE, 
+			group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE, 
+			credit INTEGER NOT NULL, 
+			UNIQUE(student ASC, group_id ASC) ON CONFLICT REPLACE)''')
+
 			cur.execute('''CREATE TABLE IF NOT EXISTS absences
 			(student INTEGER REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE, 
 			type TEXT, 
 			event INTEGER REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE, 
-			excuseid TEXT REFERENCES excuses(id) ON DELETE CASCADE ON UPDATE CASCADE 
-			CONSTRAINT pk_absence PRIMARY KEY (eventdt, student))''')
+			excuseid TEXT REFERENCES excuses(id) ON DELETE CASCADE ON UPDATE CASCADE, 
+			CONSTRAINT pk_absence PRIMARY KEY (event, student))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS excuses
 			(id INTGER PRIMARY KEY,
@@ -67,7 +68,7 @@ class AttendanceDB:
 			cur.execute('''CREATE TABLE IF NOT EXISTS signins
 			(dt TEXT, 
 			event INTEGER REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			student INTEGER REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE
+			student INTEGER REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE, 
 			CONSTRAINT pk_signin PRIMARY KEY (dt, student))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS events
@@ -75,7 +76,7 @@ class AttendanceDB:
 			eventname TEXT, 
 			dt TEXT NOT NULL, 
 			eventtype TEXT,
-			group INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE, 
+			group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE, 
 			semester TEXT REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS terms
@@ -89,7 +90,7 @@ class AttendanceDB:
 			termtwo TEXT REFERENCES terms(name) ON DELETE RESTRICT ON UPDATE CASCADE)''')
 			
 			# Days where WPI closed (holidays, snow days, etc)
-			cur.execute('CREATE TABLE IF NOT EXISTS daysoff date TEXT')
+			cur.execute('CREATE TABLE IF NOT EXISTS daysoff (date TEXT PRIMARY KEY)')
 			
 		finally:
 			cur.close()
@@ -846,7 +847,7 @@ class Group:
 			cur = connection.cursor()
 			
 			params = (student.name, self.id,)
-			cur.execute('DELETE FROM group_memberships WHERE student=? AND group=?', params)
+			cur.execute('DELETE FROM group_memberships WHERE student=? AND group_id=?', params)
 			del self.members[self.members.index(student)]
 				
 		finally:
@@ -1498,7 +1499,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			for row in cur.execute('SELECT * FROM events WHERE group=?', (group,)):
+			for row in cur.execute('SELECT * FROM events WHERE group_id=?', (group,)):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1532,7 +1533,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			sql = 'SELECT * FROM events WHERE eventname=? AND (dt BETWEEN ? AND ?) AND eventtype=? AND group=? AND semester=?'
+			sql = 'SELECT * FROM events WHERE eventname=? AND (dt BETWEEN ? AND ?) AND eventtype=? AND group_id=? AND semester=?'
 			params = (name, start_dt, end_dt, type, group, semester,)
 			for row in cur.execute(sql, params):
 				events.append(Event.new_from_row(row, connection))
@@ -1570,7 +1571,7 @@ class Event:
 			cur = connection.cursor()
 			
 			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id, self.id,)
-			cur.execute('UPDATE events SET eventname=?, dt=?, type=?, group=? WHERE id=?', params)
+			cur.execute('UPDATE events SET eventname=?, dt=?, type=?, group_id=? WHERE id=?', params)
 				
 		finally:
 			cur.close()
@@ -1583,7 +1584,7 @@ class Event:
 			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id,)
 			cur.execute('INSERT INTO events VALUES (NULL,?,?,?,?)', params)
 			
-			rows = list(cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group=?', params))
+			rows = list(cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group_id=?', params))
 			if len(rows) > 1 or len(rows) < 0:
 				raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
 			elif len(rows) == 1:
