@@ -707,6 +707,36 @@ class Organization:
 
 	def __init__(self, name):
 		self.name = name
+	
+	def update(self, connection):
+		''' Update an existing Organization record in the DB. '''
+		try:
+			cur = connection.cursor()
+			
+			cur.execute('UPDATE organizations SET name=?1 WHERE name=?1', (self.name,))
+				
+		finally:
+			cur.close()
+	
+	def insert(self, connection):
+		''' Write the Organization to the DB. '''
+		try:
+			cur = connection.cursor()
+			
+			cur.execute('INSERT INTO organizations VALUES (?)', (self.name,))
+				
+		finally:
+			cur.close()
+	
+	def delete(self, connection):
+		''' Delete the Organization from the DB. '''
+		try:
+			cur = connection.cursor()
+			
+			cur.execute('DELETE FROM organizations WHERE name=?', (self.id,))
+				
+		finally:
+			cur.close()
 
 class Group:
 	''' A group of students. 
