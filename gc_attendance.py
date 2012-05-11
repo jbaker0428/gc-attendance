@@ -35,7 +35,9 @@ class AttendanceDB:
 			goodstanding INTEGER, 
 			current INTEGER)''')
 			
-			cur.execute('CREATE TABLE IF NOT EXISTS organizations (name TEXT PRIMARY KEY)')
+			cur.execute('''CREATE TABLE IF NOT EXISTS organizations 
+			(name TEXT PRIMARY KEY, 
+			gcal_id STRING)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS groups 
 			(id INTEGER PRIMARY KEY, 
@@ -685,7 +687,7 @@ class Organization:
 	@staticmethod
 	def new_from_row(row):
 		''' Given an organization row from the DB, returns an Organization object. '''
-		return Organization(row[0])
+		return Organization(row[0], row[1])
 	
 	@staticmethod
 	def select_by_name(name, connection):
@@ -705,15 +707,16 @@ class Organization:
 			cur.close()
 			return organization
 
-	def __init__(self, name):
+	def __init__(self, name, gcal_id=None):
 		self.name = name
+		self.gcal_id = gcal_id	# Optional Google Calendar ID, e.g. wpigleeclub@gmail.com
 	
 	def update(self, connection):
 		''' Update an existing Organization record in the DB. '''
 		try:
 			cur = connection.cursor()
 			
-			cur.execute('UPDATE organizations SET name=?1 WHERE name=?1', (self.name,))
+			cur.execute('UPDATE organizations SET name=?1, gcal_id=?2 WHERE name=?1', (self.name, self.gcal_id,))
 				
 		finally:
 			cur.close()
@@ -723,7 +726,7 @@ class Organization:
 		try:
 			cur = connection.cursor()
 			
-			cur.execute('INSERT INTO organizations VALUES (?)', (self.name,))
+			cur.execute('INSERT INTO organizations VALUES (?,?)', (self.name, self.gcal_id,))
 				
 		finally:
 			cur.close()
@@ -749,8 +752,7 @@ class Group:
 		if row[1] == 'NULL':
 			organization = None
 		else:
-			# TODO: If/when Organizations get more attribs, replace this with a select_by_name call
-			organization = Organization(row[1])
+			organization = Organization.select_by_name(row[1], connection)
 		if row[2] == 'NULL':
 			semester = None
 		else:
