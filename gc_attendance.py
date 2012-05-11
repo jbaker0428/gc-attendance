@@ -507,7 +507,7 @@ class Student:
 			return students
 	
 	@staticmethod
-	def select_by_group(group, in_group=True, connection):
+	def select_by_group(group, in_group, connection):
 		''' Return the list of Students in some group (or not). '''
 		students = []
 		try:
