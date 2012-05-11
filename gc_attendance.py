@@ -2,7 +2,7 @@ import csv
 import shutil
 import os
 import apsw
-import datetime
+from datetime import *
 import types
 import xlsx
 
@@ -1067,8 +1067,8 @@ class Excuse:
 	The datetime and student ID are the primary key colums.'''
 	
 	# Cutoffs for when students can email gc-excuse (relative to event start time)
-	EXCUSES_OPENS = datetime.timedelta(-1, 0, 0, 0, 0, -18, 0)	# 1 day, 18 hours before
-	EXCUSES_CLOSES = datetime.timedelta(0, 0, 0, 0, 0, 6, 0)	# 6 hours after
+	EXCUSES_OPENS = timedelta(-1, 0, 0, 0, 0, -18, 0)	# 1 day, 18 hours before
+	EXCUSES_CLOSES = timedelta(0, 0, 0, 0, 0, 6, 0)	# 6 hours after
 	
 	@staticmethod
 	def new_from_row(row, connection):
@@ -1391,8 +1391,8 @@ class Event:
 	TYPE_CONCERT = 'Concert'
 	
 	# Cutoffs for when students can sign in (relative to event start time)
-	ATTENDANCE_OPENS = datetime.timedelta(0, 0, 0, 0, -30, 0, 0)	# 30 minutes before
-	ATTENDANCE_CLOSES = datetime.timedelta(0, 0, 0, 0, 30, 1, 0)	# 90 minutes after
+	ATTENDANCE_OPENS = timedelta(0, 0, 0, 0, -30, 0, 0)	# 30 minutes before
+	ATTENDANCE_CLOSES = timedelta(0, 0, 0, 0, 30, 1, 0)	# 90 minutes after
 	
 	@staticmethod
 	def new_from_row(row, connection):
