@@ -84,12 +84,10 @@ class AttendanceTestCase(unittest.TestCase):
 		# Term tests
 		self.a_term.insert(self.db.memory)
 		self.b_term.insert(self.db.memory)
-		terms = Term.select_by_name(self.a_term.name, self.db.memory)
-		assert len(terms) == 1
-		selected_a_term = terms[0]
-		terms = Term.select_by_name(self.b_term.name, self.db.memory)
-		assert len(terms) == 1
-		selected_b_term = terms[0]
+		selected_a_term = Term.select_by_name(self.a_term.name, self.db.memory)
+		assert selected_a_term is not None
+		selected_b_term = Term.select_by_name(self.b_term.name, self.db.memory)
+		assert selected_b_term is not None
 		# TODO: equality checks
 		
 		#finally:
