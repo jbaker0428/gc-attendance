@@ -77,7 +77,8 @@ class AttendanceDB:
 			dt TEXT NOT NULL, 
 			eventtype TEXT,
 			group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE, 
-			semester TEXT REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
+			semester TEXT REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE,
+			gcal_id TEXT UNIQUE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS terms
 			(name TEXT PRIMARY KEY,
@@ -162,8 +163,10 @@ class Term:
 			if len(rows) > 1 or len(rows) < 0:
 				raise DatabaseException(Term.select_by_name.__name__, "Query returned %s rows, expected one." % len(rows))
 			elif len(rows) == 1:
+				#print 'No term row found!'
 				term = Term.new_from_row(rows[0], connection)
 			elif len(rows) == 0:
+				#print 'No term rows found'
 				term = None
 	
 		finally:
@@ -1398,7 +1401,7 @@ class Event:
 			semester = None
 		else:
 			semester = Semester.select_by_name(row[5], connection)
-		return Event(row[0], row[1], convert_timestamp(row[2]), row[3], group, semester)
+		return Event(row[0], row[1], convert_timestamp(row[2]), row[3], group, semester, row[6])
 
 	@staticmethod
 	def select_by_id(event_id, connection):
@@ -1514,7 +1517,25 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_all(name, start_dt, end_dt, type, group, semester, connection):
+	def select_by_gcal_id(gcal_id, connection):
+		''' Return the Event of a given Google Calendar event ID. '''
+		try:
+			cur = connection.cursor()
+			event = None
+			rows = list(cur.execute('SELECT * FROM events WHERE gcal_id=?', (gcal_id,)))
+			if len(rows) > 1 or len(rows) < 0:
+				raise DatabaseException(Event.select_by_gcal_id.__name__, "Query returned %s rows, expected one." % len(rows))
+			elif len(rows) == 1:
+				event = Event.new_from_row(rows[0], connection)
+			elif len(rows) == 0:
+				event = None
+				
+		finally:
+			cur.close()
+			return event
+	
+	@staticmethod
+	def select_by_all(name, start_dt, end_dt, type, group, semester, gcal_id, connection):
 		''' Return a list of Events using any combination of filters. '''
 		events = []
 		
@@ -1526,8 +1547,8 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			sql = 'SELECT * FROM events WHERE eventname=? AND (dt BETWEEN ? AND ?) AND eventtype=? AND group_id=? AND semester=?'
-			params = (name, start_dt, end_dt, type, group, semester,)
+			sql = 'SELECT * FROM events WHERE eventname=? AND (dt BETWEEN ? AND ?) AND eventtype=? AND group_id=? AND semester=? AND gcal_id=?'
+			params = (name, start_dt, end_dt, type, group, semester, gcal_id,)
 			for row in cur.execute(sql, params):
 				events.append(Event.new_from_row(row, connection))
 				
@@ -1535,13 +1556,14 @@ class Event:
 			cur.close()
 			return events
 	
-	def __init__(self, id, name, dt, t, group, semester):
+	def __init__(self, id, name, dt, t, group, semester, gcal_id):
 		self.id = id
 		self.event_name = name
 		self.event_dt = dt		# a datetime object, primary key
 		self.event_type = t		# One of the Event.TYPE_ constants 
 		self.group = group		# Roster to check against
 		self.semester = semester	# A Semester object
+		self.gcal_id = gcal_id	# Optioal Google Calendar event ID
 		self.signins = []
 		self.excuses = []
 		self.absences = []
@@ -1563,8 +1585,8 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, self.event_dt.isoformat(), self.event_type, self.group.id, self.id,)
-			cur.execute('UPDATE events SET eventname=?, dt=?, type=?, group_id=? WHERE id=?', params)
+			params = (self.name, self.event_dt.isoformat(), self.event_type, self.group.id, self.gcal_id, self.id,)
+			cur.execute('UPDATE events SET eventname=?, dt=?, type=?, group_id=?, gcal_id=? WHERE id=?', params)
 				
 		finally:
 			cur.close()
@@ -1574,10 +1596,10 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, self.event_dt.isoformat(), self.event_type, self.group.id,)
-			cur.execute('INSERT INTO events VALUES (NULL,?,?,?,?)', params)
+			params = (self.name, self.event_dt.isoformat(), self.event_type, self.group.id, self.gcal_id,)
+			cur.execute('INSERT INTO events VALUES (NULL,?,?,?,?,?)', params)
 			
-			rows = list(cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group_id=?', params))
+			rows = list(cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group_id=? AND gcal_id=?', params))
 			if len(rows) > 1 or len(rows) < 0:
 				raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
 			elif len(rows) == 1:

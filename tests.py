@@ -27,7 +27,7 @@ class AttendanceTestCase(unittest.TestCase):
 		self.student42737 = Student(42737, 'Joe', 'Baker', 'jbaker@alum.wpi.edu')
 		self.student24631 = Student(24631, 'Anika', 'Blodgett', 'ablodgett@wpi.edu')
 		
-		self.rehearsal1 = Event(None, 'Rehearsal', datetime(2011, 9, 6, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
+		self.rehearsal1 = Event(None, 'Rehearsal', datetime(2011, 9, 6, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
 		self.signin_r1_10000 = Signin(datetime(2011, 9, 6, 18, 28), None, self.student10000)
 		self.signin_r1_11262 = Signin(datetime(2011, 9, 6, 18, 28), None, self.student11262)
 		self.signin_r1_12345 = Signin(datetime(2011, 9, 6, 18, 30), None, self.student12345)
@@ -37,9 +37,9 @@ class AttendanceTestCase(unittest.TestCase):
 		self.signin_r1_56789 = Signin(datetime(2011, 9, 6, 20, 12), None, self.student56789)
 		self.signin_r1_42737 = Signin(datetime(2011, 9, 6, 18, 35), None, self.student42737)
 		
-		self.dress1 = Event(None, 'Rehearsal for September 11', datetime(2011, 9, 10, 10, 00), Event.TYPE_DRESS, self.gc_group, self.fall_semester)
-		self.concert1 = Event(None, 'Memorial Mass', datetime(2011, 9, 11, 12, 00), Event.TYPE_CONCERT, self.gc_group, self.fall_semester)
-		self.rehearsal2 = Event(None, 'Rehearsal', datetime(2011, 9, 13, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
+		self.dress1 = Event(None, 'Rehearsal for September 11', datetime(2011, 9, 10, 10, 00), Event.TYPE_DRESS, self.gc_group, self.fall_semester, '')
+		self.concert1 = Event(None, 'Memorial Mass', datetime(2011, 9, 11, 12, 00), Event.TYPE_CONCERT, self.gc_group, self.fall_semester, '')
+		self.rehearsal2 = Event(None, 'Rehearsal', datetime(2011, 9, 13, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
 		self.signin_r2_10000 = Signin(datetime(2011, 9, 13, 18, 28), None, self.student10000)
 		self.signin_r2_11262 = Signin(datetime(2011, 9, 13, 18, 28), None, self.student11262)
 		self.signin_r2_12345 = Signin(datetime(2011, 9, 13, 18, 30), None, self.student12345)
@@ -50,10 +50,10 @@ class AttendanceTestCase(unittest.TestCase):
 		self.absence_r2_42737 = Absence(self.student42737, Absence.TYPE_PENDING, self.rehearsal2)
 		self.excuse_r2_42737 = Excuse(None, datetime(2011, 9, 13, 11, 37), self.rehearsal2, 'oh god rbe ahhhh', self.student42737)
 		
-		self.rehearsal3 = Event(None, 'Rehearsal', datetime(2011, 9, 20, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
-		self.rehearsal4 = Event(None, 'Rehearsal', datetime(2011, 9, 27, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
-		self.rehearsal5 = Event(None, 'Rehearsal', datetime(2011, 10, 4, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
-		self.rehearsal6 = Event(None, 'Rehearsal', datetime(2011, 10, 11, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester)
+		self.rehearsal3 = Event(None, 'Rehearsal', datetime(2011, 9, 20, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
+		self.rehearsal4 = Event(None, 'Rehearsal', datetime(2011, 9, 27, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
+		self.rehearsal5 = Event(None, 'Rehearsal', datetime(2011, 10, 4, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
+		self.rehearsal6 = Event(None, 'Rehearsal', datetime(2011, 10, 11, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
 	
 	def test_database(self):
 		''' Basic database functionality tests.
