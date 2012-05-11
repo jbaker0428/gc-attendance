@@ -110,7 +110,7 @@ class AttendanceDB:
 					time = row[2].split(':')
 					dt = datetime.datetime(int(date[2]), int(date[0]), int(date[1]), int(time[0]), int(time[1]))
 					# The record variable formatting matches the Sigin.__init__ arguments list
-					record = (isoformat(dt), 'NULL', int(row[3]))
+					record = (dt.isoformat(), 'NULL', int(row[3]))
 					signins.append(record)
 			
 			cur = self.memory.cursor()
@@ -157,7 +157,7 @@ class Term:
 		''' Return the Term of given name. '''
 		try:
 			cur = connection.cursor()
-			
+			term = None
 			rows = list(cur.execute('SELECT * FROM terms WHERE name=?', (name,)))
 			if len(rows) > 1 or len(rows) < 0:
 				raise DatabaseException(Term.select_by_name.__name__, "Query returned %s rows, expected one." % len(rows))
@@ -178,9 +178,9 @@ class Term:
 		terms = []
 		
 		if type(start_date == date):
-			start_date = isoformat(start_date)
+			start_date = start_date.isoformat()
 		if type(end_date == date):
-			end_date = isoformat(end_date)
+			end_date = end_date.isoformat()
 		
 		try:
 			cur = connection.cursor()
@@ -199,9 +199,9 @@ class Term:
 		terms = []
 		
 		if type(start_date == date):
-			start_date = isoformat(start_date)
+			start_date = start_date.isoformat()
 		if type(end_date == date):
-			end_date = isoformat(end_date)
+			end_date = end_date.isoformat()
 			
 		try:
 			cur = connection.cursor()
@@ -230,14 +230,14 @@ class Term:
 		result = []
 		try:
 			if type(self.start_date == date):
-				start = isoformat(self.start_date)
+				start = self.start_date.isoformat()
 			elif type(self.start_date == str):
 				start = self.start_date
 			else:
 				raise TypeError
 				
 			if type(self.end_date == date):
-				end = isoformat(self.end_date)
+				end = self.end_date.isoformat()
 			elif type(self.end_date == str):
 				end = self.end_date
 			else:
@@ -257,7 +257,7 @@ class Term:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, isoformat(self.start_date), isoformat(self.end_date),)
+			params = (self.name, self.start_date.isoformat(), self.end_date.isoformat(),)
 			cur.execute('UPDATE terms SET name=?1, startdate=?2, enddate=?3 WHERE name=?1', params)
 				
 		finally:
@@ -268,7 +268,7 @@ class Term:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, isoformat(self.start_date), isoformat(self.end_date), )
+			params = (self.name, self.start_date.isoformat(), self.end_date.isoformat(), )
 			cur.execute('INSERT INTO terms VALUES (?,?,?)', params)
 				
 		finally:
@@ -321,9 +321,9 @@ class Semester:
 		given range will be returned. '''
 		semesters = []
 		if type(start_date == date):
-			start_date = isoformat(start_date)
+			start_date = start_date.isoformat()
 		if type(end_date == date):
-			end_date = isoformat(end_date)
+			end_date = end_date.isoformat()
 			
 		try:
 			cur = connection.cursor()
@@ -350,9 +350,9 @@ class Semester:
 		semesters = []
 		
 		if type(start_date == date):
-			start_date = isoformat(start_date)
+			start_date = start_date.isoformat()
 		if type(end_date == date):
-			end_date = isoformat(end_date)
+			end_date = end_date.isoformat()
 			
 		try:
 			cur = connection.cursor()
@@ -384,14 +384,14 @@ class Semester:
 		result = []
 		try:
 			if type(self.term_one.start_date == date):
-				start = isoformat(self.term_one.start_date)
+				start = self.term_one.start_date.isoformat()
 			elif type(self.term_one.start_date == str):
 				start = self.term_one.start_date
 			else:
 				raise TypeError
 				
 			if type(self.term_two.end_date == date):
-				end = isoformat(self.term_two.end_date)
+				end = self.term_two.end_date.isoformat()
 			elif type(self.term_two.end_date == str):
 				end = self.term_two.end_date
 			else:
@@ -1008,9 +1008,6 @@ class Absence:
 		''' Return the list of Absences using any combination of filters. '''
 		absences = []
 		
-		if type(event_id == datetime):
-			event_id = isoformat(event_id)
-		
 		try:
 			cur = connection.cursor()
 			
@@ -1120,9 +1117,9 @@ class Excuse:
 		''' Return the list of Excuses in a given datetime range. '''
 		
 		if type(start_dt == datetime):
-			start_dt = isoformat(start_dt)
+			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
-			end_dt = isoformat(end_dt)
+			end_dt = end_dt.isoformat()
 		
 		excuses = []
 		try:
@@ -1157,11 +1154,9 @@ class Excuse:
 		excuses = []
 		
 		if type(start_dt == datetime):
-			start_dt = isoformat(start_dt)
+			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
-			end_dt = isoformat(end_dt)
-		if type(event_id == datetime):
-			event_id = isoformat(event_id)
+			end_dt = end_dt.isoformat()
 		
 		try:
 			cur = connection.cursor()
@@ -1187,7 +1182,7 @@ class Excuse:
 		try:
 			cur = connection.cursor()
 			
-			params = (isoformat(self.excuse_dt), self.event.id, self.reason, self.student.rfid, self.id,)
+			params = (self.excuse_dt.isoformat(), self.event.id, self.reason, self.student.rfid, self.id,)
 			cur.execute('UPDATE excuses SET dt=?, event=?, reason=?, student=? WHERE id=?', params)
 				
 		finally:
@@ -1198,11 +1193,11 @@ class Excuse:
 		try:
 			cur = connection.cursor()
 			
-			params = (isoformat(self.excuse_dt), self.event.id, self.reason, self.student.rfid,)
+			params = (self.excuse_dt.isoformat(), self.event.id, self.reason, self.student.rfid,)
 			# INSERTing 'NULL' for the integer primary key column autogenerates an id
 			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
 			
-			params = (isoformat(self.excuse_dt), self.event.id, self.student.rfid,)
+			params = (self.excuse_dt.isoformat(), self.event.id, self.student.rfid,)
 			rows = list(cur.execute('SELECT id FROM excuses WHERE dt=? AND event=? AND student=?', params))
 			if len(rows) > 1 or len(rows) < 0:
 				raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
@@ -1261,9 +1256,9 @@ class Signin:
 		signins = []
 		
 		if type(start_dt == datetime):
-			start_dt = isoformat(start_dt)
+			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
-			end_dt = isoformat(end_dt)
+			end_dt = end_dt.isoformat()
 		
 		try:
 			cur = connection.cursor()
@@ -1284,7 +1279,7 @@ class Signin:
 		try:
 			cur = connection.cursor()
 			
-			for row in cur.execute('SELECT * FROM signins WHERE event=?', (isoformat(event.id),)):
+			for row in cur.execute('SELECT * FROM signins WHERE event=?', (event.id,)):
 				signins.append(Signin.new_from_row(row, connection))
 				
 		finally:
@@ -1297,11 +1292,9 @@ class Signin:
 		signins = []
 		
 		if type(start_dt == datetime):
-			start_dt = isoformat(start_dt)
+			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
-			end_dt = isoformat(end_dt)
-		if type(event_id == datetime):
-			event_id = isoformat(event_id)
+			end_dt = end_dt.isoformat()
 			
 		try:
 			cur = connection.cursor()
@@ -1332,7 +1325,7 @@ class Signin:
 			cur = connection.cursor()
 			
 			sql = 'SELECT * FROM events WHERE (dt BETWEEN ? AND ?) AND group IN (SELECT group FROM group_memberships WHERE student=?)'
-			params = (isoformat(self.signin_dt - time_window), isoformat(self.signin_dt + time_window), self.student.rfid,) 
+			params = ((self.signin_dt - time_window).isoformat(), (self.signin_dt + time_window).isoformat(), self.student.rfid,) 
 			for row in cur.execute(sql, params):
 				if row[4] is None:
 					group = None
@@ -1354,7 +1347,7 @@ class Signin:
 		try:
 			cur = connection.cursor()
 			
-			params = (isoformat(self.signin_dt), self.event.id, self.student.rfid,)
+			params = (self.signin_dt.isoformat(), self.event.id, self.student.rfid,)
 			cur.execute('UPDATE signins SET dt=?1, event=?2, student=?3 WHERE dt=?1 AND student=?3', params)
 				
 		finally:
@@ -1365,7 +1358,7 @@ class Signin:
 		try:
 			cur = connection.cursor()
 			
-			params = (isoformat(self.signin_dt), self.event.id, self.student.rfid,)
+			params = (self.signin_dt.isoformat(), self.event.id, self.student.rfid,)
 			cur.execute('INSERT OR ABORT INTO signins VALUES (?,?,?)', params)
 				
 		finally:
@@ -1376,7 +1369,7 @@ class Signin:
 		try:
 			cur = connection.cursor()
 			
-			params = (isoformat(self.signin_dt), self.student.rfid,)
+			params = (self.signin_dt.isoformat(), self.student.rfid,)
 			cur.execute('DELETE FROM signins WHERE dt=? AND student=?', params)
 				
 		finally:
@@ -1445,7 +1438,7 @@ class Event:
 		events = []
 		
 		if type(event_dt == datetime):
-			event_dt = isoformat(event_dt)
+			event_dt = event_dt.isoformat()
 		
 		try:
 			cur = connection.cursor()
@@ -1463,9 +1456,9 @@ class Event:
 		events = []
 		
 		if type(start_dt == datetime):
-			start_dt = isoformat(start_dt)
+			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
-			end_dt = isoformat(end_dt)
+			end_dt = end_dt.isoformat()
 		
 		try:
 			cur = connection.cursor()
@@ -1526,9 +1519,9 @@ class Event:
 		events = []
 		
 		if type(start_dt == datetime):
-			start_dt = isoformat(start_dt)
+			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
-			end_dt = isoformat(end_dt)
+			end_dt = end_dt.isoformat()
 		
 		try:
 			cur = connection.cursor()
@@ -1570,7 +1563,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id, self.id,)
+			params = (self.name, self.event_dt.isoformat(), self.event_type, self.group.id, self.id,)
 			cur.execute('UPDATE events SET eventname=?, dt=?, type=?, group_id=? WHERE id=?', params)
 				
 		finally:
@@ -1581,7 +1574,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, isoformat(self.event_dt), self.event_type, self.group.id,)
+			params = (self.name, self.event_dt.isoformat(), self.event_type, self.group.id,)
 			cur.execute('INSERT INTO events VALUES (NULL,?,?,?,?)', params)
 			
 			rows = list(cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group_id=?', params))
