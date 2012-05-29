@@ -8,7 +8,7 @@ import xlsx
 # Google stuff
 import httplib2
 from apiclient.discovery import build
-import apiclient.errors
+from apiclient.errors import *
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.client import flow_from_clientsecrets
@@ -740,14 +740,33 @@ class Organization:
 
 	def __init__(self, name, gcal_id=None):
 		self.name = name
-		self.gcal_id = gcal_id	# Optional Google Calendar ID, e.g. wpigleeclub@gmail.com
+		self.calendar = {}	
+		# Optional Google Calendar ID, e.g. wpigleeclub@gmail.com
+		if gcal_id is not None:
+			self.calendar['id'] = gcal_id
+		
+	def get_calendar(self, gcal):
+		''' Gets the Organization's Google calendar resource dictionary. 
+		@param gcal: A GCal instance. '''
+		if 'id' in self.calendar:
+			response = gcal.service.calendars().get(calendarId=calendar['id']).execute()
+			self.calendar = response
+	
+	def update_calendar(self, gcal):
+		''' Updates the Organization's Google calendar with local changes. 
+		@param gcal: A GCal instance. '''
+		# Make sure the local copy is a full resource so we don't overwrite the
+		# calendar with a blank dict
+		if ('description', 'location', 'summary', 'timeZone',) in self.calendar:
+			response = gcal.service.calendars().update(calendarId=self.calendar['id'], body=self.calendar).execute()
+			self.calendar = response 
 	
 	def update(self, connection):
 		''' Update an existing Organization record in the DB. '''
 		try:
 			cur = connection.cursor()
 			
-			cur.execute('UPDATE organizations SET name=?1, gcal_id=?2 WHERE name=?1', (self.name, self.gcal_id,))
+			cur.execute('UPDATE organizations SET name=?1, gcal_id=?2 WHERE name=?1', (self.name, self.calendar['id'],))
 				
 		finally:
 			cur.close()
@@ -757,7 +776,7 @@ class Organization:
 		try:
 			cur = connection.cursor()
 			
-			cur.execute('INSERT INTO organizations VALUES (?,?)', (self.name, self.gcal_id,))
+			cur.execute('INSERT INTO organizations VALUES (?,?)', (self.name, self.calendar['id'],))
 				
 		finally:
 			cur.close()
