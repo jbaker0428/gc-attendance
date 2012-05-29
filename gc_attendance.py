@@ -740,7 +740,7 @@ class Organization:
 		try:
 			cur = connection.cursor()
 			
-			cur.execute('DELETE FROM organizations WHERE name=?', (self.id,))
+			cur.execute('DELETE FROM organizations WHERE name=?', (self.name,))
 				
 		finally:
 			cur.close()
