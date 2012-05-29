@@ -742,7 +742,7 @@ class Organization:
 			if len(rows) > 1 or len(rows) < 0:
 				raise DatabaseException(Organization.select_by_name.__name__, "Query returned %s rows, expected one." % len(rows))
 			elif len(rows) == 1:
-				organization = Organization.new_from_row(rows[0], connection)
+				organization = Organization.new_from_row(rows[0])
 			elif len(rows) == 0:
 				organization = None
 				
