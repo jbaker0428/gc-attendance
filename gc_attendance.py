@@ -5,6 +5,33 @@ import apsw
 from datetime import *
 import types
 import xlsx
+# Google stuff
+import httplib2
+from apiclient.discovery import build
+import apiclient.errors
+from oauth2client.file import Storage
+from oauth2client.client import OAuth2WebServerFlow
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.tools import run
+
+class GCal:
+	''' Container class for Google Calendar API-related objects. '''
+	
+	@staticmethod
+	def get_credentials(credentials_file='credentials.dat'):
+		storage = Storage(credentials_file)
+		credentials = storage.get()
+		
+		if credentials is None or credentials.invalid == True:
+			flow = flow_from_clientsecrets('client_secrets.json', scope='https://www.googleapis.com/auth/calendar')
+		
+		credentials = run(flow, storage)
+		return credentials
+	
+	def __init__(self, credentials_file='credentials.dat'):
+		self.credentials = GCal.get_credentials(credentials_file)
+		self.http = credentials.authorize(httplib2.Http(cache=".cache"))
+		self.service = build("calendar", "v3", http=self.http)
 
 class AttendanceDB:
 	''' Base class for the attendance database. '''
