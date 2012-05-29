@@ -66,6 +66,18 @@ class AttendanceDB:
 			(name TEXT PRIMARY KEY, 
 			gcal_id STRING)''')
 			
+			cur.execute('''CREATE TABLE IF NOT EXISTS optional_member_orgs 
+			(id INTEGER PRIMARY KEY, 
+			parent TEXT NOT NULL REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
+			child TEXT NOT NULL REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
+			UNIQUE(parent ASC, child) ON CONFLICT IGNORE)''')
+			
+			cur.execute('''CREATE TABLE IF NOT EXISTS mandatory_member_orgs 
+			(id INTEGER PRIMARY KEY, 
+			parent TEXT NOT NULL REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
+			child TEXT NOT NULL REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
+			UNIQUE(parent ASC, subgroup) ON CONFLICT IGNORE)''')
+			
 			cur.execute('''CREATE TABLE IF NOT EXISTS groups 
 			(id INTEGER PRIMARY KEY, 
 			organization TEXT REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
@@ -744,6 +756,87 @@ class Organization:
 		# Optional Google Calendar ID, e.g. wpigleeclub@gmail.com
 		if gcal_id is not None:
 			self.calendar['id'] = gcal_id
+		# Organizations whose members are granted "attendance optional" status
+		# for this Organization's events (if they are even on the roster)
+		self.optional_member_orgs = []
+		# Similar to the above, but attendance is mandatory for members
+		# of organizations on this list
+		self.mandatory_member_orgs = []
+	
+	def fetch_optional_member_orgs(self, connection):
+		''' Fetch all optional member Organizations from the database. '''
+		try:
+			orgs = []
+			cur = connection.cursor()
+			
+			sql = '''SELECT * FROM organizations WHERE name IN 
+				(SELECT child FROM optional_member_orgs WHERE parent=?)'''
+			for row in cur.execute(sql, (self.name,)):
+				orgs.append(Organization.new_from_row(row))
+				
+		finally:
+			cur.close()
+			self.optional_member_orgs = orgs
+	
+	def add_optional_member_org(self, org, connection):
+		''' Add an optional member Organization relationship. '''
+		try:
+			cur = connection.cursor()
+			
+			cur.execute('INSERT INTO optional_member_orgs VALUES (NULL,?,?)', (self.name, org.name,))
+			self.optional_member_orgs.append(org)
+				
+		finally:
+			cur.close()
+	
+	def remove_optional_member_org(self, org, connection):
+		''' Remove an optional member Organization relationship. '''
+		try:
+			cur = connection.cursor()
+			
+			cur.execute('DELETE FROM optional_member_orgs WHERE parent=? AND child=?', (self.name, org.name,))
+			del self.optional_member_orgs[self.optional_member_orgs.index(org)]
+				
+		finally:
+			cur.close()
+		
+			
+	def fetch_mandatory_member_orgs(self, connection):
+		''' Fetch all mandatory member Organizations from the database. '''
+		try:
+			orgs = []
+			cur = connection.cursor()
+			
+			sql = '''SELECT * FROM organizations WHERE name IN 
+				(SELECT child FROM mandatory_member_orgs WHERE parent=?)'''
+			for row in cur.execute(sql, (self.name,)):
+				orgs.append(Organization.new_from_row(row))
+				
+		finally:
+			cur.close()
+			self.mandatory_member_orgs = orgs
+			
+	def add_mandatory_member_org(self, org, connection):
+		''' Add a mandatory member Organization relationship. '''
+		try:
+			cur = connection.cursor()
+			
+			cur.execute('INSERT INTO mandatory_member_orgs VALUES (NULL,?,?)', (self.name, org.name,))
+			self.mandatory_member_orgs.append(org)
+				
+		finally:
+			cur.close()
+	
+	def remove_mandatory_member_org(self, org, connection):
+		''' Remove a mandatory member Organization relationship. '''
+		try:
+			cur = connection.cursor()
+			
+			cur.execute('DELETE FROM mandatory_member_orgs WHERE parent=? AND child=?', (self.name, org.name,))
+			del self.mandatory_member_orgs[self.mandatory_member_orgs.index(org)]
+				
+		finally:
+			cur.close()
 		
 	def get_calendar(self, gcal):
 		''' Gets the Organization's Google calendar resource dictionary. 
@@ -941,6 +1034,42 @@ class Group:
 				
 		finally:
 			cur.close()
+	
+	def find_concurrent_optional_groups(self, connection):
+		'''Return a list of Groups for the Organizations in this Group's parent 
+		Organization's optional_member_orgs list with the same Semester as the 
+		current Group.'''
+		groups = []
+		try:
+			cur = connection.cursor()
+			
+			sql = '''SELECT * FROM groups WHERE semester=? AND organization IN 
+			(SELECT child FROM optional_member_orgs WHERE parent=?)'''
+			params = (self.semester.name, self.organization.name,)
+			for row in cur.execute(sql, params):
+				groups.append(Group.new_from_row(row, connection))
+		
+		finally:
+			cur.close()
+			return groups
+		
+	def find_concurrent_mandatory_groups(self, connection):
+		'''Return a list of Groups for the Organizations in this Group's parent 
+		Organization's mandatory_member_orgs list with the same Semester as the 
+		current Group.'''
+		groups = []
+		try:
+			cur = connection.cursor()
+			
+			sql = '''SELECT * FROM groups WHERE semester=? AND organization IN 
+			(SELECT child FROM mandatory_member_orgs WHERE parent=?)'''
+			params = (self.semester.name, self.organization.name,)
+			for row in cur.execute(sql, params):
+				groups.append(Group.new_from_row(row, connection))
+		
+		finally:
+			cur.close()
+			return groups
 			
 	def read_gc_roster(self, infile, connection):
 		''' Parse the group's roster into the database using the Glee Club roster format. '''

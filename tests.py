@@ -76,6 +76,8 @@ class AttendanceTestCase(unittest.TestCase):
 		assert 'group_memberships' in tables
 		assert 'groups' in tables
 		assert 'organizations' in tables
+		assert 'optional_member_orgs' in tables
+		assert 'mandatory_member_orgs' in tables
 		assert 'semesters' in tables
 		assert 'signins' in tables
 		assert 'students' in tables
