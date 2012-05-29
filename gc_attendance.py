@@ -112,9 +112,12 @@ class AttendanceDB:
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS events
 			(id INTEGER PRIMARY KEY, 
-			eventname TEXT, 
-			dt TEXT NOT NULL, 
-			eventtype TEXT,
+			eventname TEXT NOT NULL, 
+			description TEXT, 
+			location TEXT, 
+			start TEXT NOT NULL, 
+			end TEXT NOT NULL, 
+			eventtype TEXT, 
 			group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE, 
 			semester TEXT REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE,
 			gcal_id TEXT UNIQUE)''')
@@ -1429,7 +1432,7 @@ class Signin:
 			return signins
 	
 	@staticmethod
-	def select_by_datetime(start_dt, end_dt, connection):
+	def select_by_start(start_dt, end_dt, connection):
 		''' Return the list of Signins in a given datetime range. '''
 		signins = []
 		
@@ -1568,15 +1571,15 @@ class Event:
 	@staticmethod
 	def new_from_row(row, connection):
 		''' Given an event row from the DB, returns an Event object. '''
-		if row[4] is None:
+		if row[7] is None:
 			group = None
 		else:
-			group = Group.select_by_id(row[4], connection)
-		if row[5] is None:
+			group = Group.select_by_id(row[7], connection)
+		if row[8] is None:
 			semester = None
 		else:
-			semester = Semester.select_by_name(row[5], connection)
-		return Event(row[0], row[1], convert_timestamp(row[2]), row[3], group, semester, row[6])
+			semester = Semester.select_by_name(row[8], connection)
+		return Event(row[0], row[1], row[2], convert_timestamp(row[4]), convert_timestamp(row[5]), row[6], group, semester, row[9])
 
 	@staticmethod
 	def select_by_id(event_id, connection):
@@ -1611,8 +1614,8 @@ class Event:
 			return events
 	
 	@staticmethod
-	def select_by_datetime(event_dt, connection):
-		''' Return the list of Events of a specific datetime. '''
+	def select_by_start(event_dt, connection):
+		''' Return the list of Events starting at a specific datetime. '''
 		events = []
 		
 		if type(event_dt == datetime):
@@ -1621,7 +1624,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			for row in cur.execute('SELECT * FROM events WHERE dt=?', (event_dt,)):
+			for row in cur.execute('SELECT * FROM events WHERE start=?', (event_dt,)):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1642,7 +1645,7 @@ class Event:
 			cur = connection.cursor()
 			
 			params = (start_dt, end_dt,)
-			for row in cur.execute('SELECT * FROM events WHERE dt BETWEEN ? AND ?', params):
+			for row in cur.execute('SELECT * FROM events WHERE start BETWEEN ? AND ?', params):
 				events.append(Event.new_from_row(row, connection))
 				
 		finally:
@@ -1722,7 +1725,7 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			sql = 'SELECT * FROM events WHERE eventname=? AND (dt BETWEEN ? AND ?) AND eventtype=? AND group_id=? AND semester=? AND gcal_id=?'
+			sql = 'SELECT * FROM events WHERE eventname=? AND (start BETWEEN ? AND ?) AND eventtype=? AND group_id=? AND semester=? AND gcal_id=?'
 			params = (name, start_dt, end_dt, type, group, semester, gcal_id,)
 			for row in cur.execute(sql, params):
 				events.append(Event.new_from_row(row, connection))
@@ -1731,25 +1734,28 @@ class Event:
 			cur.close()
 			return events
 	
-	def __init__(self, id, name, dt, t, group, semester, gcal_id):
+	def __init__(self, id, name, description, location, start, end, type, group, semester, gcal_id):
 		self.id = id
 		self.event_name = name
-		self.event_dt = dt		# a datetime object, primary key
-		self.event_type = t		# One of the Event.TYPE_ constants 
-		self.group = group		# Roster to check against
+		self.description = description
+		self.location = location
+		self.start = start			# a datetime object
+		self.end = end				# a datetime object
+		self.event_type = type		# One of the Event.TYPE_ constants
+		self.group = group			# Roster to check against
 		self.semester = semester	# A Semester object
-		self.gcal_id = gcal_id	# Optioal Google Calendar event ID
+		self.gcal_id = gcal_id		# Google Calendar event ID
 		self.signins = []
 		self.excuses = []
 		self.absences = []
 	
 	def fetch_signins(self, connection):
 		''' Fetch all Signins for this Event from the database. '''
-		self.signins = Signin.select_by_datetime(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES, connection)
+		self.signins = Signin.select_by_start(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES, connection)
 	
 	def fetch_excuses(self, connection):
 		''' Fetch all Excuses for this Event from the database. '''
-		self.excuses = Excuse.select_by_datetime(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES, connection)
+		self.excuses = Excuse.select_by_start(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES, connection)
 		
 	def fetch_absences(self, connection):
 		''' Fetch all Absences for this Event from the database. '''
