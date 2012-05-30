@@ -1792,6 +1792,10 @@ class Event:
 		event['end'] = {'dateTime' : self.end.isoformat()}
 		event['summary'] = self.event_name
 		event['status'] = 'confirmed'
+		if self.description is not None and len(self.description) > 0:
+			event['description'] = self.description
+		if self.loctaion is not None and len(self.location) > 0:
+			event['location'] = self.location
 		if self.gcal_id is not None:
 			event['id'] = self.gcal_id
 		
