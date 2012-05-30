@@ -845,7 +845,7 @@ class Organization:
 		''' Gets the Organization's Google calendar resource dictionary. 
 		@param gcal: A GCal instance. '''
 		if 'id' in self.calendar:
-			response = gcal.service.calendars().get(calendarId=calendar['id']).execute()
+			response = gcal.service.calendars().get(calendarId=self.calendar['id']).execute()
 			self.calendar = response
 	
 	def update_calendar(self, gcal):
@@ -1760,6 +1760,80 @@ class Event:
 	def fetch_absences(self, connection):
 		''' Fetch all Absences for this Event from the database. '''
 		self.absences = Absence.select_by_event(self, connection)
+	
+	def make_json(self, connection):
+		''' Converts the Event object into a JSON object suitable for use in
+		Google calendar. '''
+		event = {}
+		attendees = []
+		optional_attendees = set()
+		mandatory_attendees = set()
+		for group in self.group.find_concurrent_optional_groups(connection):
+			for member in group.members:
+				optional_attendees.add(member)
+		
+		for group in self.group.find_mandatory_optional_groups(connection):
+			for member in group.members:
+				mandatory_attendees.add(member)
+		
+		# Set attendee 'optional' flag 
+		for member in self.group.members:
+			attendee = {
+					'email' : member.email, 
+					'displayName' : member.lname + ', ' + member.fname }
+			if member in optional_attendees and member not in mandatory_attendees:
+				attendee['optional'] = True
+			else:
+				attendee['optional'] = False
+			attendees.append(attendee)
+		
+		event['attendees'] = attendees
+		event['start'] = {'dateTime' : self.start.isoformat()}
+		event['end'] = {'dateTime' : self.end.isoformat()}
+		event['summary'] = self.event_name
+		event['status'] = 'confirmed'
+		if self.gcal_id is not None:
+			event['id'] = self.gcal_id
+		
+		event = simplejson.dumps(event)
+		return event
+	
+	def gcal_get(self, gcal):
+		''' Get this Event from the parent Organization's Google calendar. 
+		@requires: self.gcal_id is not None. Will return None in this case. 
+		@param gcal: A GCal instance. 
+		@return: The retrieved event resource or None. '''
+		resource = None
+		if self.gcal_id is not None:
+			resource = gcal.service.events().get(calendarId=self.group.organization.calendar['id'], eventId=self.gcal_id).execute()
+		
+		return resource
+	
+	def gcal_insert(self, gcal, resource):
+		''' Insert this Event into the parent Organization's Google calendar. 
+		@param gcal: A GCal instance. 
+		@param resource: A gcal event resource JSON object in dict format.
+		@return: The inserted event resource. 
+		Setting self.gcal_id to return_val['id'] is normally recommended. '''
+		
+		inserted_event = gcal.service.events().insert(calendarId=self.group.organization.calendar['id'], body=resource).execute()
+		return inserted_event
+	
+	def gcal_update(self, gcal, resource):
+		''' Update this Event on the parent Organization's Google calendar. 
+		If the passed resource has no event ID, inserts the resource as a new event.
+		@requires: self.gcal_id is not None
+		@param gcal: A GCal instance. 
+		@param resource: A gcal event resource JSON object in dict format. 
+		@return: The updated event resource. '''
+		
+		if 'id' in resource:	# Resource has a gcal event ID to pass
+			updated_event = gcal.service.events().update(calendarId=self.group.organization.calendar['id'], eventId=resource['id'], body=resource).execute()
+			return updated_event
+		else:
+			inserted_event = self.gcal_insert(gcal, resource)
+			self.gcal_id = inserted_event['id']
+			return inserted_event
 	
 	def update(self, connection):
 		''' Update an existing Event record in the DB. '''
