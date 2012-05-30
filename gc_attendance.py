@@ -1844,8 +1844,9 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, self.event_dt.isoformat(), self.event_type, self.group.id, self.gcal_id, self.id,)
-			cur.execute('UPDATE events SET eventname=?, dt=?, type=?, group_id=?, gcal_id=? WHERE id=?', params)
+			sql = 'UPDATE events SET eventname=?, description=?, location=? start=?, end=?, type=?, group_id=?, gcal_id=? WHERE id=?'
+			params = (self.name, self.description, self.location, self.start.isoformat(), self.end.isoformat(), self.event_type, self.group.id, self.gcal_id, self.id,)
+			cur.execute(sql, params)
 				
 		finally:
 			cur.close()
@@ -1855,10 +1856,11 @@ class Event:
 		try:
 			cur = connection.cursor()
 			
-			params = (self.name, self.event_dt.isoformat(), self.event_type, self.group.id, self.gcal_id,)
-			cur.execute('INSERT INTO events VALUES (NULL,?,?,?,?,?)', params)
+			params = (self.name, self.description, self.location, self.start.isoformat(), self.end.isoformat(), self.event_type, self.group.id, self.gcal_id,)
+			cur.execute('INSERT INTO events VALUES (NULL,?,?,?,?,?,?,?,?)', params)
 			
-			rows = list(cur.execute('SELECT id FROM events WHERE eventname=? AND dt=? AND type=? AND group_id=? AND gcal_id=?', params))
+			params = (self.name, self.start.isoformat(), self.end.isoformat(), self.event_type, self.group.id, self.gcal_id,)
+			rows = list(cur.execute('SELECT id FROM events WHERE eventname=? AND start=? AND end=? AND type=? AND group_id=? AND gcal_id=?', params))
 			if len(rows) > 1 or len(rows) < 0:
 				raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
 			elif len(rows) == 1:
