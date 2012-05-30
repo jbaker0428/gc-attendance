@@ -101,7 +101,7 @@ class AttendanceDB:
 			cur.execute('''CREATE TABLE IF NOT EXISTS excuses
 			(id INTGER PRIMARY KEY, 
 			dt TEXT, 
-			eventdt INTEGER REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
+			event INTEGER REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
 			reason TEXT, 
 			student INTEGER REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
 			
