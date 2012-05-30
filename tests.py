@@ -9,7 +9,7 @@ class AttendanceTestCase(unittest.TestCase):
 		unittest.TestCase.setUp(self)
 		from gc_attendance import *
 		self.db = AttendanceDB(os.path.join(os.getcwd(), 'dbtests.sqlite'))
-		self.glee_club = Organization('Glee Club')
+		self.glee_club = Organization('Glee Club', 'wpigleeclub@gmail.com')
 		self.shm = Organization('SHM')
 		self.av = Organization('Alden Voices')
 		self.a_term = Term('A11', date(2011, 8, 25), date(2011, 10, 13), [date(2011, 9, 5)])
@@ -50,10 +50,10 @@ class AttendanceTestCase(unittest.TestCase):
 		self.absence_r2_42737 = Absence(self.student42737, Absence.TYPE_PENDING, self.rehearsal2)
 		self.excuse_r2_42737 = Excuse(None, datetime(2011, 9, 13, 11, 37), self.rehearsal2, 'oh god rbe ahhhh', self.student42737)
 		
-		self.rehearsal3 = Event(None, 'Rehearsal', datetime(2011, 9, 20, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
-		self.rehearsal4 = Event(None, 'Rehearsal', datetime(2011, 9, 27, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
-		self.rehearsal5 = Event(None, 'Rehearsal', datetime(2011, 10, 4, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
-		self.rehearsal6 = Event(None, 'Rehearsal', datetime(2011, 10, 11, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
+		self.rehearsal3 = Event(None, 'Rehearsal', '', 'Janet Earle', datetime(2011, 9, 20, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
+		self.rehearsal4 = Event(None, 'Rehearsal', '', 'Janet Earle', datetime(2011, 9, 27, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
+		self.rehearsal5 = Event(None, 'Rehearsal', None, 'Janet Earle', datetime(2011, 10, 4, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
+		self.rehearsal6 = Event(None, 'Rehearsal', None, 'Janet Earle', datetime(2011, 10, 11, 18, 30), Event.TYPE_REHEARSAL, self.gc_group, self.fall_semester, '')
 	
 	def test_database(self):
 		''' Basic database functionality tests.
