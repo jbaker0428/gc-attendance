@@ -64,7 +64,7 @@ class AttendanceDB:
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS organizations 
 			(name TEXT PRIMARY KEY, 
-			gcal_id STRING)''')
+			gcal_id STRING UNIQUE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS optional_member_orgs 
 			(id INTEGER PRIMARY KEY, 
@@ -76,12 +76,13 @@ class AttendanceDB:
 			(id INTEGER PRIMARY KEY, 
 			parent TEXT NOT NULL REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
 			child TEXT NOT NULL REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
-			UNIQUE(parent ASC, subgroup) ON CONFLICT IGNORE)''')
+			UNIQUE(parent ASC, child) ON CONFLICT IGNORE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS groups 
 			(id INTEGER PRIMARY KEY, 
 			organization TEXT REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
-			semester TEXT NOT NULL REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE)''')
+			semester TEXT NOT NULL REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE, 
+			UNIQUE(organization ASC, semester ASC) ON CONFLICT IGNORE )''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
 			(id INTEGER PRIMARY KEY, 
@@ -98,7 +99,7 @@ class AttendanceDB:
 			CONSTRAINT pk_absence PRIMARY KEY (event, student))''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS excuses
-			(id INTGER PRIMARY KEY,
+			(id INTGER PRIMARY KEY, 
 			dt TEXT, 
 			eventdt INTEGER REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
 			reason TEXT, 
@@ -108,7 +109,9 @@ class AttendanceDB:
 			(dt TEXT, 
 			event INTEGER REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
 			student INTEGER REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE, 
-			CONSTRAINT pk_signin PRIMARY KEY (dt, student))''')
+			CONSTRAINT pk_signin PRIMARY KEY (dt, student), 
+			UNIQUE(event ASC, student ASC), 
+			UNIQUE(student ASC, dt ASC) )''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS events
 			(id INTEGER PRIMARY KEY, 
@@ -120,12 +123,13 @@ class AttendanceDB:
 			eventtype TEXT, 
 			group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE, 
 			semester TEXT REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE,
-			gcal_id TEXT UNIQUE)''')
+			gcal_id TEXT UNIQUE, 
+			UNIQUE(group_id ASC, start ASC) )''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS terms
 			(name TEXT PRIMARY KEY,
-			startdate TEXT,
-			enddate TEXT)''')
+			startdate TEXT UNIQUE,
+			enddate TEXT UNIQUE)''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS semesters
 			(name TEXT PRIMARY KEY,
