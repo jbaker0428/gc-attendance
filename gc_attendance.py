@@ -14,7 +14,7 @@ from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.tools import run
 
-class GCal:
+class GCal(object):
 	''' Container class for Google Calendar API-related objects. '''
 	
 	@staticmethod
@@ -33,7 +33,7 @@ class GCal:
 		self.http = credentials.authorize(httplib2.Http(cache=".cache"))
 		self.service = build("calendar", "v3", http=self.http)
 
-class AttendanceDB:
+class AttendanceDB(object):
 	''' Base class for the attendance database. '''
 	db0 = os.path.join(os.getcwd(), 'gc-attendance.sqlite')
 	
@@ -191,7 +191,7 @@ class DatabaseException(Exception):
 	def __str__(self):
 		return repr(self.text)
 
-class Term:
+class Term(object):
 	''' Corresponds to one 7-week term on WPI's academic calendar. '''
 	
 	@staticmethod
@@ -334,7 +334,7 @@ class Term:
 		finally:
 			cur.close()
 
-class Semester:
+class Semester(object):
 	''' Corresponds to one 2-term semester on WPI's academic calendar. '''
 	
 	@staticmethod
@@ -488,7 +488,7 @@ class Semester:
 		finally:
 			cur.close()
 
-class Student:
+class Student(object):
 	''' A Student who has signed into the attendance system. 
 	The student's RFID ID number is the primary key column.	'''
 
@@ -731,7 +731,7 @@ class Student:
 		finally:
 			cur.close()
 
-class Organization:
+class Organization(object):
 	'''An organization that uses the RFID reader for attendance. '''
 
 	@staticmethod
@@ -891,7 +891,7 @@ class Organization:
 		finally:
 			cur.close()
 
-class Group:
+class Group(object):
 	''' A group of students. 
 	This is usually an ensemble's roster for a semester. 
 	Each Group has a parent Organization.'''
@@ -1105,7 +1105,7 @@ class Group:
 				raise RosterException(self.read_gc_roster.__name__, "Failure parsing contents of credit column in roster row " + row)
 			self.add_member(student, credit, connection)
 
-class Absence:
+class Absence(object):
 	''' An instance of a Student not singing into an Event.
 	May or may not have an Excuse attached to it. '''
 	TYPE_PENDING = "Pending"
@@ -1244,7 +1244,7 @@ class Absence:
 		finally:
 			cur.close()
 	
-class Excuse:
+class Excuse(object):
 	''' A Student's excuse for missing an Event sent to gc-excuse. 
 	The datetime and student ID are the primary key colums.'''
 	
@@ -1404,7 +1404,7 @@ class Excuse:
 		finally:
 			cur.close()
 	
-class Signin:
+class Signin(object):
 	''' Corresponds to a row in the RFID output file. 
 	The datetime and student ID are the primary key colums.'''
 	
@@ -1560,7 +1560,7 @@ class Signin:
 		finally:
 			cur.close()
 
-class Event:
+class Event(object):
 	''' An event where attendance is taken. 
 	The datetime is the primary key column.'''
 	TYPE_REHEARSAL = 'Rehearsal'
