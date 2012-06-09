@@ -16,7 +16,9 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.tools import run
 
 class GCal(object):
-	''' Container class for Google Calendar API-related objects. '''
+	
+	"""Container class for Google Calendar API-related objects."""
+	
 	__slots__ = ["credentials", "http", "service"]
 	
 	@staticmethod
@@ -36,7 +38,9 @@ class GCal(object):
 		self.service = build("calendar", "v3", http=self.http)
 
 class AttendanceDB(object):
-	''' Base class for the attendance database. '''
+	
+	"""Base class for the attendance database."""
+	
 	db0 = os.path.join(os.getcwd(), 'gc-attendance.sqlite')
 	__slots__ = ["disk_db", "memory"]
 	
@@ -45,8 +49,8 @@ class AttendanceDB(object):
 		self.memory = self.connect(":memory:")
 	
 	def connect(self, db):
-		''' Connect to the DB, enable foreign keys, set autocommit mode,  
-		and return the open connection object. '''
+		"""Connect to the DB, enable foreign keys, and return the opened connection."""
+		
 		con = apsw.Connection(db)
 		cur = con.cursor()
 		cur.execute('PRAGMA foreign_keys = ON')
@@ -54,7 +58,8 @@ class AttendanceDB(object):
 		return con
 	
 	def create_tables(self, connection):
-		''' Create the database tables. '''
+		"""Create the database tables."""
+		
 		try:
 			cur = connection.cursor()
 			cur.execute('''CREATE TABLE IF NOT EXISTS students
@@ -146,7 +151,8 @@ class AttendanceDB(object):
 			cur.close()
 	
 	def read_attendance(self, infile):
-		''' Parse the attendance record spreadsheet and write to the database. ''' 
+		"""Parse the attendance record spreadsheet and write to the database."""
+		
 		try:
 			signins = []
 			with open(infile, 'rb') as f:
@@ -179,37 +185,47 @@ class AttendanceDB(object):
 gcdb = AttendanceDB()
 
 class RosterException(Exception):
-	''' Exception raised when something goes wrong parsing a roster spreadsheet. '''
+	
+	"""Exception raised when something goes wrong parsing a roster spreadsheet."""
+	
 	__slots__ = ["source", "text"]
 	
 	def __init__(self, source, text):
 		self.source = source
 		self.text = text
+	
 	def __str__(self):
 		return repr(self.text)
 
 class DatabaseException(Exception):
-	''' Exception raised when a SQL operation executed OK, but returned unexpected results. '''
+	
+	"""Exception raised when a SQL operation executed OK, but returned unexpected results."""
+	
 	__slots__ = ["source", "text"]
 	
 	def __init__(self, source, text):
 		self.source = source
 		self.text = text
+	
 	def __str__(self):
 		return repr(self.text)
 
 class Term(object):
-	''' Corresponds to one 7-week term on WPI's academic calendar. '''
+	
+	"""Corresponds to one 7-week term on WPI's academic calendar."""
+	
 	__slots__ = ["name", "start_date", "end_date", "days_off"]
 	
 	@staticmethod
 	def new_from_row(row):
-		''' Given a term row from the DB, returns a Term object. '''
+		"""Given a term row from the DB, returns a Term object."""
+		
 		return Term(row[0], convert_date(row[1]), convert_date(row[2]))
 	
 	@staticmethod
 	def select_by_name(name, connection):
-		''' Return the Term of given name. '''
+		"""Return the Term of given name."""
+		
 		try:
 			cur = connection.cursor()
 			term = None
@@ -229,9 +245,12 @@ class Term(object):
 	
 	@staticmethod
 	def select_by_date(start_date, end_date, connection):
-		''' Return the list of Terms in a given datetime range. 
+		"""Return the list of Terms in a given datetime range. 
+		
 		Any Term whose startdate or enddate column falls within the
-		given range will be returned. '''
+		given range will be returned.
+		"""
+		
 		terms = []
 		
 		if type(start_date == date):
@@ -252,7 +271,8 @@ class Term(object):
 	
 	@staticmethod
 	def select_by_all(name, start_date, end_date, connection):
-		''' Return a list of Terms using any combination of filters. '''
+		"""Return a list of Terms using any combination of filters."""
+		
 		terms = []
 		
 		if type(start_date == date):
@@ -282,8 +302,11 @@ class Term(object):
 			self.days_off.append(d)	
 	
 	def fetch_days_off(self, connection):
-		''' Fetch all daysoff table entries for this Term from the database. 
-		Returns a list of date objects. '''
+		"""Fetch all daysoff table entries for this Term from the database.
+		 
+		Returns a list of date objects.
+		"""
+		
 		result = []
 		try:
 			if type(self.start_date == date):
@@ -310,7 +333,8 @@ class Term(object):
 			return result
 			
 	def update(self, connection):
-		''' Update an existing Term record in the DB. '''
+		"""Update an existing Term record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -321,7 +345,8 @@ class Term(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Term to the DB. '''
+		"""Write the Term to the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -332,7 +357,8 @@ class Term(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Term from the DB. '''
+		"""Delete the Term from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -343,20 +369,22 @@ class Term(object):
 			cur.close()
 
 class Semester(object):
-	''' Corresponds to one 2-term semester on WPI's academic calendar. '''
+	
+	"""Corresponds to one 2-term semester on WPI's academic calendar."""
 	
 	__slots__ = ["name", "term_one", "term_two"]
 	
 	@staticmethod
 	def new_from_row(row, connection):
-		''' Given a semester row from the DB, returns a Semester object. '''
+		"""Given a semester row from the DB, returns a Semester object."""
 		t1 = Term.select_by_name(row[1], connnection)
 		t2 = Term.select_by_name(row[2], connnection)
 		semester = Semester(row[0], t1, t2)
 				
 	@staticmethod
 	def select_by_name(name, connection):
-		''' Return the Semester of given name. '''
+		"""Return the Semester of given name."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -375,9 +403,12 @@ class Semester(object):
 	
 	@staticmethod
 	def select_by_date(start_date, end_date, connection):
-		''' Return the list of Semesters in a given datetime range. 
+		"""Return the list of Semesters in a given datetime range. 
+		
 		Any Semester whose startdate or enddate falls within the
-		given range will be returned. '''
+		given range will be returned.
+		"""
+		
 		semesters = []
 		if type(start_date == date):
 			start_date = start_date.isoformat()
@@ -405,7 +436,8 @@ class Semester(object):
 	
 	@staticmethod
 	def select_by_all(name, start_date, end_date, connection):
-		''' Return a list of Semesters using any combination of filters. '''
+		"""Return a list of Semesters using any combination of filters."""
+		
 		semesters = []
 		
 		if type(start_date == date):
@@ -438,8 +470,11 @@ class Semester(object):
 		self.term_two = term_two	# B or D term
 		
 	def fetch_days_off(self, connection):
-		''' Fetch all daysoff table entries for this Semester from the database. 
-		Returns a list of date objects. '''
+		"""Fetch all daysoff table entries for this Semester from the database. 
+		
+		Returns a list of date objects.
+		"""
+		
 		result = []
 		try:
 			if type(self.term_one.start_date == date):
@@ -466,7 +501,8 @@ class Semester(object):
 			return result
 			
 	def update(self, connection):
-		''' Update an existing Semester record in the DB. '''
+		"""Update an existing Semester record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -477,7 +513,8 @@ class Semester(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Semester to the DB. '''
+		"""Write the Semester to the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -488,7 +525,8 @@ class Semester(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Semester from the DB. '''
+		"""Delete the Semester from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -499,17 +537,22 @@ class Semester(object):
 			cur.close()
 
 class Student(object):
-	''' A Student who has signed into the attendance system. 
-	The student's RFID ID number is the primary key column.	'''
+	
+	"""A Student who has signed into the attendance system. 
+	
+	The student's RFID ID number is the primary key column.
+	"""
 
 	@staticmethod
 	def new_from_row(row):
-		''' Given a student row from the DB, returns a Student object. '''
+		"""Given a student row from the DB, returns a Student object."""
+		
 		return Student(row[0], row[1], row[2], row[3], row[4], row[5])
 
 	@staticmethod
 	def select_by_id(id, connection):
-		''' Return the Student of given ID. '''
+		"""Return the Student of given ID."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -527,7 +570,8 @@ class Student(object):
 	
 	@staticmethod
 	def select_by_name(fname, lname, connection):
-		''' Return the Student(s) of given name. '''
+		"""Return the Student(s) of given name."""
+		
 		students = []
 		try:
 			cur = connection.cursor()
@@ -540,7 +584,8 @@ class Student(object):
 	
 	@staticmethod
 	def select_by_email(email, connection):
-		''' Return the Student(s) with given email address. '''
+		"""Return the Student(s) with given email address."""
+		
 		students = []
 		try:
 			cur = connection.cursor()
@@ -554,7 +599,8 @@ class Student(object):
 	
 	@staticmethod
 	def select_by_standing(good_standing, connection):
-		''' Return the list of Students of given standing. '''
+		"""Return the list of Students of given standing."""
+		
 		students = []
 		try:
 			cur = connection.cursor()
@@ -568,7 +614,8 @@ class Student(object):
 	
 	@staticmethod
 	def select_by_group(group, in_group, connection):
-		''' Return the list of Students in some group (or not). '''
+		"""Return the list of Students in some group (or not)."""
+		
 		students = []
 		try:
 			cur = connection.cursor()
@@ -589,7 +636,8 @@ class Student(object):
 	
 	@staticmethod
 	def select_by_current(current, connection):
-		''' Return the list of current Students on the roster (or not). '''
+		"""Return the list of current Students on the roster (or not)."""
+		
 		students = []
 		try:
 			cur = connection.cursor()
@@ -603,7 +651,8 @@ class Student(object):
 		
 	@staticmethod
 	def select_by_all(id, fname, lname, email, standing, current, connection):
-		''' Return a list of Students using any combination of filters. '''
+		"""Return a list of Students using any combination of filters."""
+		
 		standing = int(standing)
 			
 		current = int(current)
@@ -624,9 +673,12 @@ class Student(object):
 	
 	@staticmethod
 	def merge(old, new, connection):
-		''' Merge the records of one student into another, deleting the first.
+		"""Merge the records of one student into another, deleting the first.
+		
 		This should be used when a student replaces their ID card, as the new
-		ID card will have a different RFID number. '''
+		ID card will have a different RFID number.
+		"""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -655,25 +707,29 @@ class Student(object):
 		self.groups = []
 		
 	def fetch_signins(self, connection):
-		''' Fetch all Signins by this Student from the database. '''
+		"""Fetch all Signins by this Student from the database."""
+		
 		self.signins = Signin.select_by_student(self, connection)
 	
 	def fetch_excuses(self, connection):
-		''' Fetch all Excuses by this Student from the database. '''
+		"""Fetch all Excuses by this Student from the database."""
+		
 		self.excuses = Excuse.select_by_student(self, connection)
 	
 	def fetch_absences(self, connection):
-		''' Fetch all Absences by this Student from the database. '''
+		"""Fetch all Absences by this Student from the database."""
+		
 		self.absences = Absence.select_by_student(self, connection)
 	
 	def fetch_groups(self, connection):
-		''' Fetch all Groups this Student is a member of from the database. '''
+		"""Fetch all Groups this Student is a member of from the database."""
+		
 		try:
 			cur = connection.cursor()
 			
 			params = (self.name,)
-			cur.execute("""SELECT * FROM groups WHERE name IN
-					(SELECT DISTINCT group FROM group_memberships WHERE student=?)""", params)
+			cur.execute('''SELECT * FROM groups WHERE name IN
+					(SELECT DISTINCT group FROM group_memberships WHERE student=?)''', params)
 			rows = cur.fetchall()
 			for row in rows:
 				group = Group(row[0], row[1], row[2])
@@ -684,7 +740,8 @@ class Student(object):
 			cur.close()
 	
 	def join_group(self, group, credit, connection):
-		''' Add the Student to a Group. '''
+		"""Add the Student to a Group."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -696,7 +753,8 @@ class Student(object):
 			self.groups.append(group)
 	
 	def leave_group(self, group, connection):
-		''' Remove the Student from a Group. '''
+		"""Remove the Student from a Group."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -708,7 +766,8 @@ class Student(object):
 			cur.close()
 	
 	def update(self, connection):
-		''' Update an existing Student record in the DB. '''
+		"""Update an existing Student record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -721,7 +780,8 @@ class Student(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Student to the DB. '''
+		"""Write the Student to the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -732,7 +792,8 @@ class Student(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Student from the DB. '''
+		"""Delete the Student from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -742,16 +803,19 @@ class Student(object):
 			cur.close()
 
 class Organization(object):
-	'''An organization that uses the RFID reader for attendance. '''
+	
+	"""An organization that uses the RFID reader for attendance."""
 
 	@staticmethod
 	def new_from_row(row):
-		''' Given an organization row from the DB, returns an Organization object. '''
+		"""Given an organization row from the DB, returns an Organization object."""
+		
 		return Organization(row[0], row[1])
 	
 	@staticmethod
 	def select_by_name(name, connection):
-		''' Return the Organization of given name. '''
+		"""Return the Organization of given name."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -781,7 +845,8 @@ class Organization(object):
 		self.mandatory_member_orgs = []
 	
 	def fetch_optional_member_orgs(self, connection):
-		''' Fetch all optional member Organizations from the database. '''
+		"""Fetch all optional member Organizations from the database."""
+		
 		try:
 			orgs = []
 			cur = connection.cursor()
@@ -796,7 +861,8 @@ class Organization(object):
 			self.optional_member_orgs = orgs
 	
 	def add_optional_member_org(self, org, connection):
-		''' Add an optional member Organization relationship. '''
+		"""Add an optional member Organization relationship."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -807,7 +873,8 @@ class Organization(object):
 			cur.close()
 	
 	def remove_optional_member_org(self, org, connection):
-		''' Remove an optional member Organization relationship. '''
+		"""Remove an optional member Organization relationship."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -819,7 +886,8 @@ class Organization(object):
 		
 			
 	def fetch_mandatory_member_orgs(self, connection):
-		''' Fetch all mandatory member Organizations from the database. '''
+		"""Fetch all mandatory member Organizations from the database."""
+		
 		try:
 			orgs = []
 			cur = connection.cursor()
@@ -834,7 +902,8 @@ class Organization(object):
 			self.mandatory_member_orgs = orgs
 			
 	def add_mandatory_member_org(self, org, connection):
-		''' Add a mandatory member Organization relationship. '''
+		"""Add a mandatory member Organization relationship."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -845,7 +914,8 @@ class Organization(object):
 			cur.close()
 	
 	def remove_mandatory_member_org(self, org, connection):
-		''' Remove a mandatory member Organization relationship. '''
+		"""Remove a mandatory member Organization relationship."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -856,15 +926,21 @@ class Organization(object):
 			cur.close()
 		
 	def get_calendar(self, gcal):
-		''' Gets the Organization's Google calendar resource dictionary. 
-		@param gcal: A GCal instance. '''
+		"""Gets the Organization's Google calendar resource dictionary.
+		
+		@param gcal: A GCal instance.
+		"""
+		
 		if 'id' in self.calendar:
 			response = gcal.service.calendars().get(calendarId=self.calendar['id']).execute()
 			self.calendar = response
 	
 	def update_calendar(self, gcal):
-		''' Updates the Organization's Google calendar with local changes. 
-		@param gcal: A GCal instance. '''
+		"""Updates the Organization's Google calendar with local changes.
+		
+		@param gcal: A GCal instance.
+		"""
+		
 		# Make sure the local copy is a full resource so we don't overwrite the
 		# calendar with a blank dict
 		if ('description', 'location', 'summary', 'timeZone',) in self.calendar:
@@ -872,7 +948,8 @@ class Organization(object):
 			self.calendar = response 
 	
 	def update(self, connection):
-		''' Update an existing Organization record in the DB. '''
+		"""Update an existing Organization record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -882,7 +959,8 @@ class Organization(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Organization to the DB. '''
+		"""Write the Organization to the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -892,7 +970,8 @@ class Organization(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Organization from the DB. '''
+		"""Delete the Organization from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -902,13 +981,17 @@ class Organization(object):
 			cur.close()
 
 class Group(object):
-	''' A group of students. 
+	
+	"""A group of students. 
+	
 	This is usually an ensemble's roster for a semester. 
-	Each Group has a parent Organization.'''
+	Each Group has a parent Organization.
+	"""
 	
 	@staticmethod
 	def new_from_row(row, connection):
-		''' Given a group row from the DB, returns a Group object. '''
+		"""Given a group row from the DB, returns a Group object."""
+		
 		if row[1] == 'NULL':
 			organization = None
 		else:
@@ -921,7 +1004,8 @@ class Group(object):
 				
 	@staticmethod
 	def select_by_id(gid, connection):
-		''' Return the Group of given ID. '''
+		"""Return the Group of given ID."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -939,7 +1023,8 @@ class Group(object):
 	
 	@staticmethod
 	def select_by_organization(organization, connection):
-		''' Return the Group(s) of given parent Organization. '''
+		"""Return the Group(s) of given parent Organization."""
+		
 		groups = []
 		try:
 			if hasattr(organization, name):	# Probably an Organization object
@@ -960,7 +1045,8 @@ class Group(object):
 		
 	@staticmethod
 	def select_by_semester(semester, connection):
-		''' Return the Group(s) of given Semester. '''
+		"""Return the Group(s) of given Semester."""
+		
 		groups = []
 		try:
 			if hasattr(semester, term_one):	# Probably a Semester object
@@ -986,11 +1072,13 @@ class Group(object):
 		self.members = students
 		
 	def fetch_members(self, connection):
-		''' Fetch all Students in this group from the database. '''
+		"""Fetch all Students in this group from the database."""
+		
 		self.members = Student.select_by_group(self, True, connection)
 	
 	def add_member(self, student, credit, connection):
-		''' Add a new member to the group. '''
+		"""Add a new member to the group."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1001,7 +1089,8 @@ class Group(object):
 			self.members.append(student)
 	
 	def remove_member(self, student, connection):
-		''' Remove a member from the group. '''
+		"""Remove a member from the group."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1013,7 +1102,8 @@ class Group(object):
 			cur.close()
 		
 	def update(self, connection):
-		''' Update an existing Group record in the DB. '''
+		"""Update an existing Group record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1024,7 +1114,8 @@ class Group(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Group to the DB and retrieve the auto-assigned ID. '''
+		"""Write the Group to the DB and retrieve the auto-assigned ID."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1043,7 +1134,8 @@ class Group(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Group from the DB. '''
+		"""Delete the Group from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1053,9 +1145,13 @@ class Group(object):
 			cur.close()
 	
 	def find_concurrent_optional_groups(self, connection):
-		'''Return a list of Groups for the Organizations in this Group's parent 
+		"""Finds this Group's concurrent optional member Groups.
+		
+		Returns a list of Groups for the Organizations in this Group's parent 
 		Organization's optional_member_orgs list with the same Semester as the 
-		current Group.'''
+		current Group.
+		"""
+		
 		groups = []
 		try:
 			cur = connection.cursor()
@@ -1071,9 +1167,13 @@ class Group(object):
 			return groups
 		
 	def find_concurrent_mandatory_groups(self, connection):
-		'''Return a list of Groups for the Organizations in this Group's parent 
+		"""Finds this Group's concurrent mandatory member Groups.
+		
+		Return a list of Groups for the Organizations in this Group's parent 
 		Organization's mandatory_member_orgs list with the same Semester as the 
-		current Group.'''
+		current Group.
+		"""
+		
 		groups = []
 		try:
 			cur = connection.cursor()
@@ -1089,7 +1189,8 @@ class Group(object):
 			return groups
 			
 	def read_gc_roster(self, infile, connection):
-		''' Parse the group's roster into the database using the Glee Club roster format. '''
+		"""Parse the group's roster into the database using the Glee Club roster format."""
+		
 		book = Workbook(infile)
 		sheet = book['Sheet1']
 		rfid_col = 0
@@ -1116,15 +1217,20 @@ class Group(object):
 			self.add_member(student, credit, connection)
 
 class Absence(object):
-	''' An instance of a Student not singing into an Event.
-	May or may not have an Excuse attached to it. '''
+	
+	"""An instance of a Student not singing into an Event.
+	
+	May or may not have an Excuse attached to it.
+	"""
+	
 	TYPE_PENDING = "Pending"
 	TYPE_EXCUSED = "Excused"
 	TYPE_UNEXCUSED = "Unexcused"
 	
 	@staticmethod
 	def new_from_row(row, connection):
-		''' Given an absence row from the DB, returns an Absence object. '''
+		"""Given an absence row from the DB, returns an Absence object."""
+		
 		if row[0] == 'NULL':
 			student = None
 		else:
@@ -1141,7 +1247,8 @@ class Absence(object):
 		
 	@staticmethod
 	def select_by_student(student, connection):
-		''' Return the list of Absences by a Student. '''
+		"""Return the list of Absences by a Student."""
+		
 		absences = []
 		try:
 			cur = connection.cursor()
@@ -1155,7 +1262,8 @@ class Absence(object):
 	
 	@staticmethod
 	def select_by_type(absence_type, connection):
-		''' Return the list of Absences of a given ABSENCE.TYPE_. '''
+		"""Return the list of Absences of a given ABSENCE.TYPE_ string."""
+		
 		absences = []
 		try:
 			cur = connection.cursor()
@@ -1169,9 +1277,9 @@ class Absence(object):
 		
 	@staticmethod
 	def select_by_event(event, connection):
-		''' Return the list of Absences of a given datetime. '''
+		"""Return the list of Absences of a given datetime."""
+		
 		absences = []
-			
 		try:
 			cur = connection.cursor()
 			
@@ -1184,9 +1292,12 @@ class Absence(object):
 	
 	@staticmethod
 	def select_by_excuse(excuse_id, connection):
-		''' Return the list of Absences of a given excuse ID.
+		"""Return the list of Absences of a given excuse ID.
+		
 		Should only return one, but returning a list in case of
-		data integrity issues related to Excuse-Event mis-assignment. '''
+		data integrity issues related to Excuse-Event mis-assignment.
+		"""
+		
 		absences = []
 		try:
 			cur = connection.cursor()
@@ -1200,9 +1311,9 @@ class Absence(object):
 	
 	@staticmethod
 	def select_by_all(student_id, absence_type, event_id, excuse_id, connection):
-		''' Return the list of Absences using any combination of filters. '''
-		absences = []
+		"""Return the list of Absences using any combination of filters."""
 		
+		absences = []
 		try:
 			cur = connection.cursor()
 			
@@ -1222,7 +1333,8 @@ class Absence(object):
 		self.excuse = excuse	# An Excuse object
 	
 	def update(self, connection):
-		''' Update an existing Absence record in the DB. '''
+		"""Update an existing Absence record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1233,7 +1345,8 @@ class Absence(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Absence to the DB. '''
+		"""Write the Absence to the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1244,7 +1357,8 @@ class Absence(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Absence from the DB. '''
+		"""Delete the Absence from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1255,8 +1369,11 @@ class Absence(object):
 			cur.close()
 	
 class Excuse(object):
-	''' A Student's excuse for missing an Event sent to gc-excuse. 
-	The datetime and student ID are the primary key colums.'''
+	
+	"""A Student's excuse for missing an Event sent to gc-excuse.
+	
+	The datetime and student ID are the primary key colums.
+	"""
 	
 	# Cutoffs for when students can email gc-excuse (relative to event start time)
 	EXCUSES_OPENS = timedelta(-1, 0, 0, 0, 0, -18, 0)	# 1 day, 18 hours before
@@ -1264,7 +1381,8 @@ class Excuse(object):
 	
 	@staticmethod
 	def new_from_row(row, connection):
-		''' Given an excuse row from the DB, returns an Excuse object. '''
+		"""Given an excuse row from the DB, returns an Excuse object."""
+		
 		if row[2] == 'NULL':
 			event = None
 		else:
@@ -1277,7 +1395,8 @@ class Excuse(object):
 	
 	@staticmethod
 	def select_by_id(excuse_id, connection):
-		''' Return the Excuse of given unique ID. '''
+		"""Return the Excuse of given unique ID."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1295,7 +1414,8 @@ class Excuse(object):
 	
 	@staticmethod
 	def select_by_student(student, connection):
-		''' Return the list of Excuses by a Student. '''
+		"""Return the list of Excuses by a Student."""
+		
 		excuses = []
 		try:
 			cur = connection.cursor()
@@ -1309,7 +1429,7 @@ class Excuse(object):
 	
 	@staticmethod
 	def select_by_datetime_range(start_dt, end_dt, connection):
-		''' Return the list of Excuses in a given datetime range. '''
+		"""Return the list of Excuses in a given datetime range."""
 		
 		if type(start_dt == datetime):
 			start_dt = start_dt.isoformat()
@@ -1330,7 +1450,8 @@ class Excuse(object):
 		
 	@staticmethod
 	def select_by_event(event, connection):
-		''' Return the list of Excuses associated with a given Event. '''
+		"""Return the list of Excuses associated with a given Event."""
+		
 		excuses = []
 		
 		try:
@@ -1345,7 +1466,8 @@ class Excuse(object):
 		
 	@staticmethod
 	def select_by_all(excuse_id, student_id, start_dt, end_dt, event_id, connection):
-		''' Return a list of Excuses using any combination of filters. '''
+		"""Return a list of Excuses using any combination of filters."""
+		
 		excuses = []
 		
 		if type(start_dt == datetime):
@@ -1373,7 +1495,8 @@ class Excuse(object):
 		self.student = s			# a Student object
 	
 	def update(self, connection):
-		''' Update an existing Excuse record in the DB. '''
+		"""Update an existing Excuse record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1384,7 +1507,8 @@ class Excuse(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Excuse to the DB and retrieve the auto-assigned ID. '''
+		"""Write the Excuse to the DB and retrieve the auto-assigned ID."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1405,7 +1529,8 @@ class Excuse(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Excuse from the DB. '''
+		"""Delete the Excuse from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1415,12 +1540,16 @@ class Excuse(object):
 			cur.close()
 	
 class Signin(object):
-	''' Corresponds to a row in the RFID output file. 
-	The datetime and student ID are the primary key colums.'''
+	
+	"""Corresponds to a row in the RFID output record file. 
+	
+	The datetime and student ID are the primary key colums.
+	"""
 	
 	@staticmethod
 	def new_from_row(row, connection):
-		''' Given a signin row from the DB, returns a signin object. '''
+		"""Given a signin row from the DB, returns a signin object."""
+		
 		if row[1] == 'NULL':
 			event = None
 		else:
@@ -1433,7 +1562,8 @@ class Signin(object):
 		
 	@staticmethod
 	def select_by_student(student, connection):
-		''' Return the list of Signins by a Student. '''
+		"""Return the list of Signins by a Student."""
+		
 		signins = []
 		try:
 			cur = connection.cursor()
@@ -1447,9 +1577,9 @@ class Signin(object):
 	
 	@staticmethod
 	def select_by_start(start_dt, end_dt, connection):
-		''' Return the list of Signins in a given datetime range. '''
-		signins = []
+		"""Return the list of Signins in a given datetime range."""
 		
+		signins = []
 		if type(start_dt == datetime):
 			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
@@ -1468,9 +1598,9 @@ class Signin(object):
 	
 	@staticmethod
 	def select_by_event(event, connection):
-		''' Return the list of Signins associated with a given Event. '''
-		signins = []
+		"""Return the list of Signins associated with a given Event."""
 		
+		signins = []
 		try:
 			cur = connection.cursor()
 			
@@ -1483,9 +1613,9 @@ class Signin(object):
 	
 	@staticmethod
 	def select_by_all(id, start_dt, end_dt, event_id, connection):
-		''' Return a list of Signins using any combination of filters. '''
-		signins = []
+		"""Return a list of Signins using any combination of filters."""
 		
+		signins = []
 		if type(start_dt == datetime):
 			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
@@ -1509,11 +1639,14 @@ class Signin(object):
 		self.student = student		# a Student object
 	
 	def guess_event(self, connection):
-		''' Search the database for events that this Signin might correspond to.
+		"""Search the database for events that this Signin might correspond to.
+		
 		Likely events are defined as starting within 2 hours of self.signin_dt
 		(to allow for showing up and/or signing in late) and are held by a group
 		that self.student is a member of.
-		Returns a list of Event objects without setting self.event directly. '''
+		@return: A list of Event objects (without setting self.event directly).
+		"""
+		
 		time_window = datetime.timedelta(0, 0, 0, 0, 0, 2, 0)	# 2 hours
 		try:
 			events = []
@@ -1538,7 +1671,8 @@ class Signin(object):
 			return events
 	
 	def update(self, connection):
-		''' Update an existing Signin record in the DB. '''
+		"""Update an existing Signin record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1549,7 +1683,8 @@ class Signin(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Signin to the DB. '''
+		"""Write the Signin to the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1560,7 +1695,8 @@ class Signin(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Signin from the DB. '''
+		"""Delete the Signin from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1571,8 +1707,12 @@ class Signin(object):
 			cur.close()
 
 class Event(object):
-	''' An event where attendance is taken. 
-	The datetime is the primary key column.'''
+	
+	"""An event where attendance is taken.
+	
+	The datetime is the primary key column.
+	"""
+	
 	TYPE_REHEARSAL = 'Rehearsal'
 	TYPE_MAKEUP = 'Makeup Rehearsal'
 	TYPE_DRESS = 'Dress Rehearsal'	# Mandatory for a concert
@@ -1584,7 +1724,8 @@ class Event(object):
 	
 	@staticmethod
 	def new_from_row(row, connection):
-		''' Given an event row from the DB, returns an Event object. '''
+		"""Given an event row from the DB, returns an Event object."""
+		
 		if row[7] is None:
 			group = None
 		else:
@@ -1597,7 +1738,8 @@ class Event(object):
 
 	@staticmethod
 	def select_by_id(event_id, connection):
-		''' Return the Event of given unique ID. '''
+		"""Return the Event of given unique ID."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1615,7 +1757,8 @@ class Event(object):
 	
 	@staticmethod
 	def select_by_name(name, connection):
-		''' Return the list of Events of a given name. '''
+		"""Return the list of Events of a given name."""
+		
 		events = []
 		try:
 			cur = connection.cursor()
@@ -1629,9 +1772,9 @@ class Event(object):
 	
 	@staticmethod
 	def select_by_start(event_dt, connection):
-		''' Return the list of Events starting at a specific datetime. '''
-		events = []
+		"""Return the list of Events starting at a specific datetime."""
 		
+		events = []
 		if type(event_dt == datetime):
 			event_dt = event_dt.isoformat()
 		
@@ -1647,9 +1790,9 @@ class Event(object):
 	
 	@staticmethod
 	def select_by_datetime_range(start_dt, end_dt, connection):
-		''' Return the list of Events in a given datetime range. '''
-		events = []
+		"""Return the list of Events in a given datetime range."""
 		
+		events = []
 		if type(start_dt == datetime):
 			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
@@ -1668,7 +1811,8 @@ class Event(object):
 	
 	@staticmethod
 	def select_by_type(type, connection):
-		''' Return the list of Events of a given type. '''
+		"""Return the list of Events of a given type."""
+		
 		events = []
 		try:
 			cur = connection.cursor()
@@ -1682,7 +1826,8 @@ class Event(object):
 	
 	@staticmethod
 	def select_by_group(group, connection):
-		''' Return the list of Events of a given group. '''
+		"""Return the list of Events of a given group."""
+		
 		events = []
 		try:
 			cur = connection.cursor()
@@ -1696,7 +1841,8 @@ class Event(object):
 	
 	@staticmethod
 	def select_by_semester(semester, connection):
-		''' Return the list of Events in a given Semester. '''
+		"""Return the list of Events in a given Semester."""
+		
 		events = []
 		try:
 			cur = connection.cursor()
@@ -1710,7 +1856,8 @@ class Event(object):
 	
 	@staticmethod
 	def select_by_gcal_id(gcal_id, connection):
-		''' Return the Event of a given Google Calendar event ID. '''
+		"""Return the Event of a given Google Calendar event ID."""
+		
 		try:
 			cur = connection.cursor()
 			event = None
@@ -1728,9 +1875,9 @@ class Event(object):
 	
 	@staticmethod
 	def select_by_all(name, start_dt, end_dt, type, group, semester, gcal_id, connection):
-		''' Return a list of Events using any combination of filters. '''
-		events = []
+		"""Return a list of Events using any combination of filters."""
 		
+		events = []
 		if type(start_dt == datetime):
 			start_dt = start_dt.isoformat()
 		if type(end_dt == datetime):
@@ -1764,20 +1911,23 @@ class Event(object):
 		self.absences = []
 	
 	def fetch_signins(self, connection):
-		''' Fetch all Signins for this Event from the database. '''
+		"""Fetch all Signins for this Event from the database."""
+		
 		self.signins = Signin.select_by_start(self.event_dt+Event.ATTENDANCE_OPENS, self.event_dt+Event.ATTENDANCE_CLOSES, connection)
 	
 	def fetch_excuses(self, connection):
-		''' Fetch all Excuses for this Event from the database. '''
+		"""Fetch all Excuses for this Event from the database."""
+		
 		self.excuses = Excuse.select_by_start(self.event_dt+Excuse.EXCUSES_OPENS, self.event_dt+Excuse.EXCUSES_CLOSES, connection)
 		
 	def fetch_absences(self, connection):
-		''' Fetch all Absences for this Event from the database. '''
+		"""Fetch all Absences for this Event from the database."""
+		
 		self.absences = Absence.select_by_event(self, connection)
 	
 	def make_json(self, connection):
-		''' Converts the Event object into a JSON object suitable for use in
-		Google calendar. '''
+		"""Converts the Event object into a JSON object suitable for use in Google calendar."""
+		
 		event = {}
 		attendees = []
 		optional_attendees = set()
@@ -1817,10 +1967,13 @@ class Event(object):
 		return event
 	
 	def gcal_get(self, gcal):
-		''' Get this Event from the parent Organization's Google calendar. 
-		@requires: self.gcal_id is not None. Will return None in this case. 
-		@param gcal: A GCal instance. 
-		@return: The retrieved event resource or None. '''
+		"""Get this Event from the parent Organization's Google calendar.
+		
+		@requires: self.gcal_id is not None. Will return None in this case.
+		@param gcal: A GCal instance.
+		@return: The retrieved event resource or None.
+		"""
+		
 		resource = None
 		if self.gcal_id is not None:
 			resource = gcal.service.events().get(calendarId=self.group.organization.calendar['id'], eventId=self.gcal_id).execute()
@@ -1828,22 +1981,26 @@ class Event(object):
 		return resource
 	
 	def gcal_insert(self, gcal, resource):
-		''' Insert this Event into the parent Organization's Google calendar. 
-		@param gcal: A GCal instance. 
+		"""Insert this Event into the parent Organization's Google calendar.
+		
+		@param gcal: A GCal instance.
 		@param resource: A gcal event resource JSON object in dict format.
 		@return: The inserted event resource. 
-		Setting self.gcal_id to return_val['id'] is normally recommended. '''
+		Setting self.gcal_id to return_val['id'] is normally recommended.
+		"""
 		
 		inserted_event = gcal.service.events().insert(calendarId=self.group.organization.calendar['id'], body=resource).execute()
 		return inserted_event
 	
 	def gcal_update(self, gcal, resource):
-		''' Update this Event on the parent Organization's Google calendar. 
+		"""Update this Event on the parent Organization's Google calendar. 
+		
 		If the passed resource has no event ID, inserts the resource as a new event.
 		@requires: self.gcal_id is not None
 		@param gcal: A GCal instance. 
 		@param resource: A gcal event resource JSON object in dict format. 
-		@return: The updated event resource. '''
+		@return: The updated event resource.
+		"""
 		
 		if 'id' in resource:	# Resource has a gcal event ID to pass
 			updated_event = gcal.service.events().update(calendarId=self.group.organization.calendar['id'], eventId=resource['id'], body=resource).execute()
@@ -1854,7 +2011,8 @@ class Event(object):
 			return inserted_event
 	
 	def update(self, connection):
-		''' Update an existing Event record in the DB. '''
+		"""Update an existing Event record in the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1866,7 +2024,8 @@ class Event(object):
 			cur.close()
 	
 	def insert(self, connection):
-		''' Write the Event to the DB and retrieve the auto-assigned ID. '''
+		"""Write the Event to the DB and retrieve the auto-assigned ID."""
+		
 		try:
 			cur = connection.cursor()
 			
@@ -1886,7 +2045,8 @@ class Event(object):
 			cur.close()
 	
 	def delete(self, connection):
-		''' Delete the Event from the DB. '''
+		"""Delete the Event from the DB."""
+		
 		try:
 			cur = connection.cursor()
 			
