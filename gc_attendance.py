@@ -6,6 +6,8 @@ import types
 
 import xlsx
 import apsw
+from dateutil.parser import *
+from dateutil.tz import *
 # Google stuff
 import httplib2
 from apiclient.discovery import build
@@ -15,12 +17,15 @@ from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.tools import run
 
+TZ_EST = tzstr('EST+05EDT,M4.1.0,M10.5.0')
+TIMEZONES = {'EST' : TZ_EST, 'UTC' : tzutc()}
+
 class GCal(object):
 	
 	"""Container class for Google Calendar API-related objects."""
 	
 	__slots__ = ["credentials", "http", "service"]
-	
+
 	@staticmethod
 	def get_credentials(credentials_file='credentials.dat'):
 		storage = Storage(credentials_file)
@@ -164,7 +169,7 @@ class AttendanceDB(object):
 					# row[3] is the RFID number
 					date = row[1].split('/')
 					time = row[2].split(':')
-					dt = datetime.datetime(int(date[2]), int(date[0]), int(date[1]), int(time[0]), int(time[1]))
+					dt = datetime.datetime(int(date[2]), int(date[0]), int(date[1]), int(time[0]), int(time[1]), tzinfo=TIMEZONES['EST'])
 					# The record variable formatting matches the Sigin.__init__ arguments list
 					record = (dt, None, int(row[3]))
 					signins.append(record)
@@ -1392,8 +1397,8 @@ class Excuse(object):
 			student = None
 		else:
 			student = Student.select_by_id(row[4], connection)
-		return cls(row[0], convert_timestamp(row[1]), event, row[3], student)
-	
+		return cls(row[0], parse(row[1], tzinfos={'EST':TZ_EST}), event, row[3], student)
+
 	@staticmethod
 	def select_by_id(excuse_id, connection):
 		"""Return the Excuse of given unique ID."""
@@ -1559,7 +1564,7 @@ class Signin(object):
 			student = None
 		else:
 			student = Student.select_by_id(row[2], connection)
-		return cls(convert_timestamp(row[0]), event, student)
+		return cls(parse(row[0], tzinfos={'EST':TZ_EST}), event, student)
 		
 	@staticmethod
 	def select_by_student(student, connection):
@@ -1664,7 +1669,7 @@ class Signin(object):
 					semester = None
 				else:
 					semester = Semester.select_by_name(row[5], connection)
-				event = Event(int(row[0]), row[1], convert_timestamp(row[2]), row[3], group, semester)
+				event = Event(int(row[0]), row[1], parse(row[2], tzinfos=TIMEZONES), row[3], group, semester)
 				events.append(event)
 		
 		finally:
@@ -1735,7 +1740,7 @@ class Event(object):
 			semester = None
 		else:
 			semester = Semester.select_by_name(row[8], connection)
-		return cls(row[0], row[1], row[2], convert_timestamp(row[4]), convert_timestamp(row[5]), row[6], group, semester, row[9])
+		return cls(row[0], row[1], row[2], parse(row[4], tzinfos=TIMEZONES), parse(row[5], tzinfos=TIMEZONES), row[6], group, semester, row[9])
 
 	@staticmethod
 	def select_by_id(event_id, connection):
