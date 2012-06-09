@@ -166,7 +166,7 @@ class AttendanceDB(object):
 					time = row[2].split(':')
 					dt = datetime.datetime(int(date[2]), int(date[0]), int(date[1]), int(time[0]), int(time[1]))
 					# The record variable formatting matches the Sigin.__init__ arguments list
-					record = (dt.isoformat(), None, int(row[3]))
+					record = (dt, None, int(row[3]))
 					signins.append(record)
 			
 			cur = self.memory.cursor()
