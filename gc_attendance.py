@@ -1,4 +1,6 @@
 import csv
+import email
+import imaplib
 import shutil
 import os
 from datetime import *
@@ -10,6 +12,7 @@ from dateutil.parser import *
 from dateutil.tz import *
 # Google stuff
 import httplib2
+import xoauth
 from apiclient.discovery import build
 from apiclient.errors import *
 from oauth2client.file import Storage
