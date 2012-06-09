@@ -17,6 +17,7 @@ from oauth2client.tools import run
 
 class GCal(object):
 	''' Container class for Google Calendar API-related objects. '''
+	__slots__ = ["credentials", "http", "service"]
 	
 	@staticmethod
 	def get_credentials(credentials_file='credentials.dat'):
@@ -37,6 +38,7 @@ class GCal(object):
 class AttendanceDB(object):
 	''' Base class for the attendance database. '''
 	db0 = os.path.join(os.getcwd(), 'gc-attendance.sqlite')
+	__slots__ = ["disk_db", "memory"]
 	
 	def __init__(self, db_file=db0):
 		self.disk_db = db_file
@@ -178,6 +180,8 @@ gcdb = AttendanceDB()
 
 class RosterException(Exception):
 	''' Exception raised when something goes wrong parsing a roster spreadsheet. '''
+	__slots__ = ["source", "text"]
+	
 	def __init__(self, source, text):
 		self.source = source
 		self.text = text
@@ -186,6 +190,8 @@ class RosterException(Exception):
 
 class DatabaseException(Exception):
 	''' Exception raised when a SQL operation executed OK, but returned unexpected results. '''
+	__slots__ = ["source", "text"]
+	
 	def __init__(self, source, text):
 		self.source = source
 		self.text = text
@@ -194,6 +200,7 @@ class DatabaseException(Exception):
 
 class Term(object):
 	''' Corresponds to one 7-week term on WPI's academic calendar. '''
+	__slots__ = ["name", "start_date", "end_date", "days_off"]
 	
 	@staticmethod
 	def new_from_row(row):
@@ -337,6 +344,8 @@ class Term(object):
 
 class Semester(object):
 	''' Corresponds to one 2-term semester on WPI's academic calendar. '''
+	
+	__slots__ = ["name", "term_one", "term_two"]
 	
 	@staticmethod
 	def new_from_row(row, connection):
