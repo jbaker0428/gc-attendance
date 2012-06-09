@@ -1497,7 +1497,7 @@ class Excuse(object):
 			return excuses
 	 
 	def __init__(self, id, dt, event, reason, s):
-		self.id = id				# Unique primary key
+		self.id = id				# Unique primary key (from IMAP UID) 
 		self.excuse_dt = dt			# a datetime object
 		self.event = event			# an Event object
 		self.reason = reason		# Student's message to gc-excuse
@@ -1521,18 +1521,23 @@ class Excuse(object):
 		try:
 			cur = connection.cursor()
 			
-			params = (self.excuse_dt.isoformat(), self.event.id, self.reason, self.student.rfid,)
-			# INSERTing 'NULL' for the integer primary key column autogenerates an id
-			cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
+			if self.id is None:
+				params = (self.excuse_dt.isoformat(), self.event.id, self.reason, self.student.rfid,)
+				# INSERTing 'NULL' for the integer primary key column autogenerates an id
+				cur.execute('INSERT INTO excuses VALUES (NULL,?,?,?,?)', params)
 			
-			params = (self.excuse_dt.isoformat(), self.event.id, self.student.rfid,)
-			rows = list(cur.execute('SELECT id FROM excuses WHERE dt=? AND event=? AND student=?', params))
-			if len(rows) > 1 or len(rows) < 0:
-				raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
-			elif len(rows) == 1:
-				self.id = rows[0][0]
-			elif len(rows) == 0:
-				raise DatabaseException(self.insert.__name__, "Could not retrieve excuse ID post-insert.")
+				params = (self.excuse_dt.isoformat(), self.event.id, self.student.rfid,)
+				rows = list(cur.execute('SELECT id FROM excuses WHERE dt=? AND event=? AND student=?', params))
+				if len(rows) > 1 or len(rows) < 0:
+					raise DatabaseException(self.insert.__name__, "Query returned %s rows, expected one." % len(rows))
+				elif len(rows) == 1:
+					self.id = rows[0][0]
+				elif len(rows) == 0:
+					raise DatabaseException(self.insert.__name__, "Could not retrieve excuse ID post-insert.")
+			
+			else:
+				params = (self.id, self.excuse_dt.isoformat(), self.event.id, self.reason, self.student.rfid,)
+				cur.execute('INSERT INTO excuses VALUES (?,?,?,?,?)', params)
 				
 		finally:
 			cur.close()
