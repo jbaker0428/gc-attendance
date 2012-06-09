@@ -216,11 +216,11 @@ class Term(object):
 	
 	__slots__ = ["name", "start_date", "end_date", "days_off"]
 	
-	@staticmethod
-	def new_from_row(row):
-		"""Given a term row from the DB, returns a Term object."""
+	@classmethod
+	def new_from_row(cls, row):
+		"""Given a terms row from the DB, returns a Term object."""
 		
-		return Term(row[0], convert_date(row[1]), convert_date(row[2]))
+		return cls(row[0], convert_date(row[1]), convert_date(row[2]))
 	
 	@staticmethod
 	def select_by_name(name, connection):
@@ -374,12 +374,13 @@ class Semester(object):
 	
 	__slots__ = ["name", "term_one", "term_two"]
 	
-	@staticmethod
-	def new_from_row(row, connection):
+	@classmethod
+	def new_from_row(cls, row, connection):
 		"""Given a semester row from the DB, returns a Semester object."""
+		
 		t1 = Term.select_by_name(row[1], connnection)
 		t2 = Term.select_by_name(row[2], connnection)
-		semester = Semester(row[0], t1, t2)
+		semester = cls(row[0], t1, t2)
 				
 	@staticmethod
 	def select_by_name(name, connection):
@@ -543,11 +544,11 @@ class Student(object):
 	The student's RFID ID number is the primary key column.
 	"""
 
-	@staticmethod
-	def new_from_row(row):
-		"""Given a student row from the DB, returns a Student object."""
+	@classmethod
+	def new_from_row(cls, row):
+		"""Given a students row from the DB, returns a Student object."""
 		
-		return Student(row[0], row[1], row[2], row[3], row[4], row[5])
+		return cls(row[0], row[1], row[2], row[3], row[4], row[5])
 
 	@staticmethod
 	def select_by_id(id, connection):
@@ -806,11 +807,11 @@ class Organization(object):
 	
 	"""An organization that uses the RFID reader for attendance."""
 
-	@staticmethod
-	def new_from_row(row):
+	@classmethod
+	def new_from_row(cls, row):
 		"""Given an organization row from the DB, returns an Organization object."""
 		
-		return Organization(row[0], row[1])
+		return cls(row[0], row[1])
 	
 	@staticmethod
 	def select_by_name(name, connection):
@@ -988,9 +989,9 @@ class Group(object):
 	Each Group has a parent Organization.
 	"""
 	
-	@staticmethod
-	def new_from_row(row, connection):
-		"""Given a group row from the DB, returns a Group object."""
+	@classmethod
+	def new_from_row(cls, row, connection):
+		"""Given a groups row from the DB, returns a Group object."""
 		
 		if row[1] == 'NULL':
 			organization = None
@@ -1000,7 +1001,7 @@ class Group(object):
 			semester = None
 		else:
 			semester = Semester.select_by_name(row[2], connection)
-		return Group(row[0], organization, semester)
+		return cls(row[0], organization, semester)
 				
 	@staticmethod
 	def select_by_id(gid, connection):
@@ -1227,9 +1228,9 @@ class Absence(object):
 	TYPE_EXCUSED = "Excused"
 	TYPE_UNEXCUSED = "Unexcused"
 	
-	@staticmethod
-	def new_from_row(row, connection):
-		"""Given an absence row from the DB, returns an Absence object."""
+	@classmethod
+	def new_from_row(cls, row, connection):
+		"""Given an absences row from the DB, returns an Absence object."""
 		
 		if row[0] == 'NULL':
 			student = None
@@ -1243,7 +1244,7 @@ class Absence(object):
 			excuse = None
 		else:
 			excuse = Excuse.select_by_id(row[3], connection)
-		return Absence(student, row[1], event, excuse)
+		return cls(student, row[1], event, excuse)
 		
 	@staticmethod
 	def select_by_student(student, connection):
@@ -1379,9 +1380,9 @@ class Excuse(object):
 	EXCUSES_OPENS = timedelta(-1, 0, 0, 0, 0, -18, 0)	# 1 day, 18 hours before
 	EXCUSES_CLOSES = timedelta(0, 0, 0, 0, 0, 6, 0)	# 6 hours after
 	
-	@staticmethod
-	def new_from_row(row, connection):
-		"""Given an excuse row from the DB, returns an Excuse object."""
+	@classmethod
+	def new_from_row(cls, row, connection):
+		"""Given an excuses row from the DB, returns an Excuse object."""
 		
 		if row[2] == 'NULL':
 			event = None
@@ -1391,7 +1392,7 @@ class Excuse(object):
 			student = None
 		else:
 			student = Student.select_by_id(row[4], connection)
-		return Excuse(row[0], convert_timestamp(row[1]), event, row[3], student)
+		return cls(row[0], convert_timestamp(row[1]), event, row[3], student)
 	
 	@staticmethod
 	def select_by_id(excuse_id, connection):
@@ -1546,9 +1547,9 @@ class Signin(object):
 	The datetime and student ID are the primary key colums.
 	"""
 	
-	@staticmethod
-	def new_from_row(row, connection):
-		"""Given a signin row from the DB, returns a signin object."""
+	@classmethod
+	def new_from_row(cls, row, connection):
+		"""Given a signins row from the DB, returns a signin object."""
 		
 		if row[1] == 'NULL':
 			event = None
@@ -1558,7 +1559,7 @@ class Signin(object):
 			student = None
 		else:
 			student = Student.select_by_id(row[2], connection)
-		return Signin(convert_timestamp(row[0]), event, student)
+		return cls(convert_timestamp(row[0]), event, student)
 		
 	@staticmethod
 	def select_by_student(student, connection):
@@ -1722,9 +1723,9 @@ class Event(object):
 	ATTENDANCE_OPENS = timedelta(0, 0, 0, 0, -30, 0, 0)	# 30 minutes before
 	ATTENDANCE_CLOSES = timedelta(0, 0, 0, 0, 30, 1, 0)	# 90 minutes after
 	
-	@staticmethod
-	def new_from_row(row, connection):
-		"""Given an event row from the DB, returns an Event object."""
+	@classmethod
+	def new_from_row(cls, row, connection):
+		"""Given an events row from the DB, returns an Event object."""
 		
 		if row[7] is None:
 			group = None
@@ -1734,7 +1735,7 @@ class Event(object):
 			semester = None
 		else:
 			semester = Semester.select_by_name(row[8], connection)
-		return Event(row[0], row[1], row[2], convert_timestamp(row[4]), convert_timestamp(row[5]), row[6], group, semester, row[9])
+		return cls(row[0], row[1], row[2], convert_timestamp(row[4]), convert_timestamp(row[5]), row[6], group, semester, row[9])
 
 	@staticmethod
 	def select_by_id(event_id, connection):
