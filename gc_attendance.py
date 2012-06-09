@@ -1,10 +1,11 @@
 import csv
 import shutil
 import os
-import apsw
 from datetime import *
 import types
+
 import xlsx
+import apsw
 # Google stuff
 import httplib2
 from apiclient.discovery import build
