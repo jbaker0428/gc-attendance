@@ -166,15 +166,15 @@ class AttendanceDB(object):
 					time = row[2].split(':')
 					dt = datetime.datetime(int(date[2]), int(date[0]), int(date[1]), int(time[0]), int(time[1]))
 					# The record variable formatting matches the Sigin.__init__ arguments list
-					record = (dt.isoformat(), 'NULL', int(row[3]))
+					record = (dt.isoformat(), None, int(row[3]))
 					signins.append(record)
 			
 			cur = self.memory.cursor()
 			
 			for t in signins:
 				# Check that student ID is in DB, if not, create a blank entry
-				if Student.select_by_id(t[3]) == None:
-					new_student = Student(t[3], 'NULL', 'NULL', 'NULL')
+				if Student.select_by_id(t[3]) is None:
+					new_student = Student(t[3], None, None, None)
 					print 'Adding unknown member to database, RFID# = ', t[3]
 					new_student.insert(self.memory)
 			cur.executemany('INSERT OR ABORT INTO signins VALUES (?,?,?)', signins)
@@ -993,11 +993,11 @@ class Group(object):
 	def new_from_row(cls, row, connection):
 		"""Given a groups row from the DB, returns a Group object."""
 		
-		if row[1] == 'NULL':
+		if row[1] is None:
 			organization = None
 		else:
 			organization = Organization.select_by_name(row[1], connection)
-		if row[2] == 'NULL':
+		if row[2] is None:
 			semester = None
 		else:
 			semester = Semester.select_by_name(row[2], connection)
@@ -1232,15 +1232,15 @@ class Absence(object):
 	def new_from_row(cls, row, connection):
 		"""Given an absences row from the DB, returns an Absence object."""
 		
-		if row[0] == 'NULL':
+		if row[0] is None:
 			student = None
 		else:
 			student = Student.select_by_id(row[0], connection)
-		if row[2] == 'NULL':
+		if row[2] is None:
 			event = None
 		else:
 			event = Event.select_by_id(row[2], connection)[0]
-		if row[3] == 'NULL':
+		if row[3] is None:
 			excuse = None
 		else:
 			excuse = Excuse.select_by_id(row[3], connection)
@@ -1384,11 +1384,11 @@ class Excuse(object):
 	def new_from_row(cls, row, connection):
 		"""Given an excuses row from the DB, returns an Excuse object."""
 		
-		if row[2] == 'NULL':
+		if row[2] is None:
 			event = None
 		else:
 			event = Event.select_by_id(row[2], connection)[0]
-		if row[4] == 'NULL':
+		if row[4] is None:
 			student = None
 		else:
 			student = Student.select_by_id(row[4], connection)
@@ -1551,11 +1551,11 @@ class Signin(object):
 	def new_from_row(cls, row, connection):
 		"""Given a signins row from the DB, returns a signin object."""
 		
-		if row[1] == 'NULL':
+		if row[1] is None:
 			event = None
 		else:
 			event = Event.select_by_id(row[1], connection)[0]
-		if row[2] == 'NULL':
+		if row[2] is None:
 			student = None
 		else:
 			student = Student.select_by_id(row[2], connection)
