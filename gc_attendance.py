@@ -95,7 +95,8 @@ class AttendanceDB(object):
 			(id INTEGER PRIMARY KEY, 
 			organization TEXT REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
 			semester TEXT NOT NULL REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE, 
-			UNIQUE(organization ASC, semester ASC) ON CONFLICT IGNORE )''')
+			name TEXT UNIQUE NOT NULL,
+			UNIQUE(organization ASC, semester ASC, name ASC) ON CONFLICT IGNORE )''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
 			(id INTEGER PRIMARY KEY, 
@@ -1006,7 +1007,7 @@ class Group(object):
 			semester = None
 		else:
 			semester = Semester.select_by_name(row[2], connection)
-		return cls(row[0], organization, semester)
+		return cls(row[0], organization, semester, row[3])
 				
 	@staticmethod
 	def select_by_id(gid, connection):
@@ -1075,6 +1076,7 @@ class Group(object):
 		self.id = id
 		self.organization = organization
 		self.semester = semester
+		self.name = name
 		self.members = students
 		
 	def fetch_members(self, connection):
