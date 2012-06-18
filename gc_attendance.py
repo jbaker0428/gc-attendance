@@ -1072,7 +1072,7 @@ class Group(object):
 			cur.close()
 			return groups
 	
-	def __init__(self, id, organization, semester, students=[]):
+	def __init__(self, id, organization, semester, name, students=[]):
 		self.id = id
 		self.organization = organization
 		self.semester = semester
