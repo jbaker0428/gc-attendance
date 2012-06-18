@@ -95,7 +95,8 @@ class AttendanceDB(object):
 			(id INTEGER PRIMARY KEY, 
 			organization TEXT REFERENCES organizations(name) ON DELETE CASCADE ON UPDATE CASCADE, 
 			semester TEXT NOT NULL REFERENCES semesters(name) ON DELETE CASCADE ON UPDATE CASCADE, 
-			name TEXT UNIQUE NOT NULL,
+			name TEXT UNIQUE NOT NULL, 
+			parent_id INTEGER REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE, 
 			UNIQUE(organization ASC, semester ASC, name ASC) ON CONFLICT IGNORE )''')
 			
 			cur.execute('''CREATE TABLE IF NOT EXISTS group_memberships 
@@ -1007,7 +1008,11 @@ class Group(object):
 			semester = None
 		else:
 			semester = Semester.select_by_name(row[2], connection)
-		return cls(row[0], organization, semester, row[3])
+		if row[4] is None:
+			parent = None
+		else:
+			parent = Group.select_by_id(row[4], connection)
+		return cls(row[0], organization, semester, row[3], parent)
 				
 	@staticmethod
 	def select_by_id(gid, connection):
@@ -1072,11 +1077,12 @@ class Group(object):
 			cur.close()
 			return groups
 	
-	def __init__(self, id, organization, semester, name, students=[]):
+	def __init__(self, id, organization, semester, name, parent_id=None, students=[]):
 		self.id = id
 		self.organization = organization
 		self.semester = semester
 		self.name = name
+		self.parent_group = parent	# Used if this group is a subgroup (for tour, etc)
 		self.members = students
 		
 	def fetch_members(self, connection):
@@ -1195,6 +1201,15 @@ class Group(object):
 		finally:
 			cur.close()
 			return groups
+	
+	@property
+	def root_group(self):
+		"""Recurse over parent groups to find an independent group."""
+		
+		if group.parent_group is None:
+			return self
+		else:
+			return group.parent_group.root_group
 			
 	def read_gc_roster(self, infile, connection):
 		"""Parse the group's roster into the database using the Glee Club roster format."""
